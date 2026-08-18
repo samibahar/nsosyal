@@ -26,6 +26,20 @@
   --konu-gundem-soft: #fdeaec;
   --konu-teknoloji: #7856ff;
   --konu-teknoloji-soft: #efe9ff;
+  --konu-bilim: #0891b2;
+  --konu-bilim-soft: #e0f7fa;
+  --konu-saglik: #db2777;
+  --konu-saglik-soft: #fce7f3;
+  --konu-ekonomi: #b45309;
+  --konu-ekonomi-soft: #fef3c7;
+  --konu-sanat: #c026d3;
+  --konu-sanat-soft: #fae8ff;
+  --konu-egitim: #4f46e5;
+  --konu-egitim-soft: #e0e7ff;
+  --konu-oyun: #ea580c;
+  --konu-oyun-soft: #ffedd5;
+  --konu-seyahat: #0284c7;
+  --konu-seyahat-soft: #e0f2fe;
   --konu-varsayilan: #536471;
   --konu-varsayilan-soft: #eff3f4;
 }
@@ -53,6 +67,13 @@
     --konu-spor-soft: #062a20;
     --konu-gundem-soft: #35080a;
     --konu-teknoloji-soft: #1d1436;
+    --konu-bilim-soft: #072e33;
+    --konu-saglik-soft: #3b0a24;
+    --konu-ekonomi-soft: #3a2607;
+    --konu-sanat-soft: #3b0742;
+    --konu-egitim-soft: #1e1b4b;
+    --konu-oyun-soft: #3a1904;
+    --konu-seyahat-soft: #082f49;
     --konu-varsayilan-soft: #202327;
   }
 }
@@ -278,7 +299,8 @@ main#akis { padding: 4px 0 8px; }
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 15px;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
   color: white;
   text-transform: uppercase;
 }
