@@ -8,11 +8,29 @@ sorgulamadan kabul et, aksini gerektiren yeni bir bilgi çıkmadıkça.
 ## Yarışma ve Teslim
 
 - Yarışma: NSosyal İnovasyon Yarışması (TEKNOFEST, düzenleyen: 2N Medya + T3 Vakfı).
-- Teknik Rapor teslimi: **24 Ağustos 2026, saat 17.00 (TSİ)** — KYS üzerinden.
-- Bu aşamada tam çalışan bir prototip ZORUNLU DEĞİL (varsa bonus); asıl istenen güçlü,
-  dürüst, teknik olarak temellendirilmiş bir rapor + mümkünse bir kanıt-of-konsept.
+- Resmi şartname okundu: `2026_NSOSYAL_YARISMASI_SARTNAMESI_TR_2026_07_24_v9_1.pdf` (V3, 17.08.2026).
+- Son başvuru tarihi 20 Ağustos 2026 idi — **başvuru/takım kaydı tamamlandı** (19.08.2026
+  itibarıyla kullanıcı onayladı, 2-5 kişilik takım + takım kaptanı zorunluluğu karşılandı).
+- Teknik Rapor teslimi: **24 Ağustos 2026, saat 17.00 (TSİ)** — KYS üzerinden. Şablona uygun
+  olmayan/eksik/geç yüklenen raporlar değerlendirmeye alınmaz, takım elenir.
+- Ardından: 2 Eylül sonuç ilanı, 2-7 Eylül mentörlük süreci, 14 Eylül final sunum teslimi,
+  20 Eylül canlı sunum, 30 Eylül-4 Ekim TEKNOFEST Şanlıurfa.
+- Şartnamenin genel kapsam metni "çalışan bir prototip ile desteklemeli" diyor — 24 Ağustos
+  raporu için net bir gate kriteri olarak yazılmamış ama final aşamasında canlı demo açıkça
+  isteniyor. Yine de olabildiğince güçlü bir kanıt-of-konsept hedefle, "zorunlu değil" diye
+  gevşek davranma.
 - Format: rapor en fazla 30 sayfa (kapak/içindekiler/kaynakça dahil), Arial 12pt, Arial Black
   14pt başlık, 1.15 satır aralığı, 2.5cm kenar boşluğu.
+- **Puanlama (Sosyal Yapay Zekâ teması):** Teknik Yeterlilik ve Uygulanabilirlik %35 (en
+  ağırlıklı kriter — kod/mimari kalitesine öncelik ver), Yenilikçilik ve Özgünlük %20,
+  Problemi Çözme Başarısı %20, Sunum ve Prototip Kalitesi %15, Kullanıcı Deneyimi (UI/UX)
+  %10, İş Modeli ve Sürdürülebilirlik %0 (bu tema için ağırlıksız — rapor şablonu muhtemelen
+  yine de istiyor ama puana katkısı yok, fazla zaman harcama).
+- **Beklenen teslimatlar (tüm yarışma boyunca, sadece 24 Ağustos değil):** teknik rapor,
+  sunum dosyası, kullanıcı senaryoları, çalışan prototip, kaynak kod, proje/demo videosu,
+  iş modeli ve gelir modeli dokümanı, yapay zekâ mimarisi dokümanı, veri/model/etik/performans
+  dokümanı, UI/UX tasarımları, kullanıcı akışları, kullanıcı araştırması özeti, kullanılabilirlik
+  testi sonuçları, erişilebilirlik değerlendirmesi.
 
 ## Ürün Konsepti (Kesinleşti)
 
