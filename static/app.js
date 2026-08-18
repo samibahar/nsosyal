@@ -14,6 +14,13 @@ const KONU_RENK = {
   spor: { bg: "var(--konu-spor-soft)", fg: "var(--konu-spor)" },
   gundem: { bg: "var(--konu-gundem-soft)", fg: "var(--konu-gundem)" },
   teknoloji: { bg: "var(--konu-teknoloji-soft)", fg: "var(--konu-teknoloji)" },
+  bilim: { bg: "var(--konu-bilim-soft)", fg: "var(--konu-bilim)" },
+  saglik: { bg: "var(--konu-saglik-soft)", fg: "var(--konu-saglik)" },
+  ekonomi: { bg: "var(--konu-ekonomi-soft)", fg: "var(--konu-ekonomi)" },
+  sanat: { bg: "var(--konu-sanat-soft)", fg: "var(--konu-sanat)" },
+  egitim: { bg: "var(--konu-egitim-soft)", fg: "var(--konu-egitim)" },
+  oyun: { bg: "var(--konu-oyun-soft)", fg: "var(--konu-oyun)" },
+  seyahat: { bg: "var(--konu-seyahat-soft)", fg: "var(--konu-seyahat)" },
 };
 
 function konuRenk(konu) {
@@ -114,7 +121,7 @@ function akisiCiz(gonderiler) {
     kart.dataset.id = g.id;
 
     kart.innerHTML = `
-      <div class="avatar" style="background:${renk.fg}">${g.konu.charAt(0)}</div>
+      <div class="avatar" style="background:${renk.fg}">${g.konu.slice(0, 2)}</div>
       <div class="govde">
         <div class="ust-satir">
           <span class="konu-etiket" style="background:${renk.bg};color:${renk.fg}">${g.konu}</span>

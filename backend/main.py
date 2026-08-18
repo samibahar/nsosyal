@@ -14,22 +14,14 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from motor import gonderileri_puanla, sirala, spiral_olasiligi
+from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
 
 app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Kanıt-of-Konsept")
 
-GONDERILER = [
-    {"id": 1, "konu": "spor", "metin": "Takımımız bu hafta harika bir galibiyet aldı, çok sevindim!"},
-    {"id": 2, "konu": "spor", "metin": "Transfer draması yüzünden taraftarlar arasında büyük öfke var."},
-    {"id": 3, "konu": "gundem", "metin": "Mahkeme, savaş suçlarından idam cezasına mahkum etti."},
-    {"id": 4, "konu": "gundem", "metin": "Yeni bir toplantı yarın saat 14.00'te başlayacak."},
-    {"id": 5, "konu": "spor", "metin": "Antrenman sonrası oyuncular keyifli bir sohbet yaptı."},
-    {"id": 6, "konu": "gundem", "metin": "Tutuklama haberi sonrası sosyal medyada büyük kaygı oluştu."},
-    {"id": 7, "konu": "teknoloji", "metin": "Yeni yapay zekâ modeli beklentilerin çok üzerinde başarı gösterdi."},
-    {"id": 8, "konu": "gundem", "metin": "Deprem sonrası bölgede büyük yıkım ve can kaybı yaşandı."},
-]
+GONDERILER = ORNEK_GONDERILER
 gonderileri_puanla(GONDERILER)
 
-KULLANICI_ILGI = {"spor": 0.9, "gundem": 0.5, "teknoloji": 0.6}
+KULLANICI_ILGI = ORNEK_KULLANICI_ILGI
 
 DAVRANIS_GUNLUGU: list[dict] = []
 
