@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Haftalık Öz-Farkındalık Raporu — Örnek</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div class="sayfa">
+  <header class="ust-bar">
+    <a class="geri-link" href="/index.html">← Ana Sayfa</a>
+  </header>
+
+  <div class="rapor-govde">
+    <div class="uyari-kutusu">
+      Bu bir <b>örnek</b> rapordur, sabit metinle hazırlanmıştır (gerçek sürümde her
+      kullanıcının o haftaki davranış verisiyle bir LLM tarafından üretilir). Bu araç
+      bir <b>teşhis veya klinik değerlendirme değildir</b> — yalnızca kendi dijital
+      alışkanlıklarını fark etmen için olası örüntüleri gösterir. Aylık versiyon,
+      aynı mantığın daha geniş bir zaman penceresi üzerinden çalıştırılmış hâlidir.
+    </div>
+
+    <h2>10–16 Ağustos haftası özetin</h2>
+    <p>
+      Bu hafta akışında <b>142 gönderi</b> ile karşılaştın, bunlardan <b>23'ünde</b>
+      1 dakikadan uzun süre durdun. Genel olarak zaman geçirdiğin içeriklerin duygu
+      tonu ortalaması <b>hafif negatif</b> (-0.18) çıktı — geçen haftaya göre (-0.09)
+      bir miktar daha negatif bir eğilim var.
+    </p>
+
+    <h3>Gözlemlenen olası örüntü</h3>
+    <p>
+      Akşam 22:00–00:00 saatleri arasında gündem içeriğinde ortalama dwell-time'ın,
+      günün diğer saatlerine göre belirgin şekilde arttığı görülüyor. Bu saatlerde
+      art arda birden fazla yoğun/negatif gündem gönderisinde durduğun, sistemin
+      "olası spiral" olarak işaretlediği 4 an oldu. Bu kesin bir duygu okuması değil,
+      davranışsal bir örüntü gözlemi.
+    </p>
+
+    <h3>İyi gidenler</h3>
+    <p>
+      Spor içeriğinde geçirdiğin zamanın büyük kısmı pozitif tonlu gönderilerdeydi
+      ve buralarda "spiral" sinyali hiç tetiklenmedi — ilgi alanın içinde kalman,
+      sistemin seni negatif tetikleyici içerikten uzaklaştırmasını kolaylaştırdı.
+    </p>
+
+    <h3>Nazik bir not</h3>
+    <p>
+      İstersen akşam saatlerinde gündem akışını biraz daha yavaş kaydırmayı
+      deneyebilirsin — bu sadece bir öneri, sistemin seni buna zorlayan bir tarafı
+      yok. Şeffaflık panelinden her gönderi için "neden bunu görüyorsun" açıklamasını
+      her zaman görebilirsin.
+    </p>
+  </div>
+
+  <footer>
+    Skorlar: savasy/bert-base-turkish-sentiment-cased (duygu) + sentetik senaryo
+    verisiyle eğitilmiş lojistik regresyon (spiral tespiti, F1≈0.75).
+    Bu sınıflandırıcı gerçek kullanıcı verisiyle yeniden eğitilmeden üretime
+    alınmamalıdır.
+  </footer>
+</div>
+</body>
+</html>
