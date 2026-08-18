@@ -1,0 +1,187 @@
+:root {
+  --bg: #f7f9f9;
+  --card-bg: #ffffff;
+  --border: #eff3f4;
+  --text: #0f1419;
+  --muted: #536471;
+  --accent: #1d9bf0;
+  --warn-bg: #fff4e5;
+  --warn-border: #ffcc80;
+  --danger: #f4212e;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.sayfa {
+  max-width: 600px;
+  margin: 0 auto;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  min-height: 100vh;
+  background: var(--card-bg);
+}
+
+header.ust-bar {
+  position: sticky;
+  top: 0;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  z-index: 5;
+}
+
+header.ust-bar h1 {
+  font-size: 18px;
+  margin: 0 0 6px;
+}
+
+.spiral-durumu {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spiral-cubuk {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.spiral-dolgu {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.eylemler {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+button.kucuk {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  cursor: pointer;
+}
+
+button.kucuk:hover { background: var(--bg); }
+
+a.rapor-link {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  align-self: center;
+}
+
+.gonderi {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+}
+
+.gonderi .konu-etiket {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--accent);
+  background: #e8f5fe;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+
+.gonderi .metin {
+  font-size: 15px;
+  line-height: 1.4;
+  margin: 4px 0 8px;
+}
+
+.gonderi .alt-satir {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.neden-buton {
+  font-size: 12px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.neden-buton:hover { color: var(--accent); }
+
+.aciklama-paneli {
+  display: none;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.aciklama-paneli.acik { display: block; }
+
+.aciklama-paneli .satir {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  color: var(--muted);
+}
+
+.aciklama-paneli .satir b { color: var(--text); }
+
+.gonderi.yumusatildi {
+  background: var(--warn-bg);
+  border-left: 3px solid var(--warn-border);
+}
+
+footer {
+  padding: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Haftalık rapor sayfası */
+.rapor-govde {
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.rapor-govde h2 { font-size: 20px; }
+.rapor-govde h3 { font-size: 16px; margin-top: 20px; }
+
+.uyari-kutusu {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #7a4a00;
+  margin-bottom: 16px;
+}
+
+.geri-link {
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+}

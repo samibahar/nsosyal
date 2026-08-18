@@ -26,10 +26,12 @@ def _yukle():
 
 def duygu_skoru(metin: str) -> float:
     """-1 (çok negatif) ile +1 (çok pozitif) arasında bir skor döndürür.
-    LABEL_1 = pozitif, LABEL_0 = negatif; model güven skoru yönle çarpılır."""
+    Etiket adı transformers sürümüne göre "positive"/"LABEL_1" gibi değişebildiği
+    için içeriğe göre (alt string eşleşmesi) esnek biçimde yorumlanır."""
     sa = _yukle()
     sonuc = sa(metin, truncation=True)[0]
-    isaret = 1.0 if sonuc["label"] == "LABEL_1" else -1.0
+    etiket = sonuc["label"].lower()
+    isaret = 1.0 if ("pos" in etiket or etiket in ("1", "label_1")) else -1.0
     return isaret * sonuc["score"]
 
 
