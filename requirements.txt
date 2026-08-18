@@ -1,0 +1,24 @@
+# NSosyal İnovasyon Yarışması — Proje Bağımlılıkları
+#
+# Not: spike_poc.py'nin çalışması için hiçbir bağımlılık gerekmez (sadece Python
+# standart kütüphanesi kullanıyor). Aşağıdakiler, "Sırada Ne Var" adımlarına
+# (gerçek BERT modeli, backend, spiral sınıflandırıcı) geçince gerekecek.
+
+# Duygu analizi (gerçek Türkçe BERT modeli)
+torch
+transformers
+
+# Backend / API
+fastapi
+uvicorn[standard]
+
+# Spiral sınıflandırıcı (lojistik regresyon / gradient boosting)
+scikit-learn
+numpy
+pandas
+
+# LLM ile rapor metni üretimi (Claude API)
+anthropic
+
+# Geliştirme kalitesi (opsiyonel ama önerilir)
+python-dotenv
