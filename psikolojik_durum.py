@@ -4,14 +4,18 @@ ikili (spiral var/yok) yaklaşımının, tek bir etkileşim anı için genişlet
 
 Her gönderi görüntüleme/etkileşim anı için 5 sinyalden (gönderinin BERT duygu
 skoru, dwell-time, tıklama, roket atma, yorum atma) bir "olası psikolojik durum"
-kategorisi tahmin ediyoruz: sakin, mutluluk, umut, korku, anksiyete.
+kategorisi tahmin ediyoruz: sakin, mutluluk, umut, sinirli, anksiyete.
 
 ÖNEMLİ SINIRLILIK (raporda dürüstçe belirtilmeli): Bu kategoriler klinik ölçüm
 değil — sadece davranışsal sinyallerden (ne kadar durdu, tıkladı mı, tepki
-verdi mi) türetilmiş OLASI bir örüntü etiketi. "korku" ile "anksiyete" gibi
-yakın durumları ayırt etmenin bilimsel bir üst sınırı var; biz bunu davranış
-örüntüsü (donup pasif izleme vs. tekrarlayan huzursuz kontrol) üzerinden kaba
-biçimde ayırt ediyoruz, gerçek bir duygu okuması iddiasında bulunmuyoruz.
+verdi mi) türetilmiş OLASI bir örüntü etiketi. "sinirli" ile "anksiyete" ikisi
+de negatif duygu içerir ve gerçek dünyada iç içe geçebilir; biz bunu davranış
+örüntüsü (aktif/tepkisel katılım -- roket/yorum sık -- vs. tekrarlayan
+huzursuz-ama-çekingen kontrol) üzerinden kaba biçimde ayırt ediyoruz, gerçek
+bir duygu okuması iddiasında bulunmuyoruz. "sinirli" kategorisi önceki
+"korku" (donup-izleme) tasarımının yerine, 19.08.2026'da davranışsal olarak
+DAHA AYIRT EDİLEBİLİR bir sinyal olduğu için (aktif tepki vs. pasif donma)
+tercih edildi -- bkz. CLAUDE.md.
 "sakin" kategorisi bilinçli olarak eklendi: davranışsal sinyal zayıf/nötr
 olduğunda modelin zorla bir duyguya (örn. anksiyete) yönelmesini önler, "her
 şey bir duygudur" gibi aşırı iddialı bir çıkarımdan kaçınmamızı sağlar.
@@ -48,7 +52,8 @@ Sentetik senaryo mantığı (üretici fonksiyon, spiral_model.py ile aynı ruhta
   - sakin      : düşük dwell, düşük etkileşim, duygu nötre yakın
   - mutluluk   : pozitif duygu + roket/yorum VAR (aktif, olumlu katılım)
   - umut       : pozitif duygu + uzun dwell ama roket/yorum YOK (sessiz takip)
-  - korku      : negatif duygu + uzun dwell + roket/yorum YOK, tıklama YOK (donup izleme)
+  - sinirli    : negatif duygu + roket/yorum VAR (aktif, tepkisel katılım) + kısa-orta
+                 dwell (uzun donup kalmaz, hızlı ve keskin tepki verir)
   - anksiyete  : negatif duygu + KISA ama tekrar eden dwell + düşük ama sıfır
                  olmayan etkileşim (huzursuz, tekrar tekrar kontrol etme hissi)
 """
@@ -58,11 +63,12 @@ import numpy as np
 from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score, classification_report
+from sklearn.preprocessing import StandardScaler
 
 RASTGELE_TOHUM = 7
 rng = np.random.default_rng(RASTGELE_TOHUM)
 
-KATEGORILER = ["sakin", "mutluluk", "umut", "korku", "anksiyete"]
+KATEGORILER = ["sakin", "mutluluk", "umut", "sinirli", "anksiyete"]
 OZELLIK_ADLARI = ["duygu", "dwell_saniye", "tiklama", "roket", "yorum"]
 
 # Kişiselleştirme (online SGD adımları) için öğrenme oranı. NOT: gerçek üretimde
@@ -106,13 +112,13 @@ def _senaryo_uret(n_kategori: int):
              roket=int(rng.random() < 0.1),
              yorum=int(rng.random() < 0.05))
 
-        # korku: negatif duygu + uzun donup-izleme, hiç etkileşim yok
-        ekle("korku",
-             duygu=np.clip(rng.normal(-0.75, 0.2), -1, 1),
-             dwell=max(0.3, rng.gamma(5.0, 2.5)),
-             tiklama=int(rng.random() < 0.03),
-             roket=int(rng.random() < 0.01),
-             yorum=int(rng.random() < 0.01))
+        # sinirli: negatif duygu + aktif/tepkisel katılım (roket/yorum sık), kısa-orta dwell
+        ekle("sinirli",
+             duygu=np.clip(rng.normal(-0.7, 0.2), -1, 1),
+             dwell=max(0.3, rng.gamma(1.8, 1.5)),
+             tiklama=int(rng.random() < 0.35),
+             roket=int(rng.random() < 0.5),
+             yorum=int(rng.random() < 0.45))
 
         # anksiyete: negatif duygu + kısa-tekrarlı dwell, huzursuz düşük etkileşim
         ekle("anksiyete",
@@ -138,16 +144,28 @@ def egit_ve_degerlendir(kategori_basina: int = 500):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.25, random_state=RASTGELE_TOHUM, stratify=y
     )
+    # ÖLÇEKLENDİRME ŞART: dwell_saniye (0-15+ arası) ile duygu (-1..1) ve
+    # roket/yorum/tıklama (0/1) çok farklı büyüklükte -- ölçeklenmeden lineer
+    # modelde dwell baskın çıkıp diğer sinyalleri gölgeliyor (ölçülü test: F1
+    # makro 0.686 -> 0.745, "sinirli" kategorisi eklenince fark edildi/düzeltildi,
+    # 19.08.2026). Ölçekleyici sentetik veriyle bir kez eğitilip DONDURULUYOR --
+    # gerçek etkileşimler de (tahmin ve kişiselleştirme) aynı sabit ölçekle
+    # dönüştürülmeli, yoksa eğitim/çıkarım tutarsız kalır.
+    olcekleyici = StandardScaler().fit(X_train)
+    X_train_olcekli = olcekleyici.transform(X_train)
+    X_test_olcekli = olcekleyici.transform(X_test)
+
     # SGDClassifier(loss="log_loss") = çevrimiçi (partial_fit destekli) lojistik
     # regresyon -- kişiselleştirme (bkz. dosya başı) bunun üzerine kuruluyor.
     # Tam-parti .fit() ile eğitildiğinde LogisticRegression'a denk sonuç verir.
     model = SGDClassifier(loss="log_loss", learning_rate="constant", eta0=KISISEL_ETA0,
                            random_state=RASTGELE_TOHUM, max_iter=1000)
-    model.fit(X_train, y_train)
-    tahmin = model.predict(X_test)
+    model.fit(X_train_olcekli, y_train)
+    tahmin = model.predict(X_test_olcekli)
 
     sonuc = {
         "model": model,
+        "olcekleyici": olcekleyici,
         "dogruluk": accuracy_score(y_test, tahmin),
         "f1_makro": f1_score(y_test, tahmin, average="macro"),
         "rapor": classification_report(y_test, tahmin, target_names=model.classes_),
@@ -157,6 +175,7 @@ def egit_ve_degerlendir(kategori_basina: int = 500):
 
 _EGITIM = egit_ve_degerlendir()
 _VARSAYILAN_MODEL = _EGITIM["model"]  # ASLA değişmez -- karşılaştırma referansı
+_OLCEKLEYICI = _EGITIM["olcekleyici"]  # sabit/dondurulmuş -- her yerde aynı dönüşüm kullanılmalı
 _KATEGORI_DIZISI = np.array(KATEGORILER)
 
 
@@ -170,8 +189,10 @@ def kisisel_guncelle(model, ozellik: list, gercek_kategori: str):
     """Kullanıcının onayladığı GERÇEK kategoriyle modelde tek küçük bir SGD
     adımı atar. KISISEL_ETA0 çok küçük olduğu için tek bir gürültülü/yanlış
     cevap modeli neredeyse hiç etkilemez; tutarlı bir örüntü biriktikçe fark
-    yaratır. `model` parametresi YERİNDE (in-place) güncellenir."""
-    X = np.array([ozellik], dtype=float)
+    yaratır. `model` parametresi YERİNDE (in-place) güncellenir. `ozellik`
+    HAM (ölçeklenmemiş) değerlerdir -- eğitimle tutarlı olması için burada
+    _OLCEKLEYICI ile dönüştürülür."""
+    X = _OLCEKLEYICI.transform(np.array([ozellik], dtype=float))
     y = np.array([gercek_kategori])
     model.partial_fit(X, y, classes=_KATEGORI_DIZISI)
 
@@ -181,7 +202,8 @@ def psikolojik_durum_tahmini(duygu: float, dwell_saniye: float, tiklama: bool,
     """Tek bir etkileşim anı için kategori olasılık dağılımını döndürür.
     `model` verilmezse VARSAYILAN (hiç değişmeyen) model kullanılır."""
     model = model if model is not None else _VARSAYILAN_MODEL
-    X = np.array([[duygu, dwell_saniye, int(tiklama), int(roket), int(yorum)]])
+    X_ham = np.array([[duygu, dwell_saniye, int(tiklama), int(roket), int(yorum)]])
+    X = _OLCEKLEYICI.transform(X_ham)
     olasiliklar = model.predict_proba(X)[0]
     dagilim = {str(kat): round(float(p), 3) for kat, p in zip(model.classes_, olasiliklar)}
     baskin = max(dagilim, key=dagilim.get)
@@ -197,7 +219,7 @@ if __name__ == "__main__":
     print("Örnek tahminler:")
     ornekler = [
         dict(duygu=0.9, dwell_saniye=3, tiklama=True, roket=True, yorum=False),
-        dict(duygu=-0.8, dwell_saniye=12, tiklama=False, roket=False, yorum=False),
+        dict(duygu=-0.75, dwell_saniye=2.5, tiklama=True, roket=True, yorum=True),
         dict(duygu=-0.6, dwell_saniye=2, tiklama=True, roket=False, yorum=False),
         dict(duygu=0.05, dwell_saniye=0.8, tiklama=False, roket=False, yorum=False),
     ]

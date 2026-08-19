@@ -94,7 +94,12 @@ function doygunlukGuncelle(seviye) {
     akisEl.style.filter = "saturate(100%)";
     return;
   }
-  const doygunluk = Math.round(100 - seviye * 45); // en fazla %45 azalma
+  // Düşük seviyelerde (özellikle güven-çarpanının küçük tuttuğu ilk birkaç
+  // etkileşimde) %45'lik eski maksimum gözle neredeyse fark edilmiyordu --
+  // %75'e çıkarıldı (19.08.2026, kullanıcı bildirdi). Eğri de hafifçe
+  // öne yüklendi (seviye^0.7) ki orta seviyelerde de fark edilir olsun,
+  // sadece seviye=1'e çok yaklaşınca değil.
+  const doygunluk = Math.round(100 - Math.pow(seviye, 0.7) * 75);
   akisEl.style.filter = `saturate(${doygunluk}%)`;
 }
 

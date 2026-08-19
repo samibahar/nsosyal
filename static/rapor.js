@@ -5,7 +5,7 @@ const RUH_RENK = {
   sakin: { bg: "var(--ruh-sakin-soft)", fg: "var(--ruh-sakin)" },
   mutluluk: { bg: "var(--ruh-mutluluk-soft)", fg: "var(--ruh-mutluluk)" },
   umut: { bg: "var(--ruh-umut-soft)", fg: "var(--ruh-umut)" },
-  korku: { bg: "var(--ruh-korku-soft)", fg: "var(--ruh-korku)" },
+  sinirli: { bg: "var(--ruh-sinirli-soft)", fg: "var(--ruh-sinirli)" },
   anksiyete: { bg: "var(--ruh-anksiyete-soft)", fg: "var(--ruh-anksiyete)" },
 };
 
@@ -80,19 +80,43 @@ async function dogrulamaOzetiYukle() {
 
 async function llmRaporuYukle() {
   const bolum = document.getElementById("llm-rapor-bolum");
+  const terapistBolum = document.getElementById("terapist-rapor-bolum");
   try {
     const yanit = await fetch("/api/haftalik-rapor");
     const veri = await yanit.json();
     if (!veri.mevcut) {
       bolum.style.display = "none"; // API anahtarı yok -- sabit örneğe düşülüyor
+      terapistBolum.style.display = "none";
       return;
     }
     document.getElementById("llm-rapor-icerik").textContent = veri.metin;
     bolum.style.display = "block";
+    terapistBolum.style.display = "block"; // aynı LLM erişimi varsa bu da kullanılabilir
   } catch (e) {
     bolum.style.display = "none";
+    terapistBolum.style.display = "none";
   }
 }
+
+// --- Terapiste götürülebilecek veri özeti: talep üzerine üretilir (otomatik
+// yüklenmez -- her sayfa açılışında ekstra bir LLM çağrısına gerek yok).
+async function terapistRaporuUret() {
+  const buton = document.getElementById("terapist-rapor-buton");
+  const icerik = document.getElementById("terapist-rapor-icerik");
+  buton.disabled = true;
+  icerik.textContent = "Hazırlanıyor…";
+  try {
+    const yanit = await fetch("/api/terapist-raporu");
+    const veri = await yanit.json();
+    icerik.textContent = veri.mevcut ? veri.metin : "Şu an hazırlanamıyor.";
+  } catch (e) {
+    icerik.textContent = "Şu an hazırlanamıyor.";
+  } finally {
+    buton.disabled = false;
+  }
+}
+
+document.getElementById("terapist-rapor-buton").addEventListener("click", terapistRaporuUret);
 
 canliOzetiYukle();
 dogrulamaOzetiYukle();

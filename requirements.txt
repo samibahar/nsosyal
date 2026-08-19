@@ -20,8 +20,8 @@ scikit-learn
 numpy
 pandas
 
-# LLM ile rapor metni üretimi (Claude API)
-anthropic
+# LLM ile rapor metni üretimi (Gemini API — ücretsiz katman)
+google-genai
 
 # Geliştirme kalitesi (opsiyonel ama önerilir)
 python-dotenv

@@ -42,8 +42,9 @@ SON_ETKILESIMLER: dict[int, dict] = {}  # gonderi_id -> o gönderiye dair BİRLE
 TAM_GUVEN_ESIGI = 8  # spiral oranı bu kadar farklı gönderi görülmeden tam güvenilir sayılmaz
 
 # --- Kendi kendini doğrulama / aktif öğrenme döngüsü ---
-# psikolojik_durum.py'nin davranış->kategori eşlemesi (örn. "uzun donup izleme
-# = korku") sentetik senaryolara dayanıyor, gerçek insan verisine değil. Bunu
+# psikolojik_durum.py'nin davranış->kategori eşlemesi (örn. "negatif duygu +
+# yoğun roket/yorum = sinirli") sentetik senaryolara dayanıyor, gerçek insan
+# verisine değil. Bunu
 # "doğrulanmış" gibi sunmak yerine, kullanıcıya ara sıra hafif bir onay sorusu
 # sorup CEVABINI modelin tahminiyle karşılaştırıyoruz -- gerçek bir dayanak
 # ancak böyle oluşur. Bkz. CLAUDE.md "Kendi Kendini Doğrulayan Aktif Öğrenme".
@@ -317,13 +318,25 @@ def api_psikolojik_ozet():
 @app.get("/api/haftalik-rapor")
 def api_haftalik_rapor():
     """LLM ile gerçek oturum verisinden haftalık öz-farkındalık raporu üretir.
-    ANTHROPIC_API_KEY tanımlı değilse mevcut:False döner -- arayüz zaten var olan
+    GEMINI_API_KEY tanımlı değilse mevcut:False döner -- arayüz zaten var olan
     statik örnek metne düşer, sahte bir LLM çıktısı asla uydurulmaz."""
     if not haftalik_rapor.mevcut():
-        return {"mevcut": False, "sebep": "ANTHROPIC_API_KEY tanımlı değil"}
+        return {"mevcut": False, "sebep": "GEMINI_API_KEY tanımlı değil"}
     psikolojik = api_psikolojik_ozet()
     dogrulama = api_dogrulama_ozet()
     return haftalik_rapor.uret(psikolojik, dogrulama)
+
+
+@app.get("/api/terapist-raporu")
+def api_terapist_raporu():
+    """Kullanıcının isterse bir ruh sağlığı uzmanına götürebileceği, YORUMSUZ
+    ham davranışsal veri özeti -- /api/haftalik-rapor ile aynı veriyi kullanır,
+    farklı (daha nötr, tavsiye vermeyen) bir sistem talimatıyla üretir."""
+    if not haftalik_rapor.mevcut():
+        return {"mevcut": False, "sebep": "GEMINI_API_KEY tanımlı değil"}
+    psikolojik = api_psikolojik_ozet()
+    dogrulama = api_dogrulama_ozet()
+    return haftalik_rapor.uret(psikolojik, dogrulama, hedef="terapist")
 
 
 @app.post("/api/sifirla")
