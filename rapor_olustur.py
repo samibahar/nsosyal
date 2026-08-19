@@ -234,7 +234,7 @@ govde(
     "öz-farkındalık raporu içeren, uçtan uca çalışan bir prototiple desteklenmiştir "
     "(bkz. Bölüm 3-4). NSosyal veya T3 AI'a gerçek bir API erişimi bulunmamaktadır; "
     "sistem bağımsız bir prototip olarak çalışır ve \"önerilen entegrasyon "
-    "konsepti\" olarak sunulur — bu, projenin dürüstlük ilkesi gereği açıkça belirtilir."
+    "konsepti\" olarak sunulur; bu durum, projenin dürüstlük ilkesi gereği açıkça belirtilir."
 )
 
 sayfa_sonu()
@@ -263,8 +263,8 @@ govde(
     "ne zaman \"değersiz\" veya \"güvensiz\" hissettiğini tespit edip bunu reklam "
     "hedeflemesi için bir fırsat olarak sunduğunu haberleştirmiştir [14]. Piyasadaki "
     "mevcut çözümler ise büyük ölçüde iki eksende yetersiz kalmaktadır: (a) şeffaflık "
-    "eksikliği — kullanıcı neden belirli bir içeriği gördüğünü genellikle bilmez; "
-    "(b) refah-körü tasarım — sıralama yalnızca etkileşimi optimize eder, kullanıcının "
+    "eksikliği: kullanıcı neden belirli bir içeriği gördüğünü genellikle bilmez; "
+    "(b) refah-körü tasarım: sıralama yalnızca etkileşimi optimize eder, kullanıcının "
     "o anki duygusal kırılganlığını hiç hesaba katmaz."
 )
 
@@ -273,21 +273,21 @@ govde(
     "Geliştirilen çözüm, iki katmanlı açıklanabilir bir sıralama motorudur: ilgi skoru "
     "(kullanıcının beyan ettiği ilgi alanları) ile refah skoru (olası spiral tespit "
     "edildiğinde AYNI ilgi alanı içinde kalarak daha az tetikleyici içeriğe kayma) "
-    "birleştirilir. Motorun akademik bir emsali vardır — \"Collective Well-Being aware "
+    "birleştirilir. Motorun akademik bir emsali vardır: \"Collective Well-Being aware "
     "Recommendation Systems (CWB-RS)\" kavramı, etkileşim optimizasyonu yerine uzun "
     "vadeli kümülatif refahı maksimize etmeyi önerir [7]; endüstri/politika düzeyinde de "
     "benzer \"insan-öncelikli\" sıralama ilkeleri savunulmaktadır [8]. Özgünlüğün temel "
     "kaynağı KARA KUTU olmayan bir tasarımdır: sinir ağı tabanlı gizli bir puanlama yerine, "
     "her karar (spiral seviyesi, refah cezası, final skor) denetlenebilir, açıklanabilir "
     "modellerle (lojistik regresyon/SGD) üretilir ve şeffaflık panelinde kullanıcıya "
-    "gösterilir. Sistem kasıtlı olarak KONU-NÖTR tasarlanmıştır — siyasi/dini içerik "
+    "gösterilir. Sistem kasıtlı olarak KONU-NÖTR tasarlanmıştır: siyasi/dini içerik "
     "kategorisine göre karar vermez, yalnızca duygusal yoğunluğa bakar; bu, hem etik "
     "açıdan hem de yerli/milli konumlandırılmış bir platform için stratejik olarak önemli "
     "bir tasarım kararıdır. Yerlilik bileşenleri somuttur: (i) NSosyal'in kendisi T3 Vakfı "
     "ve Baykar Teknoloji tarafından geliştirilen yerli bir platformdur; (ii) duygu analizi "
     "için kullanılan temel model Türkçeye özel eğitilmiştir ve bu model, bağımsız "
     "doğrulamada bulunan bir zayıflık (bkz. Bölüm 3.2) üzerine ekibimiz tarafından "
-    "yeniden eğitilerek (fine-tuning) doğruluğu %69,8'den %94,3'e çıkarılmıştır — yani "
+    "yeniden eğitilerek (fine-tuning) doğruluğu %69,8'den %94,3'e çıkarılmıştır; yani "
     "kullanılan yapay zekâ bileşeni yalnızca tüketilen değil, yerel olarak geliştirilen "
     "bir teknik varlıktır; (iii) NSosyal'in mevcut T3 AI bileşeni (otomatik yanıt, çok "
     "dilli yorumlama, filtreleme/moderasyon), duygu-analizi katmanımızın önerilen bir "
@@ -308,11 +308,11 @@ govde(
     "yerel Intersection Observer API'sini kullanan sade bir JavaScript/HTML/CSS "
     "arayüzüdür. Haftalık öz-farkındalık raporu, oturum verisini okunabilir bir metne "
     "çeviren Google Gemini API'si (gemini-3.6-flash) ile üretilir; sağlayıcı seçimi "
-    "bilinçlidir — Gemini'nin kart istemeyen gerçek bir ücretsiz katmanı, açıklanabilirlik "
+    "bilinçlidir: Gemini'nin kart istemeyen gerçek bir ücretsiz katmanı, açıklanabilirlik "
     "ilkesiyle çelişmeyen, sağlayıcıdan bağımsız tasarlanmış bir prompt mimarisiyle "
     "kullanılmaktadır. Proje sürüm kontrolü altında geliştirilmiş, düzenli ve anlamlı "
     "commit'lerle ilerletilmiştir; kaynak kod GitHub üzerinde açık bir depoda "
-    "saklanmaktadır: https://github.com/samibahar/nsosyal — depo commit geçmişiyle "
+    "saklanmaktadır: https://github.com/samibahar/nsosyal. Depo, commit geçmişiyle "
     "geliştirme sürecinin tamamını (ilk prototip aşamasından güncel sürüme kadar) "
     "takip edilebilir kılar."
 )
@@ -325,7 +325,7 @@ govde(
     "üzerinden bağımsız 1000 örneklik bir test setiyle gerçek doğruluk ölçülmüş (%69,8, "
     "F1 0,778) ve alan kayması (domain shift) kaynaklı bu zayıflık, aynı veri setinin "
     "AYRIK bir bölümüyle (veri sızıntısı önlenerek) ~15.000 örnekle yapılan hedefli bir "
-    "ince ayarla düzeltilmiştir (%94,3 doğruluk, F1 0,964 — bağımsız olarak yeniden "
+    "ince ayarla düzeltilmiştir (%94,3 doğruluk, F1 0,964; bağımsız olarak yeniden "
     "ölçülmüştür). Spiral tespiti (olası doomscrolling örüntüsü, ikili sınıflandırma), "
     "senaryo-bazlı sentetik veriyle eğitilmiş bir lojistik regresyon modelidir "
     "(doğruluk 0,714, F1 0,748); altı açıklanabilir özellik (negatif dwell oranı, "
@@ -364,7 +364,7 @@ govde(
     "tasarlanmıştır: her gönderi kartında \"Neden bunu görüyorsun?\" butonuyla açılan bir "
     "şeffaflık paneli, ilgi skoru/refah cezası/final skoru gösterir. \"Tespit edilen "
     "durum\" göstergesi yükseldikçe akışın renk doygunluğu kademeli olarak (kullanıcı "
-    "isteğiyle açılıp kapatılabilir bir anahtarla) azalır — engelleyici değil, fark "
+    "isteğiyle açılıp kapatılabilir bir anahtarla) azalır; bu, engelleyici değil, fark "
     "ettirici bir sinyal olarak tasarlanmıştır. Kullanılabilirlik testleri sırasında "
     "(gerçek kullanım denemeleriyle) birden fazla somut sorun tespit edilip düzeltilmiştir: "
     "aynı gönderiye art arda etkileşim (roket sonra kaydırıp uzaklaşma) önceden sinyali "
@@ -374,7 +374,7 @@ govde(
     "(infinite scroll) ile 150 örnek gönderiye genişletildi. Erişilebilirlik açısından: "
     "tüm renk kodlu göstergeler (spiral seviyesi, kategori barları) aynı zamanda metinsel "
     "etiket taşır (yalnızca renge dayanmaz), ve şeffaflık paneli literatürdeki \"az ama "
-    "net\" ilkesine uygun kısa/öz tutulmuştur — aşırı detaylı açıklamaların kullanıcı "
+    "net\" ilkesine uygun kısa/öz tutulmuştur; aşırı detaylı açıklamaların kullanıcı "
     "güvenini azaltabileceği (\"algorithmic aversion\") bulgusuyla uyumludur [9]."
 )
 
@@ -386,7 +386,7 @@ baslik("UYGULANABİLİRLİK")
 altbaslik("4.1. Verimlilik ve Etkinlik")
 govde(
     "Sistemin sıralama/tespit katmanı bilinçli olarak hafif ve açıklanabilir modeller "
-    "(lojistik regresyon, SGD) üzerine kurulmuştur — büyük dil modelleri düzeyinde "
+    "(lojistik regresyon, SGD) üzerine kurulmuştur; büyük dil modelleri düzeyinde "
     "hesaplama maliyeti taşımaz; yalnızca isteğe bağlı haftalık rapor üretiminde bir LLM "
     "çağrısı kullanılır. Bu, platforma milyonlarca etkileşimde dahi düşük işletme "
     "maliyetiyle ölçeklenebilirlik sağlar. Etkinlik açısından, refah katmanının "
@@ -397,7 +397,7 @@ govde(
 
 altbaslik("4.2. Hedef Kitle")
 govde(
-    "Doğrudan hedef kitle, NSosyal'in ~700 bin'i aşkın aktif kullanıcısıdır — özellikle "
+    "Doğrudan hedef kitle, NSosyal'in ~700 bin'i aşkın aktif kullanıcısıdır; özellikle "
     "gündem/haber içeriğiyle yoğun etkileşime giren, uzun oturumlar geçiren kullanıcı "
     "segmenti. Dolaylı olarak, sistemin ürettiği şeffaflık ve refah verileri içerik "
     "üreticileri (üretici paneli önerisi) ve platform yöneticileri için de değer taşır. "
@@ -451,7 +451,7 @@ altbaslik("6.1. Ticarileştirme Potansiyeli ve İş Modeli")
 govde(
     "NSosyal vakıf tabanlı ve reklamsız bir platform olduğundan klasik reklam gelirine "
     "dayalı bir model zorlanmamıştır; bunun yerine dört tamamlayıcı yön önerilmektedir: "
-    "(i) düşük işletme maliyeti — hafif/açıklanabilir modeller büyük dil modelleri kadar "
+    "(i) düşük işletme maliyeti: hafif/açıklanabilir modeller büyük dil modelleri kadar "
     "pahalı değildir, bu doğrudan bir maliyet avantajına dönüşür; (ii) anonim/toplu "
     "\"dijital refah eğilimleri\" verisiyle üniversite, TÜBİTAK veya ruh sağlığı sivil "
     "toplum kuruluşlarıyla araştırma ortaklığı (kişisel veri paylaşılmadan, yalnızca "
@@ -467,14 +467,14 @@ govde(
     "Finansal sürdürülebilirlik, düşük işletme maliyetli mimari tercihinden "
     "(büyük/pahalı modeller yerine açıklanabilir, hafif sınıflandırıcılar) doğrudan "
     "gelir. Teknik sürdürülebilirlik için, sistemin kişiselleştirme mekanizması "
-    "(SGDClassifier'ın partial_fit özelliğiyle çevrimiçi öğrenme) örnek bir kanıt-of-"
-    "konsept olarak uygulanmış ve dürüstçe sınırları belirtilmiştir. Literatür, davranıştan "
+    "(SGDClassifier'ın partial_fit özelliğiyle çevrimiçi öğrenme) örnek bir prototip "
+    "olarak uygulanmış ve dürüstçe sınırları belirtilmiştir. Literatür, davranıştan "
     "duygu-durumu çıkarımının meşru ama kişiye-özgü kalibrasyon olmadan sınırlı kaldığını "
     "göstermektedir [6]; kişiselleştirme mekanizması tam olarak bu ihtiyaca yönelik bir "
     "ilk adımdır. Demo ortamında "
     "öğrenme adımı görünür olması için kasıtlı büyütülmüştür, gerçek üretimde çok daha "
     "küçük bir adım büyüklüğü ve düzenlileştirme/sınır (clipping) eklenmesi gerektiği "
-    "açıkça not edilmiştir — bu, değişen kullanıcı ihtiyaçlarına zamanla uyum "
+    "açıkça not edilmiştir; bu, değişen kullanıcı ihtiyaçlarına zamanla uyum "
     "sağlayabilecek bir temel sunar. Sosyal sürdürülebilirlik açısından, modelin "
     "sınırlılıkları (sentetik eğitim verisi, klinik doğrulama eksikliği) raporun her "
     "aşamasında dürüstçe belirtilmiş, kendi kendini doğrulama döngüsüyle sistemin "
@@ -499,29 +499,29 @@ govde(
 t_takvim = tablo(
     ["İş Paketi", "Kapsam", "Dönem", "Durum"],
     [
-        ["İP1 — Mimari ve ilk prototip",
+        ["İP1: Mimari ve ilk prototip",
          "İki katmanlı sıralama motoru, spiral/psikolojik model tasarımı, sözlük-tabanlı ilk doğrulama",
          "Ağustos (1. hafta)", "Tamamlandı"],
-        ["İP2 — Gerçek model entegrasyonu",
+        ["İP2: Gerçek model entegrasyonu",
          "BERT entegrasyonu, bağımsız doğrulama, ince ayar, sınıflandırıcı eğitimi",
          "Ağustos (2. hafta)", "Tamamlandı"],
-        ["İP3 — Backend/arayüz ve kullanıcı testi",
+        ["İP3: Backend/arayüz ve kullanıcı testi",
          "FastAPI backend, web arayüzü, kullanılabilirlik testleri ve düzeltmeler",
          "Ağustos (2-3. hafta)", "Tamamlandı"],
-        ["İP4 — Şeffaflık, rapor ve doğrulama döngüsü",
+        ["İP4: Şeffaflık, rapor ve doğrulama döngüsü",
          "LLM destekli haftalık rapor, kendi kendini doğrulama döngüsü, kişiselleştirme",
          "Ağustos (3. hafta)", "Tamamlandı"],
-        ["İP5 — Teknik rapor ve sürüm kontrolü",
+        ["İP5: Teknik rapor ve sürüm kontrolü",
          "Teknik rapor yazımı, GitHub deposunun düzenlenmesi ve teslimi",
          "24 Ağustos 2026'ya kadar", "Tamamlandı"],
-        ["İP6 — Mentörlük geri bildirimlerinin uygulanması",
+        ["İP6: Mentörlük geri bildirimlerinin uygulanması",
          "Mentör önerileri doğrultusunda model/mimari iyileştirmeleri",
          "2-7 Eylül 2026", "Planlandı"],
-        ["İP7 — Kişiye-özgü kalibrasyon ve genişletme",
+        ["İP7: Kişiye-özgü kalibrasyon ve genişletme",
          "Kişiselleştirme mekanizmasının düzenlileştirme ile güçlendirilmesi, gelecek-"
          "vizyonu özelliklerinin (Perspektif Köprüsü vb.) fizibilite çalışması",
          "Eylül (1-2. hafta)", "Planlandı"],
-        ["İP8 — Final sunum ve canlı demo hazırlığı",
+        ["İP8: Final sunum ve canlı demo hazırlığı",
          "Sunum dosyası, kullanıcı senaryoları, canlı demo akışının hazırlanması",
          "14 Eylül 2026'ya kadar", "Planlandı"],
     ],
