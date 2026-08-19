@@ -78,7 +78,34 @@ function spiralGostergesiGuncelle(seviye) {
     : seviye > 0.3
     ? "var(--warn-soft)"
     : "var(--accent-soft)";
+  doygunlukGuncelle(seviye);
 }
+
+// --- Renk doygunluğu azaltma ---
+// spiral_seviyesi zaten (negatif dwell oranı + ortalama duygu + tıklama oranı +
+// kaydırma hızı)'nın eğitilmiş modelle birleştirilmiş TEK hâli -- doygunluğu bu
+// dört sinyali ayrı ayrı tartıp yeniden birleştirmek yerine, zaten güven-çarpanlı
+// bu değere bağlıyoruz. Durum yükseldikçe akış nazikçe soluklaşır (kesin bir
+// sınır/engel değil, fark ettirmeye yönelik yumuşak bir sinyal).
+let doygunlukAktif = true;
+
+function doygunlukGuncelle(seviye) {
+  if (!doygunlukAktif) {
+    akisEl.style.filter = "saturate(100%)";
+    return;
+  }
+  const doygunluk = Math.round(100 - seviye * 45); // en fazla %45 azalma
+  akisEl.style.filter = `saturate(${doygunluk}%)`;
+}
+
+document.getElementById("doygunluk-buton").addEventListener("click", (e) => {
+  doygunlukAktif = !doygunlukAktif;
+  const buton = e.currentTarget;
+  buton.classList.toggle("aktif", doygunlukAktif);
+  document.getElementById("doygunluk-buton-metin").textContent =
+    "Doygunluk azaltma: " + (doygunlukAktif ? "Açık" : "Kapalı");
+  if (!doygunlukAktif) akisEl.style.filter = "saturate(100%)";
+});
 
 async function etkilesimGonder(gonderi_id, dwell_saniye, tiklama = false, roket = false, yorum = false) {
   const acikEylemVar = tiklama || roket || yorum;
