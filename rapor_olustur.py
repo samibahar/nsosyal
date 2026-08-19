@@ -262,37 +262,54 @@ govde(
     "vardır: 2017'de The Australian gazetesi, Facebook'un iç bir belgesinin, gençlerin "
     "ne zaman \"değersiz\" veya \"güvensiz\" hissettiğini tespit edip bunu reklam "
     "hedeflemesi için bir fırsat olarak sunduğunu haberleştirmiştir [14]. Piyasadaki "
-    "mevcut çözümler ise büyük ölçüde iki eksende yetersiz kalmaktadır: (a) şeffaflık "
-    "eksikliği: kullanıcı neden belirli bir içeriği gördüğünü genellikle bilmez; "
-    "(b) refah-körü tasarım: sıralama yalnızca etkileşimi optimize eder, kullanıcının "
-    "o anki duygusal kırılganlığını hiç hesaba katmaz."
+    "mevcut çözümler ise büyük ölçüde iki eksende yetersiz kalmaktadır. Birincisi "
+    "şeffaflık eksikliğidir: kullanıcı neden belirli bir içeriği gördüğünü genellikle "
+    "bilmez. İkincisi refah-körü tasarımdır: sıralama yalnızca etkileşimi optimize eder, "
+    "kullanıcının o anki duygusal kırılganlığını hiç hesaba katmaz."
 )
 
 altbaslik("2.2. Çözüm Fikri, Özgünlük ve Yerlilik")
 govde(
-    "Geliştirilen çözüm, iki katmanlı açıklanabilir bir sıralama motorudur: ilgi skoru "
-    "(kullanıcının beyan ettiği ilgi alanları) ile refah skoru (olası spiral tespit "
-    "edildiğinde AYNI ilgi alanı içinde kalarak daha az tetikleyici içeriğe kayma) "
-    "birleştirilir. Motorun akademik bir emsali vardır: \"Collective Well-Being aware "
+    "Geliştirilen çözüm, iki katmanlı açıklanabilir bir sıralama motorudur. İlgi skoru, "
+    "kullanıcının platformda beyan ettiği ilgi alanlarıyla (örneğin spor, teknoloji, "
+    "gündem) bir gönderinin konusunun ne kadar örtüştüğünü ölçer; klasik bir "
+    "kişiselleştirme sinyali gibi çalışır. Refah skoru ise tamamen farklı bir soruya "
+    "cevap verir: kullanıcı şu anda olası bir \"spiral\" içinde mi? \"Spiral\", "
+    "kullanıcının kısa sürede art arda, olumsuz ve yoğun duygulu içerikte uzun süre "
+    "durup neredeyse hiç aktif tepki vermediği; doomscrolling olarak bilinen davranışa "
+    "benzeyen bir davranışsal örüntüyü tanımlar (bkz. Bölüm 3.2). Bu örüntü, eğitilmiş "
+    "bir sınıflandırıcı tarafından 0 ile 1 arasında bir \"spiral seviyesi\" olarak "
+    "tahmin edilir; seviye yükseldikçe kullanıcının ilgi alanı İÇİNDE kalınarak yalnızca "
+    "daha az tetikleyici içeriğe doğru bir kayma sağlanır, ilgi alanı hiç terk edilmez. "
+    "İlgi skoru ile refah skoru birlikte gönderinin final skorunu oluşturur ve akış bu "
+    "skora göre sıralanır."
+)
+govde(
+    "Motorun akademik bir emsali vardır: \"Collective Well-Being aware "
     "Recommendation Systems (CWB-RS)\" kavramı, etkileşim optimizasyonu yerine uzun "
     "vadeli kümülatif refahı maksimize etmeyi önerir [7]; endüstri/politika düzeyinde de "
     "benzer \"insan-öncelikli\" sıralama ilkeleri savunulmaktadır [8]. Özgünlüğün temel "
-    "kaynağı KARA KUTU olmayan bir tasarımdır: sinir ağı tabanlı gizli bir puanlama yerine, "
-    "her karar (spiral seviyesi, refah cezası, final skor) denetlenebilir, açıklanabilir "
+    "kaynağı, kararların NASIL üretildiğidir. Birçok tavsiye/sıralama sistemi, kendi "
+    "kararını kendisi de tam olarak açıklayamayan büyük ve karmaşık modellere (örneğin "
+    "derin sinir ağlarına) dayanır; bu modeller kullanıcıya yalnızca \"bana güven\" "
+    "diyebilir, \"neden\" sorusuna gerçek bir cevap veremez. Bizim sistemimizde ise her "
+    "karar (spiral seviyesi, refah cezası, final skor) denetlenebilir, açıklanabilir "
     "modellerle (lojistik regresyon/SGD) üretilir ve şeffaflık panelinde kullanıcıya "
-    "gösterilir. Sistem kasıtlı olarak KONU-NÖTR tasarlanmıştır: siyasi/dini içerik "
-    "kategorisine göre karar vermez, yalnızca duygusal yoğunluğa bakar; bu, hem etik "
-    "açıdan hem de yerli/milli konumlandırılmış bir platform için stratejik olarak önemli "
-    "bir tasarım kararıdır. Yerlilik bileşenleri somuttur: (i) NSosyal'in kendisi T3 Vakfı "
-    "ve Baykar Teknoloji tarafından geliştirilen yerli bir platformdur; (ii) duygu analizi "
-    "için kullanılan temel model Türkçeye özel eğitilmiştir ve bu model, bağımsız "
-    "doğrulamada bulunan bir zayıflık (bkz. Bölüm 3.2) üzerine ekibimiz tarafından "
-    "yeniden eğitilerek (fine-tuning) doğruluğu %69,8'den %94,3'e çıkarılmıştır; yani "
-    "kullanılan yapay zekâ bileşeni yalnızca tüketilen değil, yerel olarak geliştirilen "
-    "bir teknik varlıktır; (iii) NSosyal'in mevcut T3 AI bileşeni (otomatik yanıt, çok "
-    "dilli yorumlama, filtreleme/moderasyon), duygu-analizi katmanımızın önerilen bir "
-    "uzantısı olarak konumlandırılmıştır."
+    "gösterilir."
 )
+govde("Yerlilik bileşenleri somuttur:")
+madde([
+    "NSosyal'in kendisi T3 Vakfı ve Baykar Teknoloji tarafından geliştirilen yerli bir "
+    "platformdur.",
+    "Duygu analizi için kullanılan temel model Türkçeye özel eğitilmiştir ve bu model, "
+    "bağımsız doğrulamada bulunan bir zayıflık (bkz. Bölüm 3.2) üzerine ekibimiz "
+    "tarafından yeniden eğitilerek (fine-tuning) doğruluğu %69,8'den %94,3'e "
+    "çıkarılmıştır; yani kullanılan yapay zekâ bileşeni yalnızca tüketilen değil, yerel "
+    "olarak geliştirilen bir teknik varlıktır.",
+    "NSosyal'in mevcut T3 AI bileşeni (otomatik yanıt, çok dilli yorumlama, filtreleme/"
+    "moderasyon), duygu-analizi katmanımızın önerilen bir uzantısı olarak "
+    "konumlandırılmıştır.",
+])
 
 sayfa_sonu()
 
