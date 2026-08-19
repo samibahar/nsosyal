@@ -112,11 +112,20 @@ function dogrulamaGizle() {
 dogrulamaKarti.querySelectorAll(".dogrulama-secenek").forEach((buton) => {
   buton.addEventListener("click", async () => {
     dogrulamaGizle();
-    await fetch("/api/dogrulama", {
+    const yanit = await fetch("/api/dogrulama", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kullanici_cevabi: buton.dataset.kategori }),
     });
+    const veri = await yanit.json();
+    const aktifButon = document.querySelector('.kisisel-secenek[data-aktif="true"]');
+    const acikMi = aktifButon && aktifButon.classList.contains("aktif");
+    const not = document.getElementById("kisisel-not");
+    if (not) {
+      not.textContent = acikMi
+        ? `Kişiselleştirilmiş model, ${veri.kisisel_guncelleme_sayisi} onaya dayanıyor.`
+        : `Kişiselleştirme ${veri.kisisel_guncelleme_sayisi} onay biriktirdi (şu an kapalı).`;
+    }
   });
 });
 
@@ -301,6 +310,25 @@ document.getElementById("yenile-buton").addEventListener("click", ilkYuklemeYap)
 document.getElementById("sifirla-buton").addEventListener("click", async () => {
   await fetch("/api/sifirla", { method: "POST" });
   ilkYuklemeYap();
+});
+
+// --- Varsayılan / Kişiselleştirilmiş model anahtarı ---
+// Kişiselleştirme, kullanıcının doğrulama cevaplarıyla KISISEL_MODEL'i (ayrı
+// bir kopya) yavaşça günceller; varsayılan model hiç değişmez. Bu anahtar,
+// aynı oturumdaki gönderi geçmişini SEÇİLEN modelle yeniden skorlatıp iki
+// hâli karşılaştırmayı sağlıyor.
+document.querySelectorAll(".kisisel-secenek").forEach((buton) => {
+  buton.addEventListener("click", async () => {
+    const aktif = buton.dataset.aktif === "true";
+    document.querySelectorAll(".kisisel-secenek").forEach((b) => b.classList.toggle("aktif", b === buton));
+    const yanit = await fetch(`/api/kisisel-mod?aktif=${aktif}`, { method: "POST" });
+    const veri = await yanit.json();
+    ruhHaliGuncelle(veri.psikolojik_durum);
+    const sayi = veri.kisisel_guncelleme_sayisi;
+    document.getElementById("kisisel-not").textContent = aktif
+      ? `Kişiselleştirilmiş model, ${sayi} onaya dayanıyor.`
+      : `Kişiselleştirme ${sayi} onay biriktirdi (şu an kapalı).`;
+  });
 });
 
 ilkYuklemeYap();

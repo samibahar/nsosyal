@@ -19,7 +19,9 @@ from pydantic import BaseModel
 
 from motor import gonderileri_puanla, sirala, spiral_olasiligi
 from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
-from psikolojik_durum import psikolojik_durum_tahmini, KATEGORILER
+from psikolojik_durum import (
+    psikolojik_durum_tahmini, KATEGORILER, kisisel_model_olustur, kisisel_guncelle,
+)
 
 app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Kanıt-of-Konsept")
 
@@ -47,6 +49,15 @@ TAM_GUVEN_ESIGI = 8  # spiral oranı bu kadar farklı gönderi görülmeden tam 
 DOGRULAMA_GUNLUGU: list[dict] = []
 DOGRULAMA_ARALIGI = 8  # bu kadar etkileşimde bir onay sorusu göster
 SAYAC = {"son_dogrulamadan_beri": 0}
+
+# --- Kişiselleştirme (çevrimiçi/online öğrenme) ---
+# _VARSAYILAN_MODEL (psikolojik_durum.py içinde) hiç değişmez. KISISEL_MODEL,
+# her doğrulama cevabından sonra küçük bir SGD adımıyla güncellenen bağımsız
+# bir kopya. Arayüzdeki anahtar, hangisinin akışa yansıdığını seçer.
+KISISEL_MODEL = kisisel_model_olustur()
+KISISEL_MOD = {"aktif": False}
+KISISEL_GUNCELLEME_SAYISI = {"deger": 0}
+SON_HAM_OZELLIK = {"deger": None}  # en son etkileşimin [duygu, dwell, tiklama, roket, yorum] hâli
 
 
 class Etkilesim(BaseModel):
@@ -96,6 +107,12 @@ def _katki_agirligi(sinyal: dict) -> float:
     if sinyal["tiklama"] or sinyal["roket"] or sinyal["yorum"]:
         return 1.0
     return min(1.0, max(0.15, sinyal["dwell_saniye"] / 4.0))
+
+
+def _aktif_model():
+    """Arayüzdeki anahtara göre hangi modelin (varsayılan/kişisel) akışa
+    yansıyacağını döndürür. None -> psikolojik_durum_tahmini VARSAYILANI kullanır."""
+    return KISISEL_MODEL if KISISEL_MOD["aktif"] else None
 
 
 def _oturum_ortalamasi(gunluk: list[dict]) -> dict:
@@ -165,17 +182,24 @@ def api_etkilesim(e: Etkilesim):
     spiral = ham_spiral * _guven_carpani(len(DAVRANIS_GUNLUGU))
 
     gonderi = GONDERI_BY_ID.get(e.gonderi_id)
+    duygu = gonderi["duygu"] if gonderi else 0.0
+    ozellik = [duygu, birlesik["dwell_saniye"], int(birlesik["tiklama"]),
+               int(birlesik["roket"]), int(birlesik["yorum"])]
+    SON_HAM_OZELLIK["deger"] = ozellik
+
     tekil_psikolojik = psikolojik_durum_tahmini(
-        duygu=gonderi["duygu"] if gonderi else 0.0,
+        duygu=duygu,
         dwell_saniye=birlesik["dwell_saniye"],
         tiklama=birlesik["tiklama"],
         roket=birlesik["roket"],
         yorum=birlesik["yorum"],
+        model=_aktif_model(),
     )
     _gonderi_bazinda_yerine_koy(PSIKOLOJIK_GUNLUK, e.gonderi_id, {
         "gonderi_id": e.gonderi_id,
         "saat": datetime.now().hour,
         "konu": gonderi["konu"] if gonderi else "bilinmiyor",
+        "ozellik": ozellik,                              # anahtar değişince yeniden hesaplamak için
         "kategori": tekil_psikolojik["kategori"],       # özet istatistikleri için tekil olay
         "olasiliklar": tekil_psikolojik["olasiliklar"],  # oturum ortalaması için
         "agirlik": _katki_agirligi(birlesik),
@@ -209,7 +233,41 @@ def api_dogrulama_ekle(c: DogrulamaCevabi):
         "kullanici_cevabi": c.kullanici_cevabi,
         "eslesme": eslesme,
     })
-    return {"ok": True, "eslesme": eslesme, "model_tahmini": model_durumu["kategori"]}
+
+    # Kişiselleştirme: kullanıcının onayladığı GERÇEK kategoriyle, en son
+    # etkileşimin özelliği üzerinden KISISEL_MODEL'de tek küçük bir adım at.
+    # _VARSAYILAN_MODEL bundan hiç etkilenmez.
+    if SON_HAM_OZELLIK["deger"] is not None:
+        kisisel_guncelle(KISISEL_MODEL, SON_HAM_OZELLIK["deger"], c.kullanici_cevabi)
+        KISISEL_GUNCELLEME_SAYISI["deger"] += 1
+
+    return {
+        "ok": True,
+        "eslesme": eslesme,
+        "model_tahmini": model_durumu["kategori"],
+        "kisisel_guncelleme_sayisi": KISISEL_GUNCELLEME_SAYISI["deger"],
+    }
+
+
+@app.post("/api/kisisel-mod")
+def api_kisisel_mod(aktif: bool):
+    """Arayüzdeki 'Varsayılan / Kişiselleştirilmiş' anahtarı. Geçmiş oturum
+    kayıtlarını SEÇİLEN modelle yeniden skorlayıp güncel ortalamayı döndürür
+    -- kullanıcı iki modeli aynı oturumda karşılaştırabilsin diye."""
+    KISISEL_MOD["aktif"] = aktif
+    model = _aktif_model()
+    for kayit in PSIKOLOJIK_GUNLUK:
+        if "ozellik" not in kayit:
+            continue
+        duygu, dwell, tiklama, roket, yorum = kayit["ozellik"]
+        yeniden = psikolojik_durum_tahmini(duygu, dwell, bool(tiklama), bool(roket), bool(yorum), model=model)
+        kayit["kategori"] = yeniden["kategori"]
+        kayit["olasiliklar"] = yeniden["olasiliklar"]
+    return {
+        "aktif": KISISEL_MOD["aktif"],
+        "kisisel_guncelleme_sayisi": KISISEL_GUNCELLEME_SAYISI["deger"],
+        "psikolojik_durum": _oturum_ortalamasi(PSIKOLOJIK_GUNLUK),
+    }
 
 
 @app.get("/api/dogrulama-ozet")
@@ -221,6 +279,8 @@ def api_dogrulama_ozet():
         "eslesen": eslesen,
         "eslesme_orani": round(eslesen / toplam, 3) if toplam else None,
         "son_kayitlar": DOGRULAMA_GUNLUGU[-10:],
+        "kisisel_guncelleme_sayisi": KISISEL_GUNCELLEME_SAYISI["deger"],
+        "kisisel_mod_aktif": KISISEL_MOD["aktif"],
     }
 
 
@@ -255,12 +315,17 @@ def api_psikolojik_ozet():
 
 @app.post("/api/sifirla")
 def api_sifirla():
+    global KISISEL_MODEL
     DAVRANIS_GUNLUGU.clear()
     PSIKOLOJIK_GUNLUK.clear()
     GOSTERILEN_ID_SETI.clear()
     SON_ETKILESIMLER.clear()
     DOGRULAMA_GUNLUGU.clear()
     SAYAC["son_dogrulamadan_beri"] = 0
+    KISISEL_MODEL = kisisel_model_olustur()
+    KISISEL_MOD["aktif"] = False
+    KISISEL_GUNCELLEME_SAYISI["deger"] = 0
+    SON_HAM_OZELLIK["deger"] = None
     return {"ok": True}
 
 

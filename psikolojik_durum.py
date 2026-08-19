@@ -34,6 +34,16 @@ DAYANAK (bu bir "kanıtlanmış model" değil, iki bacaklı bir yaklaşım):
      oranı /api/dogrulama-ozet üzerinden şeffafça raporlanır. Modelin gerçek
      performansı budur -- iddia değil, ölçüm.
 
+KİŞİSELLEŞTİRME (çevrimiçi/online öğrenme, isteğe bağlı): _VARSAYILAN_MODEL
+hiç değişmeyen, sabit bir kopyadır. Backend ayrıca her kullanıcı için bir
+_KISISEL kopya tutabilir ve her doğrulama cevabından sonra kisisel_guncelle()
+ile bu kopyada TEK KÜÇÜK bir SGD adımı atılır (eta0 çok küçük olduğu için tek
+bir gürültülü/yanlış cevap modeli neredeyse hiç etkilemez, ama tutarlı bir
+örüntü zamanla birikip fark yaratır). Bu, gerçek uzun-vadeli, çok-kullanıcılı
+bir kişiselleştirme iddiası DEĞİL -- tek bir demo oturumunda bile MEKANİZMANIN
+çalıştığını göstermek için arayüzdeki "Varsayılan / Kişiselleştirilmiş" anahtarı
+ile karşılaştırılabilir hale getirildi.
+
 Sentetik senaryo mantığı (üretici fonksiyon, spiral_model.py ile aynı ruhta):
   - sakin      : düşük dwell, düşük etkileşim, duygu nötre yakın
   - mutluluk   : pozitif duygu + roket/yorum VAR (aktif, olumlu katılım)
@@ -42,8 +52,10 @@ Sentetik senaryo mantığı (üretici fonksiyon, spiral_model.py ile aynı ruhta
   - anksiyete  : negatif duygu + KISA ama tekrar eden dwell + düşük ama sıfır
                  olmayan etkileşim (huzursuz, tekrar tekrar kontrol etme hissi)
 """
+import copy
+
 import numpy as np
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score, classification_report
 
@@ -52,6 +64,13 @@ rng = np.random.default_rng(RASTGELE_TOHUM)
 
 KATEGORILER = ["sakin", "mutluluk", "umut", "korku", "anksiyete"]
 OZELLIK_ADLARI = ["duygu", "dwell_saniye", "tiklama", "roket", "yorum"]
+
+# Kişiselleştirme (online SGD adımları) için öğrenme oranı. NOT: gerçek üretimde
+# (binlerce kullanıcı, aylarca veri) bu çok daha küçük olurdu (örn. 0.0005) --
+# burada, bir demo OTURUMUNDA az sayıda onayla bile mekanizmanın görünür şekilde
+# çalıştığını gösterebilmek için kasıtlı olarak büyütüldü. Bu bir "gerçek
+# kişiselleştirme kalibrasyonu" iddiası değil, mekanizmanın kanıt-of-konseptidir.
+KISISEL_ETA0 = 0.12
 
 
 def _senaryo_uret(n_kategori: int):
@@ -119,7 +138,11 @@ def egit_ve_degerlendir(kategori_basina: int = 500):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.25, random_state=RASTGELE_TOHUM, stratify=y
     )
-    model = LogisticRegression(max_iter=2000)  # >2 sınıf + lbfgs -> otomatik multinomial (softmax)
+    # SGDClassifier(loss="log_loss") = çevrimiçi (partial_fit destekli) lojistik
+    # regresyon -- kişiselleştirme (bkz. dosya başı) bunun üzerine kuruluyor.
+    # Tam-parti .fit() ile eğitildiğinde LogisticRegression'a denk sonuç verir.
+    model = SGDClassifier(loss="log_loss", learning_rate="constant", eta0=KISISEL_ETA0,
+                           random_state=RASTGELE_TOHUM, max_iter=1000)
     model.fit(X_train, y_train)
     tahmin = model.predict(X_test)
 
@@ -133,15 +156,34 @@ def egit_ve_degerlendir(kategori_basina: int = 500):
 
 
 _EGITIM = egit_ve_degerlendir()
-_MODEL = _EGITIM["model"]
+_VARSAYILAN_MODEL = _EGITIM["model"]  # ASLA değişmez -- karşılaştırma referansı
+_KATEGORI_DIZISI = np.array(KATEGORILER)
+
+
+def kisisel_model_olustur():
+    """Varsayılan modelin bağımsız bir kopyasını döndürür -- bu kopya
+    kisisel_guncelle() ile zamanla varsayılandan sapabilir."""
+    return copy.deepcopy(_VARSAYILAN_MODEL)
+
+
+def kisisel_guncelle(model, ozellik: list, gercek_kategori: str):
+    """Kullanıcının onayladığı GERÇEK kategoriyle modelde tek küçük bir SGD
+    adımı atar. KISISEL_ETA0 çok küçük olduğu için tek bir gürültülü/yanlış
+    cevap modeli neredeyse hiç etkilemez; tutarlı bir örüntü biriktikçe fark
+    yaratır. `model` parametresi YERİNDE (in-place) güncellenir."""
+    X = np.array([ozellik], dtype=float)
+    y = np.array([gercek_kategori])
+    model.partial_fit(X, y, classes=_KATEGORI_DIZISI)
 
 
 def psikolojik_durum_tahmini(duygu: float, dwell_saniye: float, tiklama: bool,
-                               roket: bool = False, yorum: bool = False) -> dict:
-    """Tek bir etkileşim anı için kategori olasılık dağılımını döndürür."""
+                               roket: bool = False, yorum: bool = False, model=None) -> dict:
+    """Tek bir etkileşim anı için kategori olasılık dağılımını döndürür.
+    `model` verilmezse VARSAYILAN (hiç değişmeyen) model kullanılır."""
+    model = model if model is not None else _VARSAYILAN_MODEL
     X = np.array([[duygu, dwell_saniye, int(tiklama), int(roket), int(yorum)]])
-    olasiliklar = _MODEL.predict_proba(X)[0]
-    dagilim = {str(kat): round(float(p), 3) for kat, p in zip(_MODEL.classes_, olasiliklar)}
+    olasiliklar = model.predict_proba(X)[0]
+    dagilim = {str(kat): round(float(p), 3) for kat, p in zip(model.classes_, olasiliklar)}
     baskin = max(dagilim, key=dagilim.get)
     return {"kategori": baskin, "olasiliklar": dagilim}
 
