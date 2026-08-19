@@ -7,20 +7,36 @@ katmanı, spiral tespiti) değişmeden çalışsın.
 Model ikili (pozitif/negatif) sınıflandırma yapıyor, nötr sınıfı yok — bu yüzden
 nötr/duygu içermeyen cümlelerde bile model bir yöne (zayıf bir güven skoruyla)
 karar veriyor. Bu, gerçek sürümde raporda dürüstçe belirtilmesi gereken bir
-sınırlılık (savasy modelinin kendi kart bilgisine göre %95.4 doğruluk).
+sınırlılık (savasy modelinin kendi kart bilgisine göre %95.4 doğruluk; bizim
+dogrulama.py ile ölçtüğümüz bağımsız doğruluk %69.8 -- bkz. CLAUDE.md).
+
+İNCE AYARLI MODEL: ince_ayar.py, alan kayması sorununu azaltmak için bu modeli
+winvoker veri setiyle devam ederek eğitip models/bert-turkish-sentiment-ince-ayarli/
+klasörüne kaydediyor. Bu modül önce o yerel klasörü dener, yoksa (henüz eğitim
+bitmediyse ya da hiç çalıştırılmadıysa) orijinal HF Hub modeline düşer -- yani
+fine-tuning bitmeden de, bittikten sonra da kod değişikliği gerekmeden çalışır.
 """
+from pathlib import Path
+
 from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
 
-_MODEL_ADI = "savasy/bert-base-turkish-sentiment-cased"
+_MODEL_ADI_ORIJINAL = "savasy/bert-base-turkish-sentiment-cased"
+_INCE_AYARLI_DIZIN = Path(__file__).resolve().parent / "models" / "bert-turkish-sentiment-ince-ayarli"
 _pipeline = None
+_kullanilan_model = None
 
 
 def _yukle():
-    global _pipeline
+    global _pipeline, _kullanilan_model
     if _pipeline is None:
-        model = AutoModelForSequenceClassification.from_pretrained(_MODEL_ADI)
-        tokenizer = AutoTokenizer.from_pretrained(_MODEL_ADI)
+        if _INCE_AYARLI_DIZIN.exists():
+            kaynak = str(_INCE_AYARLI_DIZIN)
+        else:
+            kaynak = _MODEL_ADI_ORIJINAL
+        model = AutoModelForSequenceClassification.from_pretrained(kaynak)
+        tokenizer = AutoTokenizer.from_pretrained(kaynak)
         _pipeline = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
+        _kullanilan_model = kaynak
     return _pipeline
 
 
@@ -44,6 +60,7 @@ if __name__ == "__main__":
         "Antrenman sonrası oyuncular keyifli bir sohbet yaptı.",
         "Tutuklama haberi sonrası sosyal medyada büyük kaygı oluştu.",
     ]
-    print(f"Model yükleniyor: {_MODEL_ADI}\n")
+    duygu_skoru("ısınma")  # _yukle() tetiklenip _kullanilan_model doldurulsun
+    print(f"Kullanılan model: {_kullanilan_model}\n")
     for m in ornekler:
         print(f"{duygu_skoru(m):+.3f}  <- {m}")

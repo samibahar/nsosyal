@@ -1,7 +1,9 @@
 """
-Demo akışı için örnek gönderi havuzu — 10 konu, konu başına 5 gönderi (50 toplam),
-karışık duygu tonlarıyla (pozitif/negatif/nötr). Gerçek kullanıcı/olay adı
-geçmiyor; tüm metinler betimsel/anonim örnek içerik (CLAUDE.md kuralına uygun).
+Demo akışı için örnek gönderi havuzu — 10 konu, konu başına 15 gönderi (150
+toplam), karışık duygu tonlarıyla (pozitif/negatif/nötr). Gerçek kullanıcı/olay
+adı geçmiyor; tüm metinler betimsel/anonim örnek içerik (CLAUDE.md kuralına
+uygun). Sayı, infinite-scroll sayfalamasının (SAYFA_BOYU=12) birkaç sayfa
+boyunca gerçekten anlamlı kalması için 50'den 150'ye çıkarıldı.
 """
 
 ORNEK_GONDERILER = [
@@ -11,6 +13,16 @@ ORNEK_GONDERILER = [
     {"id": 3, "konu": "spor", "metin": "Transfer draması yüzünden taraftarlar arasında büyük öfke var."},
     {"id": 4, "konu": "spor", "metin": "Yarın akşamki maçın bilet satışları bugün başladı."},
     {"id": 5, "konu": "spor", "metin": "Sakatlık haberi sonrası taraftarlar endişeli bekleyişte."},
+    {"id": 51, "konu": "spor", "metin": "Şampiyonluk kutlamaları sokaklara taştı."},
+    {"id": 52, "konu": "spor", "metin": "Genç yeteneğin performansı büyük övgü topladı."},
+    {"id": 53, "konu": "spor", "metin": "Hakem kararları yine tartışma yarattı."},
+    {"id": 54, "konu": "spor", "metin": "Teknik direktörün istifa kararı şaşkınlık yarattı."},
+    {"id": 55, "konu": "spor", "metin": "Deplasman galibiyeti moralleri yükseltti."},
+    {"id": 56, "konu": "spor", "metin": "Kulüp tarihinin en kötü sezonu yaşanıyor."},
+    {"id": 57, "konu": "spor", "metin": "Yeni transferle ilgili imzalar tamamlandı."},
+    {"id": 58, "konu": "spor", "metin": "Taraftarlar tribünde dev bir koreografi hazırladı."},
+    {"id": 59, "konu": "spor", "metin": "Sakatlık listesi her geçen hafta uzuyor."},
+    {"id": 60, "konu": "spor", "metin": "Genç futbolcu milli takıma ilk kez çağrıldı."},
 
     # --- gundem ---
     {"id": 6, "konu": "gundem", "metin": "Mahkeme, savaş suçlarından idam cezasına mahkum etti."},
@@ -18,6 +30,16 @@ ORNEK_GONDERILER = [
     {"id": 8, "konu": "gundem", "metin": "Tutuklama haberi sonrası sosyal medyada büyük kaygı oluştu."},
     {"id": 9, "konu": "gundem", "metin": "Deprem sonrası bölgede büyük yıkım ve can kaybı yaşandı."},
     {"id": 10, "konu": "gundem", "metin": "Yeni düzenleme meclis gündemine alındı."},
+    {"id": 61, "konu": "gundem", "metin": "Trafik kazasında can kaybı yaşandı."},
+    {"id": 62, "konu": "gundem", "metin": "Yeni kanun teklifi mecliste kabul edildi."},
+    {"id": 63, "konu": "gundem", "metin": "Seçim sonuçları geç saatlerde belli oldu."},
+    {"id": 64, "konu": "gundem", "metin": "Kentte su kesintisi vatandaşları zor durumda bıraktı."},
+    {"id": 65, "konu": "gundem", "metin": "Belediye yeni bir sosyal yardım programı başlattı."},
+    {"id": 66, "konu": "gundem", "metin": "Protesto gösterisi sakin bir şekilde sona erdi."},
+    {"id": 67, "konu": "gundem", "metin": "Yangın söndürme çalışmaları saatlerce sürdü."},
+    {"id": 68, "konu": "gundem", "metin": "Yeni düzenlemeyle esnafa vergi kolaylığı sağlandı."},
+    {"id": 69, "konu": "gundem", "metin": "Sel felaketi bölgede büyük hasara yol açtı."},
+    {"id": 70, "konu": "gundem", "metin": "Toplum yararına yeni bir proje tanıtıldı."},
 
     # --- teknoloji ---
     {"id": 11, "konu": "teknoloji", "metin": "Yeni yapay zekâ modeli beklentilerin çok üzerinde başarı gösterdi."},
@@ -25,6 +47,16 @@ ORNEK_GONDERILER = [
     {"id": 13, "konu": "teknoloji", "metin": "Büyük bir veri sızıntısı milyonlarca kullanıcıyı etkiledi."},
     {"id": 14, "konu": "teknoloji", "metin": "Açık kaynak topluluğu yeni bir iş birliğiyle heyecanlandı."},
     {"id": 15, "konu": "teknoloji", "metin": "Sunucu çökmesi nedeniyle uygulama saatlerce erişilemez oldu."},
+    {"id": 71, "konu": "teknoloji", "metin": "Yeni işletim sistemi güncellemesi kullanıcılardan tam not aldı."},
+    {"id": 72, "konu": "teknoloji", "metin": "Siber saldırı sonrası şirket kullanıcı verilerini kaybetti."},
+    {"id": 73, "konu": "teknoloji", "metin": "Yerli teknoloji girişimi yurt dışından yatırım aldı."},
+    {"id": 74, "konu": "teknoloji", "metin": "Akıllı saatlerde pil sorunu şikayet konusu oldu."},
+    {"id": 75, "konu": "teknoloji", "metin": "Yapay zekâ destekli çeviri aracı büyük ilgi gördü."},
+    {"id": 76, "konu": "teknoloji", "metin": "Uygulama mağazasında sahte uygulamalar tespit edildi."},
+    {"id": 77, "konu": "teknoloji", "metin": "5G altyapısı yeni şehirlere genişletildi."},
+    {"id": 78, "konu": "teknoloji", "metin": "Oyuncular yeni grafik kartından hayal kırıklığına uğradı."},
+    {"id": 79, "konu": "teknoloji", "metin": "Girişim, ilk yapay zekâ çipini tanıttı."},
+    {"id": 80, "konu": "teknoloji", "metin": "Kullanıcı gizliliği ihlali nedeniyle şirkete soruşturma açıldı."},
 
     # --- bilim ---
     {"id": 16, "konu": "bilim", "metin": "Araştırmacılar yeni bir gezegen keşfetti, bilim dünyası heyecanlı."},
@@ -32,6 +64,16 @@ ORNEK_GONDERILER = [
     {"id": 18, "konu": "bilim", "metin": "İklim raporunda endişe verici veriler paylaşıldı."},
     {"id": 19, "konu": "bilim", "metin": "Üniversitede yeni bir laboratuvarın açılışı yapıldı."},
     {"id": 20, "konu": "bilim", "metin": "Bilim insanları küresel ısınmanın hızlandığı konusunda uyardı."},
+    {"id": 81, "konu": "bilim", "metin": "Yeni bir aşı adayı klinik denemelere geçti."},
+    {"id": 82, "konu": "bilim", "metin": "Deniz seviyesindeki yükseliş bilim insanlarını endişelendiriyor."},
+    {"id": 83, "konu": "bilim", "metin": "Kanser tedavisinde yeni bir yöntem geliştirildi."},
+    {"id": 84, "konu": "bilim", "metin": "Uzay teleskobu çarpıcı yeni görüntüler paylaştı."},
+    {"id": 85, "konu": "bilim", "metin": "Araştırmada beklenmedik bir yan etki tespit edildi."},
+    {"id": 86, "konu": "bilim", "metin": "Genç bilim insanı uluslararası ödül kazandı."},
+    {"id": 87, "konu": "bilim", "metin": "Antibiyotiğe dirençli bakteriler uzmanları alarma geçirdi."},
+    {"id": 88, "konu": "bilim", "metin": "Yapay zekâ, yeni bir malzeme keşfinde kullanıldı."},
+    {"id": 89, "konu": "bilim", "metin": "Bilim insanları nadir bir tür keşfetti."},
+    {"id": 90, "konu": "bilim", "metin": "İklim modeli, önceki tahminlerden daha kötü bir tablo çizdi."},
 
     # --- saglik ---
     {"id": 21, "konu": "saglik", "metin": "Düzenli yürüyüşün ruh sağlığına faydaları bir kez daha kanıtlandı."},
@@ -39,6 +81,16 @@ ORNEK_GONDERILER = [
     {"id": 23, "konu": "saglik", "metin": "Yeni tedavi yöntemi hastalar için umut oldu."},
     {"id": 24, "konu": "saglik", "metin": "Uzmanlar mevsimsel gribe karşı vatandaşları uyardı."},
     {"id": 25, "konu": "saglik", "metin": "Sağlıklı beslenme üzerine yeni bir rehber yayımlandı."},
+    {"id": 91, "konu": "saglik", "metin": "Aşırı ekran süresinin uyku kalitesini bozduğu belirlendi."},
+    {"id": 92, "konu": "saglik", "metin": "Yeni bir diyet trendi uzmanlar tarafından eleştirildi."},
+    {"id": 93, "konu": "saglik", "metin": "Hastane bekleme süreleri kısaltıldı."},
+    {"id": 94, "konu": "saglik", "metin": "Sigara kullanımında son yılların en düşük oranı kaydedildi."},
+    {"id": 95, "konu": "saglik", "metin": "İlaç fiyatlarındaki artış hastaları zor durumda bıraktı."},
+    {"id": 96, "konu": "saglik", "metin": "Düzenli uyku, bağışıklık sistemini güçlendiriyor."},
+    {"id": 97, "konu": "saglik", "metin": "Aşı karşıtlığı salgın riskini artırıyor."},
+    {"id": 98, "konu": "saglik", "metin": "Yeni bir tarama testi erken teşhiste umut verdi."},
+    {"id": 99, "konu": "saglik", "metin": "Ruh sağlığı hizmetlerine erişim hâlâ yetersiz."},
+    {"id": 100, "konu": "saglik", "metin": "Egzersizin kronik ağrıyı azalttığı doğrulandı."},
 
     # --- ekonomi ---
     {"id": 26, "konu": "ekonomi", "metin": "Piyasalarda bugün sert bir düşüş yaşandı, yatırımcılar endişeli."},
@@ -46,6 +98,16 @@ ORNEK_GONDERILER = [
     {"id": 28, "konu": "ekonomi", "metin": "Enflasyon rakamları açıklandı, tartışmalar sürüyor."},
     {"id": 29, "konu": "ekonomi", "metin": "Küçük işletmelere yönelik yeni bir destek paketi duyuruldu."},
     {"id": 30, "konu": "ekonomi", "metin": "Döviz kurundaki oynaklık esnafı zor durumda bırakıyor."},
+    {"id": 101, "konu": "ekonomi", "metin": "Merkez bankası faiz kararını açıkladı."},
+    {"id": 102, "konu": "ekonomi", "metin": "İşsizlik oranında hafif bir düşüş kaydedildi."},
+    {"id": 103, "konu": "ekonomi", "metin": "Yeni vergi düzenlemesi esnaf arasında tartışma yarattı."},
+    {"id": 104, "konu": "ekonomi", "metin": "Borsa güne yükselişle başladı."},
+    {"id": 105, "konu": "ekonomi", "metin": "Kira artışları kiracıları çıkmaza soktu."},
+    {"id": 106, "konu": "ekonomi", "metin": "İhracat rakamları beklentileri aştı."},
+    {"id": 107, "konu": "ekonomi", "metin": "Küçük tasarruf sahipleri için yeni bir ürün duyuruldu."},
+    {"id": 108, "konu": "ekonomi", "metin": "Tedarik zincirindeki aksaklık fiyatları etkiledi."},
+    {"id": 109, "konu": "ekonomi", "metin": "Genç girişimciler için hibe programı açıklandı."},
+    {"id": 110, "konu": "ekonomi", "metin": "Emtia fiyatlarındaki dalgalanma piyasaları tedirgin ediyor."},
 
     # --- sanat ---
     {"id": 31, "konu": "sanat", "metin": "Yeni sergi büyük beğeni topladı, ziyaretçi sayısı rekor kırdı."},
@@ -53,6 +115,16 @@ ORNEK_GONDERILER = [
     {"id": 33, "konu": "sanat", "metin": "Festival programı bu yıl daha da genişledi."},
     {"id": 34, "konu": "sanat", "metin": "Bir müzenin bütçe kesintisiyle kapanma riski tartışılıyor."},
     {"id": 35, "konu": "sanat", "metin": "Genç sanatçılar için yeni bir destek programı başladı."},
+    {"id": 111, "konu": "sanat", "metin": "Uluslararası film festivali başvuruları başladı."},
+    {"id": 112, "konu": "sanat", "metin": "Ünlü bir yazarın yeni romanı raflardaki yerini aldı."},
+    {"id": 113, "konu": "sanat", "metin": "Sokak sanatçıları şehri renklendirdi."},
+    {"id": 114, "konu": "sanat", "metin": "Bir heykelin çalınması sanat çevrelerinde tepki topladı."},
+    {"id": 115, "konu": "sanat", "metin": "Genç bir yönetmenin ilk filmi ödül kazandı."},
+    {"id": 116, "konu": "sanat", "metin": "Tiyatro salonlarına yenileri eklendi."},
+    {"id": 117, "konu": "sanat", "metin": "Bir koleksiyonun müzayedede rekor fiyata satıldığı açıklandı."},
+    {"id": 118, "konu": "sanat", "metin": "Yerel sanatçılar için ücretsiz atölye programı başladı."},
+    {"id": 119, "konu": "sanat", "metin": "Bir müzik grubunun konseri son anda iptal edildi."},
+    {"id": 120, "konu": "sanat", "metin": "Dijital sanat sergisi büyük ilgi gördü."},
 
     # --- egitim ---
     {"id": 36, "konu": "egitim", "metin": "Yeni müfredat tartışmaları öğretmenler arasında endişe yarattı."},
@@ -60,6 +132,16 @@ ORNEK_GONDERILER = [
     {"id": 38, "konu": "egitim", "metin": "Sınav sonuçları açıklandı, öğrenciler heyecanla bekliyor."},
     {"id": 39, "konu": "egitim", "metin": "Kırsal bölgelerde eğitime erişim hâlâ büyük bir sorun."},
     {"id": 40, "konu": "egitim", "metin": "Üniversiteler için yeni burs programı duyuruldu."},
+    {"id": 121, "konu": "egitim", "metin": "Üniversite sınavı sonuçlarına itiraz süreci başladı."},
+    {"id": 122, "konu": "egitim", "metin": "Okullarda dijital eğitim materyalleri yaygınlaştırılıyor."},
+    {"id": 123, "konu": "egitim", "metin": "Öğretmen açığı bazı bölgelerde derslerin aksamasına yol açtı."},
+    {"id": 124, "konu": "egitim", "metin": "Bir lise, uluslararası bir bilim yarışmasında derece aldı."},
+    {"id": 125, "konu": "egitim", "metin": "Yeni bir öğrenci değişim programı duyuruldu."},
+    {"id": 126, "konu": "egitim", "metin": "Sınav stresiyle başa çıkma rehberi öğrencilerle buluştu."},
+    {"id": 127, "konu": "egitim", "metin": "Kütüphanelerin çalışma saatleri uzatıldı."},
+    {"id": 128, "konu": "egitim", "metin": "Bir üniversite, ücretsiz çevrim içi dersler sunmaya başladı."},
+    {"id": 129, "konu": "egitim", "metin": "Okul servislerindeki aksaklıklar veli tepkisine yol açtı."},
+    {"id": 130, "konu": "egitim", "metin": "Meslek liselerine olan ilgi son yıllarda arttı."},
 
     # --- oyun ---
     {"id": 41, "konu": "oyun", "metin": "Beklenen oyunun çıkış tarihi nihayet açıklandı, hayranlar çok mutlu."},
@@ -67,6 +149,16 @@ ORNEK_GONDERILER = [
     {"id": 43, "konu": "oyun", "metin": "Yeni güncelleme oynanışı baştan sona değiştirdi."},
     {"id": 44, "konu": "oyun", "metin": "E-spor turnuvasında nefes kesen bir final yaşandı."},
     {"id": 45, "konu": "oyun", "metin": "Mikro ödeme tartışmaları oyuncu topluluğunu ikiye böldü."},
+    {"id": 131, "konu": "oyun", "metin": "Efsanevi bir oyun serisi yeniden piyasaya sürülüyor."},
+    {"id": 132, "konu": "oyun", "metin": "Bir oyun stüdyosu büyük bir işten çıkarma dalgası yaşadı."},
+    {"id": 133, "konu": "oyun", "metin": "Bağımsız bir oyun, beklenmedik bir başarı yakaladı."},
+    {"id": 134, "konu": "oyun", "metin": "Sunucu bakımı yüzünden oyuncular saatlerce bekledi."},
+    {"id": 135, "konu": "oyun", "metin": "Yeni konsolun satış rakamları rekor kırdı."},
+    {"id": 136, "konu": "oyun", "metin": "Bir oyun, çıkışından hemen sonra büyük tepki topladı."},
+    {"id": 137, "konu": "oyun", "metin": "Espor takımı şampiyonluk için finale yükseldi."},
+    {"id": 138, "konu": "oyun", "metin": "Oyun içi mağazada fiyat artışı tepki çekti."},
+    {"id": 139, "konu": "oyun", "metin": "Retro oyunlara olan ilgi yeniden canlandı."},
+    {"id": 140, "konu": "oyun", "metin": "Bir güncelleme, sevilen bir karakteri oyundan kaldırdı."},
 
     # --- seyahat ---
     {"id": 46, "konu": "seyahat", "metin": "Yeni bir doğrudan uçuş hattı tanıtıldı, seyahatseverler sevindi."},
@@ -74,6 +166,16 @@ ORNEK_GONDERILER = [
     {"id": 48, "konu": "seyahat", "metin": "Az bilinen bir sahil kasabası bu yaz gözde rotalardan biri oldu."},
     {"id": 49, "konu": "seyahat", "metin": "Uçuş iptalleri yüzünden havalimanında yolcular mağdur oldu."},
     {"id": 50, "konu": "seyahat", "metin": "Doğa yürüyüşü rotalarına yenileri eklendi."},
+    {"id": 141, "konu": "seyahat", "metin": "Az bilinen bir ada, yeni gözde tatil rotası oldu."},
+    {"id": 142, "konu": "seyahat", "metin": "Vize başvurularındaki artış bekleme sürelerini uzattı."},
+    {"id": 143, "konu": "seyahat", "metin": "Bir havayolu yeni bir kampanya duyurdu."},
+    {"id": 144, "konu": "seyahat", "metin": "Turizm gelirleri geçen yıla göre arttı."},
+    {"id": 145, "konu": "seyahat", "metin": "Doğa parkında ziyaretçi sayısı sınırlandırıldı."},
+    {"id": 146, "konu": "seyahat", "metin": "Bir bölgede aşırı turizm yerel halkı rahatsız ediyor."},
+    {"id": 147, "konu": "seyahat", "metin": "Tren seferlerine yeni hatlar eklendi."},
+    {"id": 148, "konu": "seyahat", "metin": "Bir otel zinciri sürdürülebilirlik sertifikası aldı."},
+    {"id": 149, "konu": "seyahat", "metin": "Bagaj kaybı şikayetleri havayollarını zor durumda bıraktı."},
+    {"id": 150, "konu": "seyahat", "metin": "Kamp alanlarına olan talep bu yaz zirve yaptı."},
 ]
 
 # Örnek kullanıcının ilgi alanı profili (kayıt sırasında seçildiği varsayımıyla)

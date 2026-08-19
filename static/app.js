@@ -1,7 +1,8 @@
 // NSosyal duygu-duyarlı akış — timeline arayüzü.
 // Intersection Observer ile her gönderinin görünürlük süresini (dwell-time)
-// ölçer, backend'e bildirir; backend spiral olasılığını günceller ve akış
-// bir sonraki yenilemede buna göre yeniden sıralanır.
+// ölçer, backend'e bildirir; backend spiral olasılığını günceller. Akış,
+// aşağı kaydırdıkça bizim skor motorumuza göre sayfa sayfa (infinite scroll)
+// yüklenir -- sabit, tek seferlik bir liste değil.
 
 const akisEl = document.getElementById("akis");
 const spiralDolgu = document.getElementById("spiral-dolgu");
@@ -79,13 +80,6 @@ function spiralGostergesiGuncelle(seviye) {
     : "var(--accent-soft)";
 }
 
-async function gonderileriGetir() {
-  const yanit = await fetch("/api/gonderiler");
-  const veri = await yanit.json();
-  spiralGostergesiGuncelle(veri.spiral_seviyesi);
-  akisiCiz(veri.gonderiler);
-}
-
 async function etkilesimGonder(gonderi_id, dwell_saniye, tiklama = false, roket = false, yorum = false) {
   const acikEylemVar = tiklama || roket || yorum;
   if (!acikEylemVar && dwell_saniye < 0.3) return; // sadece pasif dwell'de gürültü filtrele
@@ -97,7 +91,36 @@ async function etkilesimGonder(gonderi_id, dwell_saniye, tiklama = false, roket 
   const veri = await yanit.json();
   spiralGostergesiGuncelle(veri.spiral_seviyesi);
   ruhHaliGuncelle(veri.psikolojik_durum);
+  if (veri.onay_sorulsun_mu) dogrulamaGoster();
 }
+
+// --- Kendi kendini doğrulama kartı ---
+// psikolojik_durum.py'nin davranış->kategori eşlemesi sentetik senaryolara
+// dayanıyor; gerçek bir dayanak için ara sıra kullanıcıya soruyoruz ve
+// cevabını modelin O ANKİ tahminiyle karşılaştırıyoruz. Model tahmini,
+// taraflı olmasın diye kullanıcı cevap vermeden ÖNCE hiç gösterilmiyor.
+const dogrulamaKarti = document.getElementById("dogrulama-karti");
+
+function dogrulamaGoster() {
+  dogrulamaKarti.classList.remove("gizli");
+}
+
+function dogrulamaGizle() {
+  dogrulamaKarti.classList.add("gizli");
+}
+
+dogrulamaKarti.querySelectorAll(".dogrulama-secenek").forEach((buton) => {
+  buton.addEventListener("click", async () => {
+    dogrulamaGizle();
+    await fetch("/api/dogrulama", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kullanici_cevabi: buton.dataset.kategori }),
+    });
+  });
+});
+
+document.getElementById("dogrulama-gec-buton").addEventListener("click", dogrulamaGizle);
 
 function olcumSatiriOlustur(baslik, gosterilenMetin, barDeger, maxDeger, renk) {
   const yuzde = Math.max(0, Math.min(100, (barDeger / maxDeger) * 100));
@@ -110,119 +133,174 @@ function olcumSatiriOlustur(baslik, gosterilenMetin, barDeger, maxDeger, renk) {
   return satir;
 }
 
-function akisiCiz(gonderiler) {
+// --- Dwell-time takibi: tek bir paylaşılan gözlemci, akışa eklenen her yeni
+// kart bu gözlemciye kaydolur (sayfalamada her seferinde yeniden yaratılmaz).
+const dwellGozlemci = new IntersectionObserver(
+  (girdiler) => {
+    girdiler.forEach((girdi) => {
+      const id = Number(girdi.target.dataset.id);
+      if (girdi.isIntersecting) {
+        gorunurlukBaslangic.set(id, performance.now());
+      } else if (gorunurlukBaslangic.has(id)) {
+        const gecenSaniye = (performance.now() - gorunurlukBaslangic.get(id)) / 1000;
+        gorunurlukBaslangic.delete(id);
+        etkilesimGonder(id, gecenSaniye);
+      }
+    });
+  },
+  { threshold: 0.6 } // gönderinin en az %60'ı görünür olmalı
+);
+
+function kartOlustur(g) {
+  const renk = konuRenk(g.konu);
+  const dRenk = duyguRengi(g.duygu);
+
+  const kart = document.createElement("article");
+  kart.className = "gonderi" + (g.refah_cezasi > 0 ? " yumusatildi" : "");
+  kart.dataset.id = g.id;
+
+  kart.innerHTML = `
+    <div class="avatar" style="background:${renk.fg}">${g.konu.slice(0, 2)}</div>
+    <div class="govde">
+      <div class="ust-satir">
+        <span class="konu-etiket" style="background:${renk.bg};color:${renk.fg}">${g.konu}</span>
+        ${g.refah_cezasi > 0 ? `<span class="yumusatma-rozeti">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+          yumuşatıldı
+        </span>` : ""}
+      </div>
+      <div class="metin"></div>
+      <div class="alt-satir">
+        <button class="neden-buton">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          Neden bunu görüyorsun?
+        </button>
+        <span class="duygu-rozeti"><span class="duygu-nokta" style="background:${dRenk}"></span>duygu ${g.duygu.toFixed(2)}</span>
+      </div>
+      <div class="etkilesim-satiri">
+        <div class="mini-eylemler">
+          <button class="mini-eylem-buton roket" title="Roket at">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+            Roket
+          </button>
+          <button class="mini-eylem-buton yorum" title="Yorum yaz">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Yorum
+          </button>
+        </div>
+      </div>
+      <div class="aciklama-paneli"></div>
+    </div>
+  `;
+  // metni güvenli biçimde ekle (XSS'ten kaçınmak için textContent kullan)
+  kart.querySelector(".metin").textContent = g.metin;
+
+  const panel = kart.querySelector(".aciklama-paneli");
+  panel.appendChild(olcumSatiriOlustur("İlgi skoru", g.ilgi_skoru, g.ilgi_skoru, 1, "var(--accent)"));
+  if (g.refah_cezasi > 0) {
+    panel.appendChild(olcumSatiriOlustur("Refah yumuşatması", "-" + g.refah_cezasi, g.refah_cezasi, 1, "var(--warn)"));
+  }
+  panel.appendChild(olcumSatiriOlustur("Final skor", g.final_skor, g.final_skor, 1, "var(--good)"));
+  const not = document.createElement("div");
+  not.className = "aciklama-notu";
+  not.textContent = g.aciklama;
+  panel.appendChild(not);
+
+  const nedenButon = kart.querySelector(".neden-buton");
+  nedenButon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    panel.classList.toggle("acik");
+    nedenButon.classList.toggle("acik");
+  });
+
+  // Roket/yorum tuşlarına spam basmak, tek bir olayı değil, backend'de aynı
+  // gönderiye ait TEK bir kaydı güncelliyor (bkz. backend/main.py), bu yüzden
+  // burada sadece hızlı art arda ağ isteğini önlemek için basit bir kilit var.
+  let gonderiliyor = false;
+  async function eylemGonder(roket, yorum, aktifButon) {
+    if (gonderiliyor) return;
+    gonderiliyor = true;
+    aktifButon.classList.toggle("aktif");
+    await etkilesimGonder(g.id, guncelDwell(g.id), false, roket, yorum);
+    gonderiliyor = false;
+  }
+
+  const roketButon = kart.querySelector(".mini-eylem-buton.roket");
+  roketButon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    eylemGonder(!roketButon.classList.contains("aktif"), false, roketButon);
+  });
+
+  const yorumButon = kart.querySelector(".mini-eylem-buton.yorum");
+  yorumButon.addEventListener("click", (e) => {
+    e.stopPropagation();
+    eylemGonder(false, !yorumButon.classList.contains("aktif"), yorumButon);
+  });
+
+  kart.addEventListener("click", () => {
+    etkilesimGonder(g.id, guncelDwell(g.id), true);
+  });
+
+  dwellGozlemci.observe(kart);
+  return kart;
+}
+
+// --- Sayfalama (infinite scroll) ---
+const sentinel = document.createElement("div");
+sentinel.id = "akis-sentinel";
+sentinel.className = "durum-mesaji";
+
+let yukleniyor = false;
+let tukendi = false;
+
+const sayfaGozlemci = new IntersectionObserver((girdiler) => {
+  if (girdiler[0].isIntersecting) dahaFazlaYukle();
+}, { rootMargin: "400px" }); // ekrandan 400px önce tetikle, kullanıcı beklemesin
+
+async function sayfaGetir(sifirdan) {
+  const yanit = await fetch(`/api/gonderiler?sifirdan=${sifirdan}`);
+  const veri = await yanit.json();
+  spiralGostergesiGuncelle(veri.spiral_seviyesi);
+  tukendi = veri.tukendi;
+  return veri.gonderiler;
+}
+
+async function ilkYuklemeYap() {
+  yukleniyor = true;
+  tukendi = false;
   akisEl.innerHTML = "";
+  const gonderiler = await sayfaGetir(true);
 
   if (!gonderiler.length) {
     akisEl.innerHTML = '<div class="durum-mesaji">Gösterilecek gönderi yok.</div>';
+    yukleniyor = false;
     return;
   }
 
-  const observer = new IntersectionObserver(
-    (girdiler) => {
-      girdiler.forEach((girdi) => {
-        const id = Number(girdi.target.dataset.id);
-        if (girdi.isIntersecting) {
-          gorunurlukBaslangic.set(id, performance.now());
-        } else if (gorunurlukBaslangic.has(id)) {
-          const gecenSaniye = (performance.now() - gorunurlukBaslangic.get(id)) / 1000;
-          gorunurlukBaslangic.delete(id);
-          etkilesimGonder(id, gecenSaniye);
-        }
-      });
-    },
-    { threshold: 0.6 } // gönderinin en az %60'ı görünür olmalı
-  );
-
-  gonderiler.forEach((g) => {
-    const renk = konuRenk(g.konu);
-    const dRenk = duyguRengi(g.duygu);
-
-    const kart = document.createElement("article");
-    kart.className = "gonderi" + (g.refah_cezasi > 0 ? " yumusatildi" : "");
-    kart.dataset.id = g.id;
-
-    kart.innerHTML = `
-      <div class="avatar" style="background:${renk.fg}">${g.konu.slice(0, 2)}</div>
-      <div class="govde">
-        <div class="ust-satir">
-          <span class="konu-etiket" style="background:${renk.bg};color:${renk.fg}">${g.konu}</span>
-          ${g.refah_cezasi > 0 ? `<span class="yumusatma-rozeti">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
-            yumuşatıldı
-          </span>` : ""}
-        </div>
-        <div class="metin"></div>
-        <div class="alt-satir">
-          <button class="neden-buton">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-            Neden bunu görüyorsun?
-          </button>
-          <span class="duygu-rozeti"><span class="duygu-nokta" style="background:${dRenk}"></span>duygu ${g.duygu.toFixed(2)}</span>
-        </div>
-        <div class="etkilesim-satiri">
-          <div class="mini-eylemler">
-            <button class="mini-eylem-buton roket" title="Roket at">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
-              Roket
-            </button>
-            <button class="mini-eylem-buton yorum" title="Yorum yaz">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Yorum
-            </button>
-          </div>
-        </div>
-        <div class="aciklama-paneli"></div>
-      </div>
-    `;
-    // metni güvenli biçimde ekle (XSS'ten kaçınmak için textContent kullan)
-    kart.querySelector(".metin").textContent = g.metin;
-
-    const panel = kart.querySelector(".aciklama-paneli");
-    panel.appendChild(olcumSatiriOlustur("İlgi skoru", g.ilgi_skoru, g.ilgi_skoru, 1, "var(--accent)"));
-    if (g.refah_cezasi > 0) {
-      panel.appendChild(olcumSatiriOlustur("Refah yumuşatması", "-" + g.refah_cezasi, g.refah_cezasi, 1, "var(--warn)"));
-    }
-    panel.appendChild(olcumSatiriOlustur("Final skor", g.final_skor, g.final_skor, 1, "var(--good)"));
-    const not = document.createElement("div");
-    not.className = "aciklama-notu";
-    not.textContent = g.aciklama;
-    panel.appendChild(not);
-
-    const nedenButon = kart.querySelector(".neden-buton");
-    nedenButon.addEventListener("click", (e) => {
-      e.stopPropagation();
-      panel.classList.toggle("acik");
-      nedenButon.classList.toggle("acik");
-    });
-
-    const roketButon = kart.querySelector(".mini-eylem-buton.roket");
-    roketButon.addEventListener("click", (e) => {
-      e.stopPropagation();
-      roketButon.classList.toggle("aktif");
-      etkilesimGonder(g.id, guncelDwell(g.id), false, roketButon.classList.contains("aktif"), false);
-    });
-
-    const yorumButon = kart.querySelector(".mini-eylem-buton.yorum");
-    yorumButon.addEventListener("click", (e) => {
-      e.stopPropagation();
-      yorumButon.classList.toggle("aktif");
-      etkilesimGonder(g.id, guncelDwell(g.id), false, false, yorumButon.classList.contains("aktif"));
-    });
-
-    kart.addEventListener("click", () => {
-      etkilesimGonder(g.id, guncelDwell(g.id), true);
-    });
-
-    akisEl.appendChild(kart);
-    observer.observe(kart);
-  });
+  gonderiler.forEach((g) => akisEl.appendChild(kartOlustur(g)));
+  akisEl.appendChild(sentinel);
+  sentinel.textContent = "";
+  sayfaGozlemci.observe(sentinel);
+  yukleniyor = false;
 }
 
-document.getElementById("yenile-buton").addEventListener("click", gonderileriGetir);
+async function dahaFazlaYukle() {
+  if (yukleniyor || tukendi) return;
+  yukleniyor = true;
+  sentinel.textContent = "Yeni gönderiler yükleniyor…";
+
+  const gonderiler = await sayfaGetir(false);
+  gonderiler.forEach((g) => akisEl.insertBefore(kartOlustur(g), sentinel));
+
+  sentinel.textContent = tukendi ? "Akışın sonuna geldin." : "";
+  if (tukendi) sayfaGozlemci.unobserve(sentinel);
+  yukleniyor = false;
+}
+
+document.getElementById("yenile-buton").addEventListener("click", ilkYuklemeYap);
 document.getElementById("sifirla-buton").addEventListener("click", async () => {
   await fetch("/api/sifirla", { method: "POST" });
-  gonderileriGetir();
+  ilkYuklemeYap();
 });
 
-gonderileriGetir();
+ilkYuklemeYap();

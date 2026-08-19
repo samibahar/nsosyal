@@ -2,3 +2,6 @@
 __pycache__/
 *.pyc
 .env
+
+# İnce ayarlı model (~420MB) -- git'e uygun değil, ince_ayar.py ile yeniden üretilebilir
+models/

@@ -48,4 +48,35 @@ async function canliOzetiYukle() {
   }
 }
 
+async function dogrulamaOzetiYukle() {
+  const yanit = await fetch("/api/dogrulama-ozet");
+  const veri = await yanit.json();
+
+  const bolum = document.getElementById("dogrulama-ozet-bolum");
+  if (!veri.toplam_onay) {
+    bolum.style.display = "none";
+    return;
+  }
+  bolum.style.display = "block";
+
+  const icerik = document.getElementById("dogrulama-ozet-icerik");
+  const yuzdeMetin = veri.eslesme_orani === null ? "—" : Math.round(veri.eslesme_orani * 100) + "%";
+
+  icerik.innerHTML = `
+    <div class="ozet-satiri" style="margin-bottom:12px">
+      <div class="ozet-kutu"><div class="sayi">${veri.toplam_onay}</div><div class="etiket">onay sorusu soruldu</div></div>
+      <div class="ozet-kutu"><div class="sayi">${veri.eslesen}</div><div class="etiket">tahminle eşleşti</div></div>
+      <div class="ozet-kutu"><div class="sayi">${yuzdeMetin}</div><div class="etiket">eşleşme oranı</div></div>
+    </div>
+  `;
+
+  if (veri.toplam_onay < 5) {
+    const not = document.createElement("div");
+    not.className = "aciklama-notu";
+    not.textContent = "Henüz çok az onay verisi var -- bu oran istatistiksel olarak anlamlı sayılamaz, daha fazla etkileşimle güvenilirleşir.";
+    icerik.appendChild(not);
+  }
+}
+
 canliOzetiYukle();
+dogrulamaOzetiYukle();

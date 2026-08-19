@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Haftalık Öz-Farkındalık Raporu — Örnek</title>
-<link rel="stylesheet" href="/style.css?v=5" />
+<link rel="stylesheet" href="/style.css?v=8" />
 </head>
 <body>
 <div class="sayfa">
@@ -40,6 +40,22 @@
         gönderilerle etkileşime girdikçe değişir).
       </p>
       <div id="canli-dagilim"></div>
+    </div>
+
+    <div class="rapor-bolum canli" id="dogrulama-ozet-bolum" style="display:none">
+      <h3 class="rapor-bolum-baslik">
+        <span class="ikon" style="background:var(--accent-soft);color:var(--accent)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </span>
+        Model doğrulama
+      </h3>
+      <p style="margin-bottom: 14px;">
+        Ana Sayfa'da ara sıra çıkan "şu an gerçekte nasıl hissediyorsun?" sorusuna
+        verdiğin cevaplarla modelin O ANKİ tahmini karşılaştırılıyor. Bu, sistemin
+        kendi kendini denetlediği bir mekanizma — tahminlerin doğru olduğunu
+        varsaymak yerine gerçekten ölçüyoruz.
+      </p>
+      <div id="dogrulama-ozet-icerik"></div>
     </div>
 
     <h2 class="rapor-baslik">10–16 Ağustos haftası özetin</h2>
@@ -106,13 +122,17 @@
     </div>
 
     <footer>
-      Skorlar: savasy/bert-base-turkish-sentiment-cased (duygu) + sentetik senaryo
-      verisiyle eğitilmiş lojistik regresyon (spiral tespiti, F1≈0.75).
-      Bu sınıflandırıcı gerçek kullanıcı verisiyle yeniden eğitilmeden üretime
-      alınmamalıdır.
+      Skorlar: savasy/bert-base-turkish-sentiment-cased (duygu, ince ayar
+      çalışması sürüyor) + sentetik senaryo verisiyle eğitilmiş lojistik
+      regresyon (spiral tespiti F1≈0.75, psikolojik kategori F1≈0.78).
+      Davranış→psikoloji eşlemesi kesin bir ölçüm değil, önerilen bir yöntemdir;
+      genel kabul gören dijital davranış kavramlarıyla (edilgen tüketim,
+      dwell-time'ın dikkat göstergesi olması vb.) uyumlu tasarlandı ve yukarıdaki
+      "Model doğrulama" mekanizmasıyla sürekli sınanır. Gerçek kullanıcı
+      verisiyle yeniden kalibre edilmeden üretime alınmamalıdır.
     </footer>
   </div>
 </div>
-<script src="/rapor.js?v=5"></script>
+<script src="/rapor.js?v=8"></script>
 </body>
 </html>
