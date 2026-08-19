@@ -20,6 +20,21 @@ from motor import gonderileri_puanla, sirala, spiral_olasiligi
 from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
 from psikolojik_durum import psikolojik_durum_tahmini, KATEGORILER
 
+PENCERE_BOYU = 5  # "anlık izlenim" için son kaç etkileşimin ortalaması alınacak
+
+
+def _pencere_ortalamasi(gunluk: list[dict]) -> dict:
+    """Son PENCERE_BOYU etkileşimin olasılık dağılımlarını ortalar. Tek bir
+    olaya (örn. tek bir roket tıklaması) göre uçlara savrulmayı önler —
+    'anlık izlenim' artık gerçekten anlık değil, kısa bir pencerenin özeti."""
+    son_kayitlar = gunluk[-PENCERE_BOYU:]
+    ortalama = {k: 0.0 for k in KATEGORILER}
+    for kayit in son_kayitlar:
+        for kat, p in kayit["olasiliklar"].items():
+            ortalama[kat] += p / len(son_kayitlar)
+    baskin = max(ortalama, key=ortalama.get)
+    return {"kategori": baskin, "olasiliklar": {k: round(v, 3) for k, v in ortalama.items()}}
+
 app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Kanıt-of-Konsept")
 
 GONDERILER = ORNEK_GONDERILER
@@ -54,7 +69,7 @@ def api_etkilesim(e: Etkilesim):
     spiral = spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER)
 
     gonderi = GONDERI_BY_ID.get(e.gonderi_id)
-    psikolojik = psikolojik_durum_tahmini(
+    tekil_psikolojik = psikolojik_durum_tahmini(
         duygu=gonderi["duygu"] if gonderi else 0.0,
         dwell_saniye=e.dwell_saniye,
         tiklama=e.tiklama,
@@ -64,10 +79,12 @@ def api_etkilesim(e: Etkilesim):
     PSIKOLOJIK_GUNLUK.append({
         "saat": datetime.now().hour,
         "konu": gonderi["konu"] if gonderi else "bilinmiyor",
-        "kategori": psikolojik["kategori"],
+        "kategori": tekil_psikolojik["kategori"],       # özet istatistikleri için tekil olay
+        "olasiliklar": tekil_psikolojik["olasiliklar"],  # pencere ortalaması için
     })
+    psikolojik_pencere = _pencere_ortalamasi(PSIKOLOJIK_GUNLUK)
 
-    return {"spiral_seviyesi": round(spiral, 3), "psikolojik_durum": psikolojik}
+    return {"spiral_seviyesi": round(spiral, 3), "psikolojik_durum": psikolojik_pencere}
 
 
 @app.get("/api/psikolojik-ozet")

@@ -29,6 +29,15 @@ function ruhHaliGuncelle(psikolojik) {
 
 const gorunurlukBaslangic = new Map(); // gonderi_id -> performance.now() zamanı
 
+function guncelDwell(gonderi_id) {
+  // Roket/yorum/tıklama anında gönderi hâlâ görünürse gerçek geçen süreyi kullan;
+  // değilse (görünürlük takip edilmiyorsa) makul bir varsayılana düş.
+  if (gorunurlukBaslangic.has(gonderi_id)) {
+    return Math.max(0.3, (performance.now() - gorunurlukBaslangic.get(gonderi_id)) / 1000);
+  }
+  return 1.5;
+}
+
 const KONU_RENK = {
   spor: { bg: "var(--konu-spor-soft)", fg: "var(--konu-spor)" },
   gundem: { bg: "var(--konu-gundem-soft)", fg: "var(--konu-gundem)" },
@@ -199,18 +208,18 @@ function akisiCiz(gonderiler) {
     roketButon.addEventListener("click", (e) => {
       e.stopPropagation();
       roketButon.classList.toggle("aktif");
-      etkilesimGonder(g.id, 1.0, false, roketButon.classList.contains("aktif"), false);
+      etkilesimGonder(g.id, guncelDwell(g.id), false, roketButon.classList.contains("aktif"), false);
     });
 
     const yorumButon = kart.querySelector(".mini-eylem-buton.yorum");
     yorumButon.addEventListener("click", (e) => {
       e.stopPropagation();
       yorumButon.classList.toggle("aktif");
-      etkilesimGonder(g.id, 1.0, false, false, yorumButon.classList.contains("aktif"));
+      etkilesimGonder(g.id, guncelDwell(g.id), false, false, yorumButon.classList.contains("aktif"));
     });
 
     kart.addEventListener("click", () => {
-      etkilesimGonder(g.id, 1.0, true);
+      etkilesimGonder(g.id, guncelDwell(g.id), true);
     });
 
     akisEl.appendChild(kart);
