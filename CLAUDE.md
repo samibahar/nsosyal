@@ -139,6 +139,38 @@ doğrulama yaptık, bir sınırlılık keşfettik ve dürüstçe raporladık". H
 (vendor) hem %69.8 (bağımsız, bizim ölçümümüz) rakamını birlikte ver, aradaki
 farkı alan kayması ile açıkla.
 
+## Çok Kategorili Psikolojik Durum Katmanı (19.08.2026)
+
+Kullanıcı isteği üzerine, ikili "spiral var/yok" tespitinin yanına, her etkileşim
+anı için 5 kategorili bir "olası psikolojik izlenim" katmanı eklendi:
+**sakin, mutluluk, umut, korku, anksiyete**. `psikolojik_durum.py` — spiral_model.py
+ile AYNI yöntemle (açıklanabilir, sentetik senaryo verisiyle eğitilmiş lojistik
+regresyon), 5 sinyalden (BERT duygu skoru, dwell-time, tıklama, roket, yorum)
+tahmin üretiyor. F1 makro ≈0.78.
+
+**Neden hazır bir "duygu kategorisi" BERT modeli kullanılmadı:** Araştırıldı
+(`maymuni/bert-base-turkish-cased-emotion-analysis` vb.) — hepsi belgesiz eğitim
+verisi ve doğrulanmamış/şüpheli doğruluk iddiaları taşıyor (savasy modelinde
+yaşanan güven kırılmasından hemen sonra). Ayrıca kara kutu bir model, projenin
+"her karar açıklanabilir olmalı" temel tezine aykırı olurdu.
+
+**Kritik sınırlılık (raporda mutlaka belirtilmeli):** Bu kategoriler klinik bir
+duygu okuması DEĞİL — sadece davranışsal sinyallerden (durma süresi, tıklama,
+roket, yorum) türetilmiş olası bir örüntü etiketi. "korku" ve "anksiyete" gibi
+yakın psikolojik durumları salt etkileşim verisinden kesin ayırt etmenin bilimsel
+bir sınırı var. Aşırı iddialı dilden kaçınılmalı ("tespit ettik" değil "olası").
+
+**X'ten veri çekme fikri reddedildi:** ToS ihlali riski + X'in öneri algoritmasını
+kendi altyapımız olmadan yeniden üretemeyeceğimiz gerekçesiyle. Bkz. yukarıdaki
+"Bağımsız Model Doğrulaması" bölümü — onun yerine hazır/lisanslı veri seti kullanıldı.
+
+**Backend/arayüz:** `/api/etkilesim` artık `roket`/`yorum` alanlarını da alıyor,
+her etkileşimde anlık kategori tahminini dönüyor (arayüzde canlı rozet olarak
+gösteriliyor). `/api/psikolojik-ozet`, bu OTURUMDA gerçekten kaydedilen
+etkileşimlerden (sabit örnek metin değil) konu/saat bazlı gerçek bir özet
+üretiyor — `rapor.html`'de "Bu oturumda gerçekten gözlemlenen" bölümü olarak
+canlı gösteriliyor.
+
 ## Sırada Ne Var (öncelik sırasıyla)
 
 1. `spike_poc.py`'deki `duygu_skoru()` fonksiyonunu gerçek BERT modeliyle değiştir.

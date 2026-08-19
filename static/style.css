@@ -42,6 +42,17 @@
   --konu-seyahat-soft: #e0f2fe;
   --konu-varsayilan: #536471;
   --konu-varsayilan-soft: #eff3f4;
+
+  --ruh-sakin: #536471;
+  --ruh-sakin-soft: #eff3f4;
+  --ruh-mutluluk: #00ba7c;
+  --ruh-mutluluk-soft: #e5f9f2;
+  --ruh-umut: #0284c7;
+  --ruh-umut-soft: #e0f2fe;
+  --ruh-korku: #6d28d9;
+  --ruh-korku-soft: #efe9ff;
+  --ruh-anksiyete: #f4212e;
+  --ruh-anksiyete-soft: #fdeaec;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -75,6 +86,12 @@
     --konu-oyun-soft: #3a1904;
     --konu-seyahat-soft: #082f49;
     --konu-varsayilan-soft: #202327;
+
+    --ruh-sakin-soft: #202327;
+    --ruh-mutluluk-soft: #062a20;
+    --ruh-umut-soft: #082f49;
+    --ruh-korku-soft: #1d1436;
+    --ruh-anksiyete-soft: #35080a;
   }
 }
 
@@ -209,6 +226,33 @@ header.ust-bar {
   background: var(--accent);
   transition: width 0.4s cubic-bezier(.4,0,.2,1), background 0.4s ease;
   width: 0%;
+}
+
+/* Anlık psikolojik durum rozeti */
+
+.ruh-hali-satiri {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.ruh-hali-rozeti {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 999px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.ruh-hali-rozeti .nokta {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
 }
 
 .eylemler {
@@ -351,6 +395,13 @@ main#akis { padding: 4px 0 8px; }
   gap: 10px;
 }
 
+.etkilesim-satiri {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
 .neden-buton {
   display: inline-flex;
   align-items: center;
@@ -376,6 +427,34 @@ main#akis { padding: 4px 0 8px; }
 }
 
 .neden-buton.acik svg { transform: rotate(180deg); }
+
+.mini-eylemler {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mini-eylem-buton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 999px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mini-eylem-buton svg { width: 14px; height: 14px; }
+
+.mini-eylem-buton:hover { background: var(--card-hover); color: var(--text); }
+
+.mini-eylem-buton.aktif.roket { color: var(--warn); background: var(--warn-soft); }
+.mini-eylem-buton.aktif.yorum { color: var(--accent); background: var(--accent-soft); }
 
 .duygu-rozeti {
   display: inline-flex;

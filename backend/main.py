@@ -1,9 +1,12 @@
 """
 FastAPI backend — motor.py'deki gerçek skor motorunu (BERT duygu analizi +
-eğitilmiş spiral sınıflandırıcı) bir web arayüzüne bağlar. Tek demo kullanıcı
+eğitilmiş spiral sınıflandırıcı) ve psikolojik_durum.py'deki çok kategorili
+anlık yorum sınıflandırıcısını bir web arayüzüne bağlar. Tek demo kullanıcı
 için bellek-içi durum tutar (gerçek üretimde bu veritabanına/oturuma taşınır).
 """
 import sys
+from collections import Counter
+from datetime import datetime
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,21 +18,26 @@ from pydantic import BaseModel
 
 from motor import gonderileri_puanla, sirala, spiral_olasiligi
 from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
+from psikolojik_durum import psikolojik_durum_tahmini, KATEGORILER
 
 app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Kanıt-of-Konsept")
 
 GONDERILER = ORNEK_GONDERILER
 gonderileri_puanla(GONDERILER)
+GONDERI_BY_ID = {g["id"]: g for g in GONDERILER}
 
 KULLANICI_ILGI = ORNEK_KULLANICI_ILGI
 
-DAVRANIS_GUNLUGU: list[dict] = []
+DAVRANIS_GUNLUGU: list[dict] = []  # spiral modeli için kayan pencere (son 20)
+PSIKOLOJIK_GUNLUK: list[dict] = []  # "haftalık" özet için tüm oturum kaydı
 
 
 class Etkilesim(BaseModel):
     gonderi_id: int
     dwell_saniye: float
     tiklama: bool = False
+    roket: bool = False
+    yorum: bool = False
 
 
 @app.get("/api/gonderiler")
@@ -44,12 +52,57 @@ def api_etkilesim(e: Etkilesim):
     DAVRANIS_GUNLUGU.append(e.model_dump())
     del DAVRANIS_GUNLUGU[:-20]  # kayan pencere: son 20 etkileşim
     spiral = spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER)
-    return {"spiral_seviyesi": round(spiral, 3)}
+
+    gonderi = GONDERI_BY_ID.get(e.gonderi_id)
+    psikolojik = psikolojik_durum_tahmini(
+        duygu=gonderi["duygu"] if gonderi else 0.0,
+        dwell_saniye=e.dwell_saniye,
+        tiklama=e.tiklama,
+        roket=e.roket,
+        yorum=e.yorum,
+    )
+    PSIKOLOJIK_GUNLUK.append({
+        "saat": datetime.now().hour,
+        "konu": gonderi["konu"] if gonderi else "bilinmiyor",
+        "kategori": psikolojik["kategori"],
+    })
+
+    return {"spiral_seviyesi": round(spiral, 3), "psikolojik_durum": psikolojik}
+
+
+@app.get("/api/psikolojik-ozet")
+def api_psikolojik_ozet():
+    """Bu oturumda GERÇEKTEN kaydedilen etkileşimlerden özet — sabit örnek metin
+    değil. 'Haftalık' değil (tek oturum), ama aynı mantığın küçük ölçekli, canlı
+    kanıtı: hangi saatte / hangi konuda / hangi psikolojik kategoriye yönelik
+    içerikte daha çok durulmuş."""
+    toplam = len(PSIKOLOJIK_GUNLUK)
+    kategori_sayaclari = Counter(kayit["kategori"] for kayit in PSIKOLOJIK_GUNLUK)
+    konu_kategori = Counter((kayit["konu"], kayit["kategori"]) for kayit in PSIKOLOJIK_GUNLUK)
+    saat_kategori = Counter((kayit["saat"], kayit["kategori"]) for kayit in PSIKOLOJIK_GUNLUK)
+
+    en_cok_konu_kategori = konu_kategori.most_common(3)
+    en_cok_saat_kategori = saat_kategori.most_common(3)
+
+    return {
+        "toplam_etkilesim": toplam,
+        "kategoriler": KATEGORILER,
+        "kategori_dagilimi": {k: kategori_sayaclari.get(k, 0) for k in KATEGORILER},
+        "en_belirgin_konu_kategori": [
+            {"konu": konu, "kategori": kat, "sayi": sayi}
+            for (konu, kat), sayi in en_cok_konu_kategori
+        ],
+        "en_belirgin_saat_kategori": [
+            {"saat": saat, "kategori": kat, "sayi": sayi}
+            for (saat, kat), sayi in en_cok_saat_kategori
+        ],
+    }
 
 
 @app.post("/api/sifirla")
 def api_sifirla():
     DAVRANIS_GUNLUGU.clear()
+    PSIKOLOJIK_GUNLUK.clear()
     return {"ok": True}
 
 
