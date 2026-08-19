@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NSosyal — Duygu-Duyarlı Akış (Kanıt-of-Konsept)</title>
-<link rel="stylesheet" href="/style.css?v=5" />
+<link rel="stylesheet" href="/style.css?v=8" />
 </head>
 <body>
 <div class="sayfa">
@@ -30,8 +30,8 @@
       </div>
     </div>
 
-    <div class="ruh-hali-paneli" title="Oturum boyunca biriken ortalama — 'tespit edilen durum' farklı bir modelle (spiral tespiti, son 20 etkileşim) ayrıca hesaplanır.">
-      <div class="ruh-hali-baslik">Bu oturumda biriken olası izlenim (içeriklere baktıkça yavaş yavaş dolar)</div>
+    <div class="ruh-hali-paneli" title="Oturum boyunca biriken ortalama — 'tespit edilen durum' farklı bir modelle (spiral tespiti, son 20 etkileşim) ayrıca hesaplanır. Bu bir teşhis değil, ara sıra sorulan onay sorularıyla doğrulanan bir tahmindir.">
+      <div class="ruh-hali-baslik">Bu oturumda biriken olası izlenim (içeriklere baktıkça yavaş yavaş dolar, ara sıra sorularla doğrulanır)</div>
       <div id="ruh-hali-cubuklar">
         <div class="ruh-hali-cubuk-satiri" data-kategori="mutluluk">
           <span class="ruh-hali-cubuk-etiket">mutluluk</span>
@@ -91,6 +91,21 @@
   </footer>
 </div>
 
-<script src="/app.js?v=5"></script>
+<div id="dogrulama-karti" class="dogrulama-karti gizli">
+  <div class="dogrulama-metin">
+    <div class="dogrulama-baslik">Şu an gerçekte nasıl hissediyorsun?</div>
+    <div class="dogrulama-alt">Tahminimizi doğrulamamıza yardımcı olur — istersen geç.</div>
+  </div>
+  <div class="dogrulama-secenekler">
+    <button class="dogrulama-secenek" data-kategori="mutluluk">🙂<span>mutluluk</span></button>
+    <button class="dogrulama-secenek" data-kategori="umut">🌤️<span>umut</span></button>
+    <button class="dogrulama-secenek" data-kategori="sakin">😐<span>sakin</span></button>
+    <button class="dogrulama-secenek" data-kategori="korku">😨<span>korku</span></button>
+    <button class="dogrulama-secenek" data-kategori="anksiyete">😟<span>anksiyete</span></button>
+  </div>
+  <button class="dogrulama-gec" id="dogrulama-gec-buton">Geç</button>
+</div>
+
+<script src="/app.js?v=8"></script>
 </body>
 </html>

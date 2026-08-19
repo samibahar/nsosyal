@@ -19,6 +19,21 @@ Arayüzde tek bir "baskın" etiket yerine TÜM kategorilerin olasılık çubukla
 birlikte gösterilir — bu da tek bir zayıf sinyalin kesin bir teşhis gibi
 görünmesini engeller.
 
+DAYANAK (bu bir "kanıtlanmış model" değil, iki bacaklı bir yaklaşım):
+  1) Sentetik senaryoların TASARIMI keyfi değil, dijital davranış/HCI
+     literatüründe sık işlenen genel kavramlarla kabaca uyumlu: edilgen/uzun
+     süreli tüketimin dikkat sabitlenmesi (rumination) ile ilişkilendirilmesi,
+     aktif katılımın (beğeni/yorum) olumlu duygulanımla ilişkilendirilmesi,
+     hızlı-tekrarlı kontrol davranışının huzursuzluk/kompulsif kontrol
+     örüntüleriyle ilişkilendirilmesi gibi genel kabul gören fikirler. Bu,
+     kesin akademik parametre KAYNAĞI değil, tasarım kararlarının rastgele
+     olmadığının gerekçesidir.
+  2) Gerçek dayanak: backend/main.py'deki KENDİ KENDİNİ DOĞRULAMA döngüsü.
+     Kullanıcıya ara sıra "şu an gerçekte nasıl hissediyorsun?" sorusu
+     sorulur, cevabı modelin o anki tahminiyle karşılaştırılır ve eşleşme
+     oranı /api/dogrulama-ozet üzerinden şeffafça raporlanır. Modelin gerçek
+     performansı budur -- iddia değil, ölçüm.
+
 Sentetik senaryo mantığı (üretici fonksiyon, spiral_model.py ile aynı ruhta):
   - sakin      : düşük dwell, düşük etkileşim, duygu nötre yakın
   - mutluluk   : pozitif duygu + roket/yorum VAR (aktif, olumlu katılım)

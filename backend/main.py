@@ -4,6 +4,7 @@ eğitilmiş spiral sınıflandırıcı) ve psikolojik_durum.py'deki çok kategor
 anlık yorum sınıflandırıcısını bir web arayüzüne bağlar. Tek demo kullanıcı
 için bellek-içi durum tutar (gerçek üretimde bu veritabanına/oturuma taşınır).
 """
+import random
 import sys
 from collections import Counter
 from datetime import datetime
@@ -20,19 +21,6 @@ from motor import gonderileri_puanla, sirala, spiral_olasiligi
 from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
 from psikolojik_durum import psikolojik_durum_tahmini, KATEGORILER
 
-def _oturum_ortalamasi(gunluk: list[dict]) -> dict:
-    """TÜM oturumdaki etkileşimlerin olasılık dağılımlarını ortalar (tek bir
-    olaya göre değil). Her yeni etkileşim ortalamayı biraz kaydırır -- çubuklar
-    ilk birkaç etkileşimde daha oynak, oturum uzadıkça yavaş yavaş durulur/dolar.
-    Tek bir olayın (örn. tek bir roket tıklaması) sonucu tek başına ekrana
-    %90+ gibi aşırı bir değer olarak yansımaz."""
-    ortalama = {k: 0.0 for k in KATEGORILER}
-    for kayit in gunluk:
-        for kat, p in kayit["olasiliklar"].items():
-            ortalama[kat] += p / len(gunluk)
-    baskin = max(ortalama, key=ortalama.get)
-    return {"kategori": baskin, "olasiliklar": {k: round(v, 3) for k, v in ortalama.items()}}
-
 app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Kanıt-of-Konsept")
 
 GONDERILER = ORNEK_GONDERILER
@@ -41,8 +29,24 @@ GONDERI_BY_ID = {g["id"]: g for g in GONDERILER}
 
 KULLANICI_ILGI = ORNEK_KULLANICI_ILGI
 
-DAVRANIS_GUNLUGU: list[dict] = []  # spiral modeli için kayan pencere (son 20)
-PSIKOLOJIK_GUNLUK: list[dict] = []  # "haftalık" özet için tüm oturum kaydı
+SAYFA_BOYU = 12
+
+DAVRANIS_GUNLUGU: list[dict] = []  # spiral modeli için kayan pencere (son 20, gönderi başına 1 kayıt)
+PSIKOLOJIK_GUNLUK: list[dict] = []  # oturum özeti için (gönderi başına 1 kayıt)
+GOSTERILEN_ID_SETI: set[int] = set()  # sayfalama: bu oturumda zaten sunulan gönderiler
+SON_ETKILESIMLER: dict[int, dict] = {}  # gonderi_id -> o gönderiye dair BİRLEŞTİRİLMİŞ ham sinyal
+
+TAM_GUVEN_ESIGI = 8  # spiral oranı bu kadar farklı gönderi görülmeden tam güvenilir sayılmaz
+
+# --- Kendi kendini doğrulama / aktif öğrenme döngüsü ---
+# psikolojik_durum.py'nin davranış->kategori eşlemesi (örn. "uzun donup izleme
+# = korku") sentetik senaryolara dayanıyor, gerçek insan verisine değil. Bunu
+# "doğrulanmış" gibi sunmak yerine, kullanıcıya ara sıra hafif bir onay sorusu
+# sorup CEVABINI modelin tahminiyle karşılaştırıyoruz -- gerçek bir dayanak
+# ancak böyle oluşur. Bkz. CLAUDE.md "Kendi Kendini Doğrulayan Aktif Öğrenme".
+DOGRULAMA_GUNLUGU: list[dict] = []
+DOGRULAMA_ARALIGI = 8  # bu kadar etkileşimde bir onay sorusu göster
+SAYAC = {"son_dogrulamadan_beri": 0}
 
 
 class Etkilesim(BaseModel):
@@ -53,36 +57,171 @@ class Etkilesim(BaseModel):
     yorum: bool = False
 
 
+class DogrulamaCevabi(BaseModel):
+    kullanici_cevabi: str
+
+
+def _gonderi_bazinda_yerine_koy(gunluk: list[dict], gonderi_id: int, yeni_kayit: dict):
+    """Aynı gönderiye ait önceki kaydı kaldırıp yenisini sona ekler -- her
+    gönderinin günlükte en fazla bir kaydı olur, kaç kez etkileşim gelirse gelsin."""
+    gunluk[:] = [k for k in gunluk if k.get("gonderi_id") != gonderi_id]
+    gunluk.append(yeni_kayit)
+
+
+def _sinyalleri_birlestir(gonderi_id: int, e: "Etkilesim") -> dict:
+    """Aynı gönderi için art arda gelen etkileşimleri (roket sonra scroll-away
+    dwell'i, ya da spam tıklama) TEK bir birleşik sinyale indirger: en uzun
+    görünen süre + o ana kadarki tüm açık eylemlerin (OR) toplamı. Bu olmadan,
+    örneğin bir gönderiye roket atıp sonra kaydırıp uzaklaşınca, scroll-away
+    olayı roket sinyalini SESSİZCE ezip kaybediyordu."""
+    onceki = SON_ETKILESIMLER.get(gonderi_id, {"dwell_saniye": 0.0, "tiklama": False, "roket": False, "yorum": False})
+    birlesik = {
+        "dwell_saniye": max(onceki["dwell_saniye"], e.dwell_saniye),
+        "tiklama": onceki["tiklama"] or e.tiklama,
+        "roket": onceki["roket"] or e.roket,
+        "yorum": onceki["yorum"] or e.yorum,
+    }
+    SON_ETKILESIMLER[gonderi_id] = birlesik
+    return birlesik
+
+
+def _katki_agirligi(sinyal: dict) -> float:
+    """Bir etkileşimin oturum ortalamasına katkı ağırlığı. Çok kısa, edilgen
+    bir görünme (örn. hızlı kaydırırken 0.4sn görünüp geçme) tam bir gözlem
+    gibi sayılmamalı -- yoksa sırf çok sayıda gönderiyi hızlıca geçmek bile
+    barları tek başına domine edebiliyordu ("kaç gönderi gördüm" ayrı bir
+    sinyal, "tespit edilen durum" barındaki kaydırma hızı özelliği onu zaten
+    ölçüyor). Roket/yorum/tıklama gibi açık bir eylem varsa süre kısa olsa
+    bile niyet açıktır, tam ağırlık verilir."""
+    if sinyal["tiklama"] or sinyal["roket"] or sinyal["yorum"]:
+        return 1.0
+    return min(1.0, max(0.15, sinyal["dwell_saniye"] / 4.0))
+
+
+def _oturum_ortalamasi(gunluk: list[dict]) -> dict:
+    """TÜM oturumdaki (gönderi başına tekil) etkileşimlerin AĞIRLIKLI olasılık
+    dağılımlarını ortalar (ağırlık = _katki_agirligi). Çubuklar ilk birkaç
+    etkileşimde daha oynak, oturum uzadıkça yavaş yavaş durulur/dolar."""
+    if not gunluk:
+        return {"kategori": None, "olasiliklar": {k: 0.0 for k in KATEGORILER}}
+    toplam_agirlik = sum(k.get("agirlik", 1.0) for k in gunluk) or 1e-9
+    ortalama = {k: 0.0 for k in KATEGORILER}
+    for kayit in gunluk:
+        agirlik = kayit.get("agirlik", 1.0)
+        for kat, p in kayit["olasiliklar"].items():
+            ortalama[kat] += p * agirlik / toplam_agirlik
+    baskin = max(ortalama, key=ortalama.get)
+    return {"kategori": baskin, "olasiliklar": {k: round(v, 3) for k, v in ortalama.items()}}
+
+
+def _guven_carpani(ornek_sayisi: int) -> float:
+    """Az sayıda farklı gönderiyle (örn. sadece 2-3) hesaplanan bir ORAN
+    istatistiksel olarak güvenilmez -- küçük örneklemde kolayca %0 ya da
+    %100'e savrulur. Yeterli veri (TAM_GUVEN_ESIGI kadar farklı gönderi)
+    birikene kadar GÖSTERİLEN değeri kademeli yumuşatıyoruz; hesaplanan
+    olasılığın kendisini değiştirmiyoruz, sadece ekrana yansıyan güveni."""
+    return min(1.0, ornek_sayisi / TAM_GUVEN_ESIGI)
+
+
+def _dogal_cesitlilik_ekle(siralanmis: list[dict], genlik: float = 0.08) -> list[dict]:
+    """Aynı ilgi skoruna sahip gönderiler (örn. hepsi 'spor') her sayfa
+    yüklemesinde birebir aynı sırada gelmesin diye final_skor'a küçük bir
+    rastgele gürültü ekleyip yeniden sıralar. motor.py'nin kendisi kasıtlı
+    olarak deterministik bırakıldı (spike_poc.py'deki örnek çıktı tekrar
+    üretilebilir kalsın diye) -- gürültü sadece burada, sunum katmanında."""
+    gurultulu = [(g, g["final_skor"] + random.uniform(-genlik, genlik)) for g in siralanmis]
+    gurultulu.sort(key=lambda cift: -cift[1])
+    return [g for g, _ in gurultulu]
+
+
 @app.get("/api/gonderiler")
-def api_gonderiler():
+def api_gonderiler(sifirdan: bool = False):
+    if sifirdan:
+        GOSTERILEN_ID_SETI.clear()
+
     spiral = spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER)
     siralanmis = sirala(GONDERILER, KULLANICI_ILGI, spiral)
-    return {"spiral_seviyesi": round(spiral, 3), "gonderiler": siralanmis}
+    siralanmis = _dogal_cesitlilik_ekle(siralanmis)
+
+    kalanlar = [g for g in siralanmis if g["id"] not in GOSTERILEN_ID_SETI]
+    sayfa = kalanlar[:SAYFA_BOYU]
+    for g in sayfa:
+        GOSTERILEN_ID_SETI.add(g["id"])
+
+    return {
+        "spiral_seviyesi": round(spiral, 3),
+        "gonderiler": sayfa,
+        "tukendi": len(kalanlar) <= SAYFA_BOYU,
+    }
 
 
 @app.post("/api/etkilesim")
 def api_etkilesim(e: Etkilesim):
-    DAVRANIS_GUNLUGU.append(e.model_dump())
-    del DAVRANIS_GUNLUGU[:-20]  # kayan pencere: son 20 etkileşim
-    spiral = spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER)
+    birlesik = _sinyalleri_birlestir(e.gonderi_id, e)
+
+    _gonderi_bazinda_yerine_koy(DAVRANIS_GUNLUGU, e.gonderi_id, {"gonderi_id": e.gonderi_id, **birlesik})
+    del DAVRANIS_GUNLUGU[:-20]  # kayan pencere: son 20 FARKLI gönderi
+    ham_spiral = spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER)
+    spiral = ham_spiral * _guven_carpani(len(DAVRANIS_GUNLUGU))
 
     gonderi = GONDERI_BY_ID.get(e.gonderi_id)
     tekil_psikolojik = psikolojik_durum_tahmini(
         duygu=gonderi["duygu"] if gonderi else 0.0,
-        dwell_saniye=e.dwell_saniye,
-        tiklama=e.tiklama,
-        roket=e.roket,
-        yorum=e.yorum,
+        dwell_saniye=birlesik["dwell_saniye"],
+        tiklama=birlesik["tiklama"],
+        roket=birlesik["roket"],
+        yorum=birlesik["yorum"],
     )
-    PSIKOLOJIK_GUNLUK.append({
+    _gonderi_bazinda_yerine_koy(PSIKOLOJIK_GUNLUK, e.gonderi_id, {
+        "gonderi_id": e.gonderi_id,
         "saat": datetime.now().hour,
         "konu": gonderi["konu"] if gonderi else "bilinmiyor",
         "kategori": tekil_psikolojik["kategori"],       # özet istatistikleri için tekil olay
-        "olasiliklar": tekil_psikolojik["olasiliklar"],  # pencere ortalaması için
+        "olasiliklar": tekil_psikolojik["olasiliklar"],  # oturum ortalaması için
+        "agirlik": _katki_agirligi(birlesik),
     })
     psikolojik_oturum = _oturum_ortalamasi(PSIKOLOJIK_GUNLUK)
 
-    return {"spiral_seviyesi": round(spiral, 3), "psikolojik_durum": psikolojik_oturum}
+    SAYAC["son_dogrulamadan_beri"] += 1
+    onay_sorulsun_mu = SAYAC["son_dogrulamadan_beri"] >= DOGRULAMA_ARALIGI
+    if onay_sorulsun_mu:
+        SAYAC["son_dogrulamadan_beri"] = 0
+
+    return {
+        "spiral_seviyesi": round(spiral, 3),
+        "psikolojik_durum": psikolojik_oturum,
+        "onay_sorulsun_mu": onay_sorulsun_mu,
+    }
+
+
+@app.post("/api/dogrulama")
+def api_dogrulama_ekle(c: DogrulamaCevabi):
+    """Kullanıcının kendi bildirdiği anlık durumu, modelin O ANKİ oturum
+    tahminiyle karşılaştırıp günlüğe kaydeder. Kullanıcıya soru sorulmadan
+    ÖNCE modelin tahmini arayüze hiç gösterilmez -- karşılaştırma taraflı
+    olmasın diye."""
+    if c.kullanici_cevabi not in KATEGORILER:
+        return {"ok": False, "hata": "geçersiz kategori"}
+    model_durumu = _oturum_ortalamasi(PSIKOLOJIK_GUNLUK)
+    eslesme = model_durumu["kategori"] == c.kullanici_cevabi
+    DOGRULAMA_GUNLUGU.append({
+        "model_tahmini": model_durumu["kategori"],
+        "kullanici_cevabi": c.kullanici_cevabi,
+        "eslesme": eslesme,
+    })
+    return {"ok": True, "eslesme": eslesme, "model_tahmini": model_durumu["kategori"]}
+
+
+@app.get("/api/dogrulama-ozet")
+def api_dogrulama_ozet():
+    toplam = len(DOGRULAMA_GUNLUGU)
+    eslesen = sum(1 for k in DOGRULAMA_GUNLUGU if k["eslesme"])
+    return {
+        "toplam_onay": toplam,
+        "eslesen": eslesen,
+        "eslesme_orani": round(eslesen / toplam, 3) if toplam else None,
+        "son_kayitlar": DOGRULAMA_GUNLUGU[-10:],
+    }
 
 
 @app.get("/api/psikolojik-ozet")
@@ -118,6 +257,10 @@ def api_psikolojik_ozet():
 def api_sifirla():
     DAVRANIS_GUNLUGU.clear()
     PSIKOLOJIK_GUNLUK.clear()
+    GOSTERILEN_ID_SETI.clear()
+    SON_ETKILESIMLER.clear()
+    DOGRULAMA_GUNLUGU.clear()
+    SAYAC["son_dogrulamadan_beri"] = 0
     return {"ok": True}
 
 

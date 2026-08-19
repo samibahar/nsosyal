@@ -39,6 +39,11 @@ def _ozellik_cikar(log: list[dict], gonderiler: list[dict]) -> np.ndarray:
     negatif_dwell_toplam = dwell[negatif_maske].sum()
     negatif_dwell_orani = negatif_dwell_toplam / toplam_dwell
 
+    # NOT: backend artık gönderi başına en fazla 1 kayıt tuttuğu için (spam
+    # tıklamanın günlüğü domine etmesini önlemek amacıyla) bu her zaman 0
+    # çıkar -- bilinen bir sınırlılık, spiral_model.py'nin bu özelliği
+    # yeniden anlamlandırılmadan (örn. "farklı oturumda tekrar ziyaret")
+    # etkisiz kalıyor.
     negatif_id_listesi = [k["gonderi_id"] for i, k in enumerate(log) if negatif_maske[i]]
     negatif_tekrar_sayisi = len(negatif_id_listesi) - len(set(negatif_id_listesi))
 

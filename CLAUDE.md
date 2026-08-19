@@ -171,6 +171,94 @@ etkileşimlerden (sabit örnek metin değil) konu/saat bazlı gerçek bir özet
 üretiyor — `rapor.html`'de "Bu oturumda gerçekten gözlemlenen" bölümü olarak
 canlı gösteriliyor.
 
+## Duygu Analizi Optimizasyonu + Kendi Kendini Doğrulama (19.08.2026, gece)
+
+Kullanıcı sordu: "BERT fine-tuning arka planda çalışıyor ama o sadece gönderi
+METNİNİ yorumluyor — barları dolduran davranış→psikoloji eşlemesini neye
+dayandıracağız?" Çok haklı bir soru, üç parçalı cevap uygulandı:
+
+1. **Aktif öğrenme / kendi kendini doğrulama döngüsü (kodlandı):** Kullanıcıya
+   her ~8 etkileşimde bir hafif bir onay sorusu çıkıyor ("şu an gerçekte nasıl
+   hissediyorsun?" — mutluluk/umut/sakin/korku/anksiyete, "Geç" seçeneği de
+   var). Cevap, modelin O ANKİ tahminiyle karşılaştırılıp `/api/dogrulama`
+   ile kaydediliyor; taraflılık olmasın diye model tahmini kullanıcıya ÖNCE
+   gösterilmiyor. `/api/dogrulama-ozet` eşleşme oranını döndürüyor,
+   `rapor.html`'de "Model doğrulama" bölümü olarak şeffafça gösteriliyor.
+   Bu, CLAUDE.md'nin başındaki orijinal üründe zaten planlanmış ama hiç
+   kodlanmamış "Kendi kendini doğrulayan aktif öğrenme döngüsü" maddesinin
+   ilk gerçek uygulaması.
+2. **Literatüre gevşek dayandırma:** `psikolojik_durum.py`'nin docstring'i
+   güncellendi — sentetik senaryoların tasarımının rastgele olmadığı,
+   genel kabul gören dijital davranış kavramlarıyla (edilgen tüketim ~
+   rumination, aktif katılım ~ olumlu duygulanım, tekrarlı kontrol ~
+   huzursuzluk) kabaca uyumlu olduğu belirtildi. Bu KESİN akademik kaynak
+   iddiası DEĞİL — "rastgele uydurma değil" seviyesinde bir gerekçe.
+3. **Kapsamı dürüstçe küçültme:** Arayüz metinleri (ruh-hali-paneli başlığı,
+   rapor.html footer'ı) "doğrulanmış tespit sistemi" değil "önerilen yöntem +
+   sürekli doğrulama mekanizması" olarak güncellendi.
+
+**Raporda kullanılacak çerçeve:** "Modelimiz mükemmel değil, bunu biliyoruz ve
+saklamıyoruz — bu yüzden hem bağımsız veri setiyle doğruluk ölçtük (duygu
+modeli) hem de kullanıcı onayıyla sürekli kendini sınayan bir mekanizma
+kurduk (psikolojik kategori modeli)." Bu, ham doğruluk iddiasından çok daha
+güçlü bir "teknik yeterlilik" argümanı.
+
+## Duygu Analizi Optimizasyonu — BERT Fine-Tuning (19.08.2026)
+
+`ince_ayar.py`: savasy modeli, winvoker veri setinin **split="test"** bölümünden
+(dogrulama.py'nin kullandığı split="train" 1000 örneğiyle ÇAKIŞMIYOR, veri
+sızıntısı yok) dengeli ~15.000 örnekle (7500 pozitif + 7500 negatif) 2 epoch
+devam ederek ince ayar yapılıyor. Amaç: dogrulama.py'de bulunan alan kayması
+sorununu (gerçek doğruluk %69.8, modelin negatif tahmin yanlılığı) azaltmak.
+
+CPU'da (GPU yok) eğitim tahmin edilenden çok daha yavaş çıktı: ~5.1sn/adım,
+1480 adım toplam → gerçek süre 2 saat 6 dakika sürdü (ilk tahmin 45-90 dk
+yanlıştı). Fine-tuned model `models/bert-turkish-sentiment-ince-ayarli/`
+klasörüne kaydedildi; `duygu_modeli.py` artık bu klasörü önce dener, yoksa
+HF Hub'daki orijinal modele düşer (kod değişikliği gerekmeden çalışır).
+
+**SONUÇ (19.08.2026, ~gece yarısı) — AYNI 1000 örneklik bağımsız test
+setinde (dogrulama.py, split="train", fine-tuning'in kullandığı split="test"
+ile tamamen ayrık, veri sızıntısı yok):**
+
+| | Doğruluk | F1 | negatif precision |
+|---|---|---|---|
+| Önce (orijinal savasy) | %69.8 | 0.778 | 0.372 |
+| Sonra (ince ayarlı)    | **%94.3** | **0.964** | **0.803** |
+
+24.5 puanlık gerçek, bağımsız ölçülmüş bir iyileşme. En büyük düzelme:
+model artık "negatif" dediğinde çoğunlukla haklı (önceden pozitif metni
+sık sık yanlışlıkla negatif sanıyordu). Yan not/sınırlılık: nötr etiketli
+örneklerin pozitife yuvarlanma oranı arttı (%52 → %91) -- model hâlâ ikili,
+nötr sınıfı yok, ve şimdi belirsiz/nötr metni daha güçlü biçimde pozitife
+okuyor gibi görünüyor; raporda bu dürüstçe belirtilmeli.
+
+**Raporda kullanılacak çerçeve:** "Vendor'ın iddiasını (%95.4) sorgulamadan
+kabul etmek yerine bağımsız ölçtük, gerçek zayıflık bulduk (%69.8), bunu
+hedefli bir fine-tuning ile ölçülebilir biçimde düzelttik (%94.3), ve
+sürecin her adımını (veri sızıntısı koruması dahil) şeffafça belgeledik."
+Bu, tek başına "%95 doğruluk" demekten çok daha güçlü bir teknik yeterlilik
+anlatısı.
+
+**EK BULGU / KISA ALARM (aynı gece, hemen sonrasında test edildi):** İnce
+ayarlı modeli `ornek_veri.py`'deki 150 demo gönderisinde (kısa, resmi,
+üçüncü-şahıs "haber bülteni" tarzı cümleler -- winvoker'ın daha çok birinci
+şahıs/günlük-dil ağırlıklı tarzından farklı bir alt-tür) test ederken, ilk
+8 örneklik hızlı testte ince ayarlı model şaşırtıcı biçimde KÖTÜ çıktı
+(idam/tutuklama gibi net negatif haberleri pozitif sanıyordu). 20 örneğe
+genişletilince endişe geçti: **orijinal ve ince ayarlı model bu ÖZEL alt-türde
+eşit performans gösteriyor (%65 = %65)** -- yani fine-tuning bizim demo
+içeriğimizde ne iyileştirme ne kötüleştirme yaptı, GENEL Türkçe metinde
+(bağımsız 1000 örnek) ise büyük iyileştirme yaptı (%69.8→%94.3).
+
+**Karar:** İnce ayarlı modeli kullanmaya devam (duygu_modeli.py zaten
+otomatik seçiyor) -- genel performansı kesin olarak daha iyi, kendi demo
+tarzımızda da geriletmiyor. **Raporda dürüstçe belirtilmesi gereken ek
+sınırlılık:** kısa/resmi/dolaylı-duygu-ifadeli Türkçe cümleler (örn. "X
+tepki topladı" gibi çıkarımsal duygu, doğrudan "harika/kötü" gibi açık
+duygu kelimesi yok) HER İKİ modelin de zorlandığı bir alt-tür (%65
+civarı) -- bu, modelin genel bir sınırlılığı, fine-tuning ile çözülmedi.
+
 ## Sırada Ne Var (öncelik sırasıyla)
 
 1. `spike_poc.py`'deki `duygu_skoru()` fonksiyonunu gerçek BERT modeliyle değiştir.
