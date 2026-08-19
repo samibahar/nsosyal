@@ -9,8 +9,12 @@ sorgulamadan kabul et, aksini gerektiren yeni bir bilgi çıkmadıkça.
 
 - Yarışma: NSosyal İnovasyon Yarışması (TEKNOFEST, düzenleyen: 2N Medya + T3 Vakfı).
 - Resmi şartname okundu: `2026_NSOSYAL_YARISMASI_SARTNAMESI_TR_2026_07_24_v9_1.pdf` (V3, 17.08.2026).
-- Son başvuru tarihi 20 Ağustos 2026 idi — **başvuru/takım kaydı tamamlandı** (19.08.2026
-  itibarıyla kullanıcı onayladı, 2-5 kişilik takım + takım kaptanı zorunluluğu karşılandı).
+- Son başvuru tarihi: **20 Ağustos 2026** (şartnamede sadece tarih var, saat belirtilmemiş —
+  24 Ağustos/14 Eylül'ün aksine). **DÜZELTME (19.08.2026 gece):** önceki kayıt "başvuru
+  tamamlandı" diyordu ama bu YANLIŞTI — kullanıcı daha önce "yaptım"a bastığını sanmış,
+  gerçekte başvuru geçmemiş. Kullanıcı 19.08.2026 gece "yapmak üzereyim, önemli değil daha
+  vakit var" dedi — yani **başvuru/takım kaydı HENÜZ TAMAMLANMADI**, bu hâlâ açık bir risk.
+  Fırsat çıkarsa nazikçe hatırlat, üstüne gitme (kullanıcı bilinçli, "acele değil" dedi).
 - Teknik Rapor teslimi: **24 Ağustos 2026, saat 17.00 (TSİ)** — KYS üzerinden. Şablona uygun
   olmayan/eksik/geç yüklenen raporlar değerlendirmeye alınmaz, takım elenir.
 - Ardından: 2 Eylül sonuç ilanı, 2-7 Eylül mentörlük süreci, 14 Eylül final sunum teslimi,
