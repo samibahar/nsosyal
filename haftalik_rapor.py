@@ -3,10 +3,14 @@ LLM destekli "haftalık öz-farkındalık raporu" üretimi — CLAUDE.md'de baş
 planlanan ama önce statik bir örnekle gösterilen özelliğin gerçek hâli.
 
 Gerçek oturum verisinden (psikolojik_durum kategorileri, konu, saat) bir özet
-çıkarılıp Claude API'sine prompt olarak verilir; model bunu okunabilir, nazik,
+çıkarılıp Gemini API'sine prompt olarak verilir; model bunu okunabilir, nazik,
 TEŞHİS OLMAYAN bir rapor metnine çevirir. API anahtarı yoksa (ör. .env dosyası
 eksikse) `mevcut()` False döner ve arayüz zaten var olan statik örneğe düşer --
 kod hiçbir zaman "sahte" bir LLM çıktısı uydurmaz.
+
+Gemini kullanılıyor (Claude değil) -- ücretsiz katmanı olduğu için (bkz. CLAUDE.md,
+19.08.2026 notu). Mantık/prompt tasarımı sağlayıcıdan bağımsız, istenirse
+Anthropic'e geri dönmek tek fonksiyonu (uret) değiştirmek kadar basit.
 """
 import os
 
@@ -14,9 +18,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MODEL_ADI = "claude-sonnet-5"
+MODEL_ADI = "gemini-3.6-flash"
 
-SISTEM_TALIMATI = """Sen NSosyal platformu için "haftalık öz-farkındalık raporu" yazan bir asistansın.
+SISTEM_TALIMATI_KISISEL = """Sen NSosyal platformu için "haftalık öz-farkındalık raporu" yazan bir asistansın.
 Kurallar (KESİNLİKLE uy):
 - Bu bir teşhis veya klinik değerlendirme DEĞİL. "Kesin", "tanı", "hasta", "bozukluk" gibi kelimeler kullanma.
 - "Tespit ettik" değil "gözlemledik", "kesin" değil "olası" gibi temkinli bir dil kullan.
@@ -26,9 +30,30 @@ Kurallar (KESİNLİKLE uy):
   Her bölüm başlığını tam bu şekilde yaz (## ile başlat), altına 2-4 cümlelik bir paragraf yaz.
 - Sadece verilen gerçek sayılara dayan, uydurma detay ekleme."""
 
+# Terapiste/uzmana götürülmek üzere hazırlanan varyant -- kullanıcı isteğiyle
+# eklendi (19.08.2026). Kritik fark: kişisel raporun aksine YORUM/tavsiye
+# YAPMAZ, sadece ham davranışsal veriyi düzenli sunar -- nihai değerlendirme
+# uzmana ait olduğu için model burada bir adım daha geri durmalı.
+SISTEM_TALIMATI_TERAPIST = """Sen NSosyal platformunun kullanıcı davranış verisinden, kullanıcının kendi
+isteğiyle bir ruh sağlığı uzmanına GÖTÜREBİLECEĞİ yapılandırılmış bir VERİ ÖZETİ hazırlayan bir asistansın.
+Kurallar (KESİNLİKLE uy):
+- Bu KESİNLİKLE bir teşhis, klinik değerlendirme veya tavsiye DEĞİL -- "tanı", "hasta", "bozukluk",
+  "tedavi" gibi kelimeler kullanma. Yorum yapma, öneri verme, sonuç çıkarma -- sadece VERİYİ düzenli sun.
+- İlk cümlede açıkça belirt: bu, kullanıcının kendi isteğiyle bir uzmana götürebileceği, uygulamanın
+  kaydettiği DAVRANIŞSAL veri özetidir; klinik bir belge değildir, nihai değerlendirme uzmana aittir.
+- Üçüncü şahıs, nötr, açıklayıcı bir dil kullan -- bir gözlem günlüğü özeti gibi, bir doktor raporu gibi DEĞİL.
+- Sayısal verileri (kategori dağılımı, doğrulama/eşleşme oranı, saat/konu örüntüleri) olduğu gibi ver,
+  yorumlama veya ciddiyet derecesi atama.
+- Siyasi/dini içerik kategorisine değinme -- sadece duygusal yoğunluk ve davranış örüntüsünden bahset.
+- Çıktı düz metin olsun, şu bölümlerle: "Veri Özeti", "Gözlemlenen Davranışsal Örüntüler", "Sınırlılıklar".
+  Her başlığı tam bu şekilde yaz (## ile başlat). "Sınırlılıklar" bölümünde MUTLAKA şunu tekrar et: bu
+  veriler sentetik senaryolarla eğitilmiş bir modelden geliyor, klinik doğrulaması yok, kullanıcının kendi
+  onaylarıyla kısmen sınanıyor, ve TEK BAŞINA hiçbir karar/değerlendirme için yeterli değil.
+- Sadece verilen gerçek sayılara dayan, uydurma detay ekleme."""
+
 
 def mevcut() -> bool:
-    return bool(os.environ.get("ANTHROPIC_API_KEY"))
+    return bool(os.environ.get("GEMINI_API_KEY"))
 
 
 def _ozet_metni_olustur(psikolojik_ozet: dict, dogrulama_ozet: dict) -> str:
@@ -62,24 +87,36 @@ def _ozet_metni_olustur(psikolojik_ozet: dict, dogrulama_ozet: dict) -> str:
     return "\n".join(satirlar)
 
 
-def uret(psikolojik_ozet: dict, dogrulama_ozet: dict) -> dict:
-    """API anahtarı yoksa {"mevcut": False, ...} döner -- arayüz statik örneğe düşer."""
+def uret(psikolojik_ozet: dict, dogrulama_ozet: dict, hedef: str = "kisisel") -> dict:
+    """API anahtarı yoksa {"mevcut": False, ...} döner -- arayüz statik örneğe düşer.
+    `hedef`: "kisisel" (varsayılan, sıcak/destekleyici öz-farkındalık raporu) veya
+    "terapist" (yorumsuz, ham veri özeti -- kullanıcının bir uzmana götürebileceği)."""
     if not mevcut():
-        return {"mevcut": False, "sebep": "ANTHROPIC_API_KEY tanımlı değil"}
+        return {"mevcut": False, "sebep": "GEMINI_API_KEY tanımlı değil"}
 
-    from anthropic import Anthropic
+    from google import genai
+    from google.genai import types
 
     veri_ozeti = _ozet_metni_olustur(psikolojik_ozet, dogrulama_ozet)
-    istemci = Anthropic()
-    yanit = istemci.messages.create(
-        model=MODEL_ADI,
-        max_tokens=600,
-        system=SISTEM_TALIMATI,
-        messages=[{
-            "role": "user",
-            "content": f"Bu oturumda gerçekten kaydedilen veri özeti:\n\n{veri_ozeti}\n\n"
-                       f"Bu veriye dayanarak haftalık öz-farkındalık raporu metnini yaz.",
-        }],
+    sistem_talimati = SISTEM_TALIMATI_TERAPIST if hedef == "terapist" else SISTEM_TALIMATI_KISISEL
+    kullanici_istegi = (
+        "Bu oturumda gerçekten kaydedilen veri özeti:\n\n{}\n\n"
+        "Bu veriye dayanarak {} metnini yaz."
+    ).format(
+        veri_ozeti,
+        "bir uzmana götürülebilecek yapılandırılmış veri özeti" if hedef == "terapist"
+        else "haftalık öz-farkındalık raporu",
     )
-    metin = "".join(blok.text for blok in yanit.content if blok.type == "text")
-    return {"mevcut": True, "metin": metin, "veri_ozeti": veri_ozeti}
+
+    istemci = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    yanit = istemci.models.generate_content(
+        model=MODEL_ADI,
+        contents=kullanici_istegi,
+        config=types.GenerateContentConfig(
+            system_instruction=sistem_talimati,
+            max_output_tokens=2048,
+            thinking_config=types.ThinkingConfig(thinking_level="low"),
+        ),
+    )
+    metin = yanit.text
+    return {"mevcut": True, "metin": metin, "veri_ozeti": veri_ozeti, "hedef": hedef}

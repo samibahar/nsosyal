@@ -298,6 +298,107 @@ bir ML kavramı (online/incremental learning, SGD). Uygulandı:
   dönüp güvenli tarafa geçilebilir). Gerçek üründe düzenlileştirme/sınır
   (clipping) eklenmeli -- rapor bunu "gelecek iş" olarak not etmeli.
 
+## Renk Doygunluğu Azaltma + Gerçek LLM Haftalık Rapor (19.08.2026, gece)
+
+Spiral seviyesine bağlı renk doygunluğu azaltma eklendi (`app.js`/`index.html`/
+`style.css`): `spiral_seviyesi` arttıkça akışın CSS `saturate()` filtresi
+kademeli azalıyor (seviye 0.7'de %69 doygunluk gibi), kullanıcı isteğiyle bir
+açma/kapama tuşu da eklendi. Ayrı bir ağırlıklı formül icat etmek yerine zaten
+eğitilmiş tek bileşik sinyali (spiral_seviyesi) tekrar kullanmak tercih edildi
+— tutarlılık için.
+
+**Gerçek LLM destekli haftalık rapor** (`haftalik_rapor.py`) eklendi —
+sabit örnek metnin yanına, bu oturumda gerçekten kaydedilen veriye bakarak
+anlık üretilen bir versiyon. **Sağlayıcı: Anthropic/Claude DEĞİL, Google
+Gemini** (`gemini-2.5-flash`, `google-genai` kütüphanesi) — kullanıcı bütçe
+kısıtı nedeniyle sordu, Gemini'nin kart istemeyen gerçek bir ücretsiz katmanı
+olduğu için ona geçildi (Claude API tamamen kullanım-bazlı ücretli, ücretsiz
+kota yok). Mantık/prompt/sistem talimatı sağlayıcıdan bağımsız tasarlandı —
+`uret()` fonksiyonunu değiştirmek başka bir sağlayıcıya geçmek için yeterli.
+`GEMINI_API_KEY` ortam değişkeni `.env`'de yoksa `mevcut()` False döner,
+arayüz zaten var olan statik örnek rapora düşer — sahte bir LLM çıktısı asla
+uydurulmaz.
+
+**Uçtan uca canlı test edildi (19.08.2026, gece) — çalışıyor.** İki küçük
+sorun çözüldü: (1) `gemini-2.5-flash` artık yeni kullanıcılara kapalı, API'nin
+kendi hata mesajının önerdiği `gemini-3.6-flash`'a geçildi; (2) ilk denemede
+çıktı yarıda kesiliyordu -- sebebi modelin "thinking" (iç muhakeme) token'larının
+`max_output_tokens` bütçesinden düşmesiydi (`thoughts_token_count` günlükte
+görüldü). `thinking_budget=0` ile tamamen kapatmak bu modelde reddedildi (400
+hata) -- çözüm `thinking_level="low"` + `max_output_tokens=2048`'e çıkarmak
+oldu. Gerçek bir örnek üretimle doğrulandı: üç bölüm de doğru formatta
+("## Gözlemlenen olası örüntü" / "İyi gidenler" / "Nazik bir not"), teşhis
+dili yok, temkinli ton korunuyor.
+
+## "Korku" → "Sinirli" Kategori Değişikliği + Ölçeklendirme Düzeltmesi (19.08.2026, gece)
+
+Kullanıcının gözlemi: "korku" davranışsal olarak gerçekçi hissettirmiyordu,
+"sinirli" gibi bir kategori daha gerçekçi olur mu? Haklı bir gözlem --
+`psikolojik_durum.py`'nin kendi dosya-başı dürüstlük notu zaten "korku ile
+anksiyete'yi ayırt etmenin bilimsel bir üst sınırı var" diyordu, çünkü ikisi
+de "negatif duygu + pasif" örüntüsüydü, davranışsal olarak neredeyse aynı
+imzayı taşıyorlardı. **"sinirli" (negatif duygu + roket/yorum VAR, aktif
+tepkisel katılım) davranışsal olarak GERÇEKTEN AYRIT EDİLEBİLİR bir imza** --
+"korku"nun donup-pasif-izleme'sinin tam tersi. 5 kategori: sakin, mutluluk,
+umut, sinirli, anksiyete. Arayüz (renk, etiket, doğrulama kartı emojisi) ve
+`rapor.js` buna göre güncellendi.
+
+**Yan bulgu (kod incelenirken ortaya çıktı, saklanmadı):** kategori değişip
+model yeniden eğitilince F1 makro 0.78'den 0.686'ya düştü. Kök neden
+araştırıldı: `dwell_saniye` (0-15+ saniye) ile `duygu` (-1..1) ve
+roket/yorum/tıklama (0/1) arasında BÜYÜK ölçek farkı var, lineer modelde
+(SGDClassifier/lojistik regresyon) ölçeklenmemiş büyük-skala özellik küçük
+olanları gölgeliyor. Eskiden bu sorun gizliydi çünkü "korku"nun ayrımı
+neredeyse tamamen dev dwell büyüklüğüyle yapılıyordu; "sinirli" ise küçük
+skala olan duygu işaretine (negatif/pozitif) dayandığı için sorun görünür
+oldu. `StandardScaler` eklendi (eğitim + `psikolojik_durum_tahmini` +
+`kisisel_guncelle` -- üçü de AYNI dondurulmuş `_OLCEKLEYICI`'yi kullanıyor,
+tutarsızlık olmasın diye). Sonuç: F1 makro 0.686 → **0.704**, kategoriler
+arası denge de düzeltildi (örn. "umut" precision 0.55 → 0.72). Eski 0.78'in
+altında ama bu, gerçek ve daha zor bir ayrım görevinin dürüst sonucu --
+uydurma bir sayı değil. `rapor.html` altbilgisindeki eski/yanlış F1≈0.78 ve
+"ince ayar sürüyor" ifadeleri de güncel gerçek değerlere düzeltildi.
+
+**Doygunluk azaltma "çalışmıyor gibi" sorunu (aynı gece) — kök neden bulundu
+ve düzeltildi.** Kullanıcı canlı testte fark etmediğini bildirdi. Tarayıcıda
+`getComputedStyle` ile doğrulandı: mekanizma TEKNİK olarak çalışıyordu
+(`#akis` üzerinde `filter: saturate(...)` doğru uygulanıyordu), ama etki
+gözle görülemeyecek kadar küçüktü -- iki sebep: (1) `_guven_carpani` (az
+etkileşimde spiral_seviyesi'ni kasıtlı bastıran güven mekanizması) ilk
+birkaç etkileşimde seviyeyi çok düşük tutuyor (örn. %9'da doygunluk sadece
+%96 -- fark edilmez), (2) eski formülün maksimum azalması bile sadece %45'ti
+(seviye=1'de saturate(55%)). Güven bastırmasını KORUDUK (istatistiksel
+gerekçesi hâlâ geçerli, spiral_seviyesi ile tutarlılık ilkesi bozulmasın
+diye) ama görünürlük eğrisini güçlendirdik: maksimum azalma %45→%75, eğri
+de `seviye^0.7` ile öne yüklendi (orta seviyelerde de belirgin olsun, sadece
+seviye=1'e çok yaklaşınca değil). Test: seviye=0.33 → saturate(66%) (öncesi
+~saturate(85%) olurdu), seviye=1.0 → saturate(25%) (öncesi saturate(55%)).
+
+## Rapor Sayfası Metin Düzeltmesi + "Terapiste Götürülebilir Veri Özeti" (19.08.2026, gece)
+
+`rapor.html` başındaki uyarı kutusu artık yanlıştı -- "gerçek sürümde bir LLM
+tarafından üretilir" diye GELECEK ZAMANDA yazıyordu ama bu artık şu anda
+oluyor (canlı LLM raporu çalışıyor). Metin, hangi bölümlerin gerçekten canlı
+(gözlemlenen/doğrulama/AI yorumu) hangi bölümün hâlâ sabit format örneği
+(10-16 Ağustos) olduğunu netleştirecek şekilde güncellendi. "Teşhis/klinik
+değerlendirme değildir" uyarısı AYNEN korundu.
+
+**Yeni özellik: "Bir uzmana götürmek istersen" bölümü.** Kullanıcının önerisi
+-- LLM, isteğe bağlı olarak, kullanıcının bir ruh sağlığı uzmanına götürebileceği
+YORUMSUZ bir ham veri özeti de hazırlayabilsin. Kişisel rapordan (sıcak,
+"Nazik bir not" içeren) kasıtlı olarak FARKLI bir sistem talimatıyla
+(`SISTEM_TALIMATI_TERAPIST`, `haftalik_rapor.py`) çalışıyor: tavsiye/yorum/
+sonuç çıkarma YASAK, üçüncü şahıs+nötr dil, sadece "Veri Özeti / Gözlemlenen
+Davranışsal Örüntüler / Sınırlılıklar" başlıklarıyla ham sayıları sunuyor,
+"Sınırlılıklar" bölümünde modelin sentetik veriyle eğitildiğini, klinik
+doğrulaması olmadığını ve TEK BAŞINA yeterli olmadığını tekrar etmesi
+ZORUNLU. Otomatik yüklenmiyor -- talep üzerine (buton) üretiliyor, her sayfa
+açılışında gereksiz LLM çağrısı olmasın diye. `uret()` fonksiyonuna
+`hedef="kisisel"|"terapist"` parametresi eklendi, yeni endpoint:
+`GET /api/terapist-raporu`. Canlı test edildi -- çıktı beklenen çerçeveye
+tam uyuyor, açılış cümlesi "klinik bir belge değildir, nihai değerlendirme
+uzmana aittir" diyor.
+
 ## Sırada Ne Var (öncelik sırasıyla)
 
 1. `spike_poc.py`'deki `duygu_skoru()` fonksiyonunu gerçek BERT modeliyle değiştir.

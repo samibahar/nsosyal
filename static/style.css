@@ -49,8 +49,8 @@
   --ruh-mutluluk-soft: #e5f9f2;
   --ruh-umut: #0284c7;
   --ruh-umut-soft: #e0f2fe;
-  --ruh-korku: #6d28d9;
-  --ruh-korku-soft: #efe9ff;
+  --ruh-sinirli: #ea580c;
+  --ruh-sinirli-soft: #ffedd5;
   --ruh-anksiyete: #f4212e;
   --ruh-anksiyete-soft: #fdeaec;
 }
@@ -90,7 +90,7 @@
     --ruh-sakin-soft: #21262b;
     --ruh-mutluluk-soft: #062a20;
     --ruh-umut-soft: #082f49;
-    --ruh-korku-soft: #1d1436;
+    --ruh-sinirli-soft: #3a1c07;
     --ruh-anksiyete-soft: #35080a;
   }
 }
