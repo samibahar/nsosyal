@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Haftalık Öz-Farkındalık Raporu — Örnek</title>
-<link rel="stylesheet" href="/style.css" />
+<link rel="stylesheet" href="/style.css?v=3" />
 </head>
 <body>
 <div class="sayfa">
@@ -27,7 +27,23 @@
       </div>
     </div>
 
+    <div class="rapor-bolum canli" id="canli-bolum" style="display:none">
+      <h3 class="rapor-bolum-baslik">
+        <span class="ikon" style="background:var(--good-soft);color:var(--good)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        </span>
+        Bu oturumda gerçekten gözlemlenen
+      </h3>
+      <p style="margin-bottom: 14px;">
+        Bu bölüm örnek değil — bu tarayıcı oturumunda gerçekten kaydettiğin
+        <b id="canli-toplam">0</b> etkileşimden canlı hesaplandı (Ana Sayfa'da
+        gönderilerle etkileşime girdikçe değişir).
+      </p>
+      <div id="canli-dagilim"></div>
+    </div>
+
     <h2 class="rapor-baslik">10–16 Ağustos haftası özetin</h2>
+    <div style="font-size: 12.5px; color: var(--faint); margin: -12px 0 20px;">Bu kısım örnek — sabit metinle hazırlandı</div>
 
     <div class="ozet-satiri">
       <div class="ozet-kutu">
@@ -97,5 +113,6 @@
     </footer>
   </div>
 </div>
+<script src="/rapor.js?v=3"></script>
 </body>
 </html>

@@ -7,6 +7,25 @@ const akisEl = document.getElementById("akis");
 const spiralDolgu = document.getElementById("spiral-dolgu");
 const spiralMetin = document.getElementById("spiral-metin");
 const spiralIkon = document.getElementById("spiral-ikon");
+const ruhHaliRozeti = document.getElementById("ruh-hali-rozeti");
+
+const RUH_RENK = {
+  sakin: { bg: "var(--ruh-sakin-soft)", fg: "var(--ruh-sakin)" },
+  mutluluk: { bg: "var(--ruh-mutluluk-soft)", fg: "var(--ruh-mutluluk)" },
+  umut: { bg: "var(--ruh-umut-soft)", fg: "var(--ruh-umut)" },
+  korku: { bg: "var(--ruh-korku-soft)", fg: "var(--ruh-korku)" },
+  anksiyete: { bg: "var(--ruh-anksiyete-soft)", fg: "var(--ruh-anksiyete)" },
+};
+
+function ruhHaliGuncelle(psikolojik) {
+  if (!psikolojik) return;
+  const renk = RUH_RENK[psikolojik.kategori] || RUH_RENK.sakin;
+  const yuzde = Math.round((psikolojik.olasiliklar[psikolojik.kategori] || 0) * 100);
+  ruhHaliRozeti.style.background = renk.bg;
+  ruhHaliRozeti.style.color = renk.fg;
+  ruhHaliRozeti.querySelector(".nokta").style.background = renk.fg;
+  ruhHaliRozeti.querySelector(".metin").textContent = `${psikolojik.kategori} · %${yuzde}`;
+}
 
 const gorunurlukBaslangic = new Map(); // gonderi_id -> performance.now() zamanı
 
@@ -66,15 +85,17 @@ async function gonderileriGetir() {
   akisiCiz(veri.gonderiler);
 }
 
-async function etkilesimGonder(gonderi_id, dwell_saniye, tiklama = false) {
-  if (dwell_saniye < 0.3) return; // gürültü filtrele
+async function etkilesimGonder(gonderi_id, dwell_saniye, tiklama = false, roket = false, yorum = false) {
+  const acikEylemVar = tiklama || roket || yorum;
+  if (!acikEylemVar && dwell_saniye < 0.3) return; // sadece pasif dwell'de gürültü filtrele
   const yanit = await fetch("/api/etkilesim", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ gonderi_id, dwell_saniye, tiklama }),
+    body: JSON.stringify({ gonderi_id, dwell_saniye, tiklama, roket, yorum }),
   });
   const veri = await yanit.json();
   spiralGostergesiGuncelle(veri.spiral_seviyesi);
+  ruhHaliGuncelle(veri.psikolojik_durum);
 }
 
 function olcumSatiriOlustur(baslik, gosterilenMetin, barDeger, maxDeger, renk) {
@@ -138,6 +159,18 @@ function akisiCiz(gonderiler) {
           </button>
           <span class="duygu-rozeti"><span class="duygu-nokta" style="background:${dRenk}"></span>duygu ${g.duygu.toFixed(2)}</span>
         </div>
+        <div class="etkilesim-satiri">
+          <div class="mini-eylemler">
+            <button class="mini-eylem-buton roket" title="Roket at">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+              Roket
+            </button>
+            <button class="mini-eylem-buton yorum" title="Yorum yaz">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Yorum
+            </button>
+          </div>
+        </div>
         <div class="aciklama-paneli"></div>
       </div>
     `;
@@ -160,6 +193,20 @@ function akisiCiz(gonderiler) {
       e.stopPropagation();
       panel.classList.toggle("acik");
       nedenButon.classList.toggle("acik");
+    });
+
+    const roketButon = kart.querySelector(".mini-eylem-buton.roket");
+    roketButon.addEventListener("click", (e) => {
+      e.stopPropagation();
+      roketButon.classList.toggle("aktif");
+      etkilesimGonder(g.id, 1.0, false, roketButon.classList.contains("aktif"), false);
+    });
+
+    const yorumButon = kart.querySelector(".mini-eylem-buton.yorum");
+    yorumButon.addEventListener("click", (e) => {
+      e.stopPropagation();
+      yorumButon.classList.toggle("aktif");
+      etkilesimGonder(g.id, 1.0, false, false, yorumButon.classList.contains("aktif"));
     });
 
     kart.addEventListener("click", () => {
