@@ -78,5 +78,22 @@ async function dogrulamaOzetiYukle() {
   }
 }
 
+async function llmRaporuYukle() {
+  const bolum = document.getElementById("llm-rapor-bolum");
+  try {
+    const yanit = await fetch("/api/haftalik-rapor");
+    const veri = await yanit.json();
+    if (!veri.mevcut) {
+      bolum.style.display = "none"; // API anahtarı yok -- sabit örneğe düşülüyor
+      return;
+    }
+    document.getElementById("llm-rapor-icerik").textContent = veri.metin;
+    bolum.style.display = "block";
+  } catch (e) {
+    bolum.style.display = "none";
+  }
+}
+
 canliOzetiYukle();
 dogrulamaOzetiYukle();
+llmRaporuYukle();
