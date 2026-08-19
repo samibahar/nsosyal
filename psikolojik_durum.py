@@ -12,6 +12,12 @@ verdi mi) türetilmiş OLASI bir örüntü etiketi. "korku" ile "anksiyete" gibi
 yakın durumları ayırt etmenin bilimsel bir üst sınırı var; biz bunu davranış
 örüntüsü (donup pasif izleme vs. tekrarlayan huzursuz kontrol) üzerinden kaba
 biçimde ayırt ediyoruz, gerçek bir duygu okuması iddiasında bulunmuyoruz.
+"sakin" kategorisi bilinçli olarak eklendi: davranışsal sinyal zayıf/nötr
+olduğunda modelin zorla bir duyguya (örn. anksiyete) yönelmesini önler, "her
+şey bir duygudur" gibi aşırı iddialı bir çıkarımdan kaçınmamızı sağlar.
+Arayüzde tek bir "baskın" etiket yerine TÜM kategorilerin olasılık çubukları
+birlikte gösterilir — bu da tek bir zayıf sinyalin kesin bir teşhis gibi
+görünmesini engeller.
 
 Sentetik senaryo mantığı (üretici fonksiyon, spiral_model.py ile aynı ruhta):
   - sakin      : düşük dwell, düşük etkileşim, duygu nötre yakın
