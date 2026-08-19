@@ -7,24 +7,16 @@ const akisEl = document.getElementById("akis");
 const spiralDolgu = document.getElementById("spiral-dolgu");
 const spiralMetin = document.getElementById("spiral-metin");
 const spiralIkon = document.getElementById("spiral-ikon");
-const ruhHaliRozeti = document.getElementById("ruh-hali-rozeti");
-
-const RUH_RENK = {
-  sakin: { bg: "var(--ruh-sakin-soft)", fg: "var(--ruh-sakin)" },
-  mutluluk: { bg: "var(--ruh-mutluluk-soft)", fg: "var(--ruh-mutluluk)" },
-  umut: { bg: "var(--ruh-umut-soft)", fg: "var(--ruh-umut)" },
-  korku: { bg: "var(--ruh-korku-soft)", fg: "var(--ruh-korku)" },
-  anksiyete: { bg: "var(--ruh-anksiyete-soft)", fg: "var(--ruh-anksiyete)" },
-};
 
 function ruhHaliGuncelle(psikolojik) {
   if (!psikolojik) return;
-  const renk = RUH_RENK[psikolojik.kategori] || RUH_RENK.sakin;
-  const yuzde = Math.round((psikolojik.olasiliklar[psikolojik.kategori] || 0) * 100);
-  ruhHaliRozeti.style.background = renk.bg;
-  ruhHaliRozeti.style.color = renk.fg;
-  ruhHaliRozeti.querySelector(".nokta").style.background = renk.fg;
-  ruhHaliRozeti.querySelector(".metin").textContent = `${psikolojik.kategori} · %${yuzde}`;
+  Object.entries(psikolojik.olasiliklar).forEach(([kategori, olasilik]) => {
+    const satir = document.querySelector(`.ruh-hali-cubuk-satiri[data-kategori="${kategori}"]`);
+    if (!satir) return;
+    const yuzde = Math.round(olasilik * 100);
+    satir.querySelector(".ruh-hali-cubuk-dolgu").style.width = yuzde + "%";
+    satir.querySelector(".ruh-hali-cubuk-yuzde").textContent = "%" + yuzde;
+  });
 }
 
 const gorunurlukBaslangic = new Map(); // gonderi_id -> performance.now() zamanı

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>NSosyal — Duygu-Duyarlı Akış (Kanıt-of-Konsept)</title>
-<link rel="stylesheet" href="/style.css?v=4" />
+<link rel="stylesheet" href="/style.css?v=5" />
 </head>
 <body>
 <div class="sayfa">
@@ -30,9 +30,35 @@
       </div>
     </div>
 
-    <div class="ruh-hali-satiri" title="Son 5 etkileşiminin ortalaması — 'tespit edilen durum' ise son 20 etkileşimin farklı bir modelle (spiral tespiti) özetidir, ikisi ayrı şeyler ölçer.">
-      <span>Son birkaç etkileşimindeki olası izlenim:</span>
-      <span class="ruh-hali-rozeti" id="ruh-hali-rozeti"><span class="nokta"></span><span class="metin">henüz veri yok</span></span>
+    <div class="ruh-hali-paneli" title="Oturum boyunca biriken ortalama — 'tespit edilen durum' farklı bir modelle (spiral tespiti, son 20 etkileşim) ayrıca hesaplanır.">
+      <div class="ruh-hali-baslik">Bu oturumda biriken olası izlenim (içeriklere baktıkça yavaş yavaş dolar)</div>
+      <div id="ruh-hali-cubuklar">
+        <div class="ruh-hali-cubuk-satiri" data-kategori="mutluluk">
+          <span class="ruh-hali-cubuk-etiket">mutluluk</span>
+          <div class="ruh-hali-cubuk-arka"><div class="ruh-hali-cubuk-dolgu" style="background:var(--ruh-mutluluk)"></div></div>
+          <span class="ruh-hali-cubuk-yuzde">%0</span>
+        </div>
+        <div class="ruh-hali-cubuk-satiri" data-kategori="umut">
+          <span class="ruh-hali-cubuk-etiket">umut</span>
+          <div class="ruh-hali-cubuk-arka"><div class="ruh-hali-cubuk-dolgu" style="background:var(--ruh-umut)"></div></div>
+          <span class="ruh-hali-cubuk-yuzde">%0</span>
+        </div>
+        <div class="ruh-hali-cubuk-satiri" data-kategori="sakin">
+          <span class="ruh-hali-cubuk-etiket">sakin</span>
+          <div class="ruh-hali-cubuk-arka"><div class="ruh-hali-cubuk-dolgu" style="background:var(--ruh-sakin)"></div></div>
+          <span class="ruh-hali-cubuk-yuzde">%0</span>
+        </div>
+        <div class="ruh-hali-cubuk-satiri" data-kategori="korku">
+          <span class="ruh-hali-cubuk-etiket">korku</span>
+          <div class="ruh-hali-cubuk-arka"><div class="ruh-hali-cubuk-dolgu" style="background:var(--ruh-korku)"></div></div>
+          <span class="ruh-hali-cubuk-yuzde">%0</span>
+        </div>
+        <div class="ruh-hali-cubuk-satiri" data-kategori="anksiyete">
+          <span class="ruh-hali-cubuk-etiket">anksiyete</span>
+          <div class="ruh-hali-cubuk-arka"><div class="ruh-hali-cubuk-dolgu" style="background:var(--ruh-anksiyete)"></div></div>
+          <span class="ruh-hali-cubuk-yuzde">%0</span>
+        </div>
+      </div>
     </div>
 
     <div class="eylemler">
@@ -65,6 +91,6 @@
   </footer>
 </div>
 
-<script src="/app.js?v=4"></script>
+<script src="/app.js?v=5"></script>
 </body>
 </html>

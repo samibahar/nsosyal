@@ -20,18 +20,16 @@ from motor import gonderileri_puanla, sirala, spiral_olasiligi
 from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
 from psikolojik_durum import psikolojik_durum_tahmini, KATEGORILER
 
-PENCERE_BOYU = 5  # "anlık izlenim" için son kaç etkileşimin ortalaması alınacak
-
-
-def _pencere_ortalamasi(gunluk: list[dict]) -> dict:
-    """Son PENCERE_BOYU etkileşimin olasılık dağılımlarını ortalar. Tek bir
-    olaya (örn. tek bir roket tıklaması) göre uçlara savrulmayı önler —
-    'anlık izlenim' artık gerçekten anlık değil, kısa bir pencerenin özeti."""
-    son_kayitlar = gunluk[-PENCERE_BOYU:]
+def _oturum_ortalamasi(gunluk: list[dict]) -> dict:
+    """TÜM oturumdaki etkileşimlerin olasılık dağılımlarını ortalar (tek bir
+    olaya göre değil). Her yeni etkileşim ortalamayı biraz kaydırır -- çubuklar
+    ilk birkaç etkileşimde daha oynak, oturum uzadıkça yavaş yavaş durulur/dolar.
+    Tek bir olayın (örn. tek bir roket tıklaması) sonucu tek başına ekrana
+    %90+ gibi aşırı bir değer olarak yansımaz."""
     ortalama = {k: 0.0 for k in KATEGORILER}
-    for kayit in son_kayitlar:
+    for kayit in gunluk:
         for kat, p in kayit["olasiliklar"].items():
-            ortalama[kat] += p / len(son_kayitlar)
+            ortalama[kat] += p / len(gunluk)
     baskin = max(ortalama, key=ortalama.get)
     return {"kategori": baskin, "olasiliklar": {k: round(v, 3) for k, v in ortalama.items()}}
 
@@ -82,9 +80,9 @@ def api_etkilesim(e: Etkilesim):
         "kategori": tekil_psikolojik["kategori"],       # özet istatistikleri için tekil olay
         "olasiliklar": tekil_psikolojik["olasiliklar"],  # pencere ortalaması için
     })
-    psikolojik_pencere = _pencere_ortalamasi(PSIKOLOJIK_GUNLUK)
+    psikolojik_oturum = _oturum_ortalamasi(PSIKOLOJIK_GUNLUK)
 
-    return {"spiral_seviyesi": round(spiral, 3), "psikolojik_durum": psikolojik_pencere}
+    return {"spiral_seviyesi": round(spiral, 3), "psikolojik_durum": psikolojik_oturum}
 
 
 @app.get("/api/psikolojik-ozet")
