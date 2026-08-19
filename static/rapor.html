@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Haftalık Öz-Farkındalık Raporu — Örnek</title>
-<link rel="stylesheet" href="/style.css?v=10" />
+<link rel="stylesheet" href="/style.css?v=11" />
 </head>
 <body>
 <div class="sayfa">
@@ -56,6 +56,22 @@
         varsaymak yerine gerçekten ölçüyoruz.
       </p>
       <div id="dogrulama-ozet-icerik"></div>
+    </div>
+
+    <div class="rapor-bolum canli" id="llm-rapor-bolum" style="display:none">
+      <h3 class="rapor-bolum-baslik">
+        <span class="ikon" style="background:var(--good-soft);color:var(--good)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5c0 1.5.5 2.5 1.5 3.5L12 14l3.5-3.5C16.5 9.5 17 8.5 17 7a5 5 0 0 0-5-5Z"/><path d="M12 14v8M8 22h8"/></svg>
+        </span>
+        Bu haftanın gerçek yapay zekâ yorumu
+      </h3>
+      <p style="margin-bottom: 14px;">
+        Aşağıdaki metin, bu oturumda gerçekten kaydedilen veriye bakılarak bir
+        dil modeli tarafından o an üretildi — sabit bir şablon değil. Model,
+        teşhis dili kullanmaması ve temkinli ("olası örüntü") konuşması için
+        özel olarak yönlendirildi.
+      </p>
+      <div id="llm-rapor-icerik" style="white-space: pre-wrap; font-size: 14px; line-height: 1.7;"></div>
     </div>
 
     <h2 class="rapor-baslik">10–16 Ağustos haftası özetin</h2>
@@ -133,6 +149,6 @@
     </footer>
   </div>
 </div>
-<script src="/rapor.js?v=10"></script>
+<script src="/rapor.js?v=11"></script>
 </body>
 </html>

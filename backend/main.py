@@ -22,6 +22,7 @@ from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
 from psikolojik_durum import (
     psikolojik_durum_tahmini, KATEGORILER, kisisel_model_olustur, kisisel_guncelle,
 )
+import haftalik_rapor
 
 app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Kanıt-of-Konsept")
 
@@ -311,6 +312,18 @@ def api_psikolojik_ozet():
             for (saat, kat), sayi in en_cok_saat_kategori
         ],
     }
+
+
+@app.get("/api/haftalik-rapor")
+def api_haftalik_rapor():
+    """LLM ile gerçek oturum verisinden haftalık öz-farkındalık raporu üretir.
+    ANTHROPIC_API_KEY tanımlı değilse mevcut:False döner -- arayüz zaten var olan
+    statik örnek metne düşer, sahte bir LLM çıktısı asla uydurulmaz."""
+    if not haftalik_rapor.mevcut():
+        return {"mevcut": False, "sebep": "ANTHROPIC_API_KEY tanımlı değil"}
+    psikolojik = api_psikolojik_ozet()
+    dogrulama = api_dogrulama_ozet()
+    return haftalik_rapor.uret(psikolojik, dogrulama)
 
 
 @app.post("/api/sifirla")
