@@ -259,6 +259,19 @@ tepki topladı" gibi çıkarımsal duygu, doğrudan "harika/kötü" gibi açık
 duygu kelimesi yok) HER İKİ modelin de zorlandığı bir alt-tür (%65
 civarı) -- bu, modelin genel bir sınırlılığı, fine-tuning ile çözülmedi.
 
+## Literatür Taraması (19.08.2026, gece)
+
+`literatur_bulgulari.md` — gerçek kaynaklarla (uydurma yok) bir tarama
+yapıldı. En önemli bulgu: bizim "kendi kendini doğrulama döngümüz" aslında
+psikolojideki **EMA (Ecological Momentary Assessment)** yönteminin bağımsız
+bir yeniden keşfi — bu literatürle isimlendirilip raporda güçlendirilebilir.
+Diğer bulgular: pasif dwell-time/olumsuz duygu ilişkisi literatürde ORTA
+güçte (abartma), davranıştan duygu çıkarımı meşru ama kişiye-özgü kalibrasyon
+olmadan sınırlı (bilinen sınırlılık olarak yaz), refah-farkında sıralama
+konseptimizin akademik emsali var (CWB-RS, arXiv:2102.04211), şeffaflık
+panelinde "az ama net" ilkesi literatürce destekleniyor. Detaylar ve tam
+atıflar dosyada.
+
 ## Sırada Ne Var (öncelik sırasıyla)
 
 1. `spike_poc.py`'deki `duygu_skoru()` fonksiyonunu gerçek BERT modeliyle değiştir.
