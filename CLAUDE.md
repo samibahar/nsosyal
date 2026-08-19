@@ -115,6 +115,30 @@ mikroblog, Reels değil) için duygu-duyarlı, açıklanabilir ve koruyucu bir k
   üretildi. Bu dosyayı incele, mantığı understand et, sonra gerçek BERT modeliyle
   değiştirmeye başla (burada normal internet erişimi olduğu için bu artık mümkün olmalı).
 
+## Bağımsız Model Doğrulaması (19.08.2026)
+
+`dogrulama.py` ile `savasy/bert-base-turkish-sentiment-cased` modeli, kendi kart
+iddiasına (%95.4 doğruluk) güvenmek yerine BAĞIMSIZ bir veri setinde
+(winvoker/turkish-sentiment-analysis-dataset, 1000 rastgele örnek) test edildi.
+X/Twitter'dan canlı veri çekmek ToS ihlali + altyapı riski taşıdığı için
+(X'in öneri algoritmasını kendi kullanıcı grafiğimiz olmadan yeniden üretmek
+mümkün değil), bunun yerine hazır/lisanslı bu veri seti kullanıldı.
+
+**Bulgu:** Bağımsız doğruluk %69.8, F1 0.778 (ikili karşılaştırmaya giren 630
+örnekte) — modelin kendi iddiasının belirgin altında. Model "negatif" dediğinde
+sık yanılıyor (precision 0.37) ama gerçek negatifleri kaçırmıyor (recall 0.93) —
+yani gerçekte POZİTİF olan metinleri sıklıkla negatif sınıflandırıyor. Muhtemel
+sebep: alan kayması (domain shift) — model muhtemelen dar bir alanda (ürün/film
+yorumu) fine-tune edilmiş, test verimiz haber/sosyal medya karışımı. Ayrıca
+1000 örneğin 370'i "Nötr" etiketli — modelin nötr sınıfı yok, bu örneklerin
+hepsi zorla pozitif/negatif tarafa yuvarlanıyor (bilinen bir sınırlılık).
+
+**Raporda nasıl kullanılacak:** Bunu saklamak yerine METODOLOJİK DÜRÜSTLÜK
+kanıtı olarak sun — "vendor iddiasını sorgulamadan kabul etmedik, bağımsız
+doğrulama yaptık, bir sınırlılık keşfettik ve dürüstçe raporladık". Hem %95.4
+(vendor) hem %69.8 (bağımsız, bizim ölçümümüz) rakamını birlikte ver, aradaki
+farkı alan kayması ile açıkla.
+
 ## Sırada Ne Var (öncelik sırasıyla)
 
 1. `spike_poc.py`'deki `duygu_skoru()` fonksiyonunu gerçek BERT modeliyle değiştir.
