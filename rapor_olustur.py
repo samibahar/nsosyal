@@ -251,7 +251,7 @@ govde(
     "fark edip bu ağırlığı sonradan düşürdüğünü ortaya koymuştur [13]. Akademik tarafta, "
     "yaklaşık 105.000 haber başlığı varyasyonunun ~5,7 milyon tıklama üzerinden analiz "
     "edildiği randomize kontrollü bir çalışma, bu etkinin (%2,3'lük tıklama artışı) "
-    "yalnızca bir korelasyon değil, NEDENSEL bir ilişki olduğunu göstermiştir [10]; "
+    "yalnızca bir korelasyon değil, nedensel bir ilişki olduğunu göstermiştir [10]; "
     "olumsuz haberlerin sosyal medyada daha fazla paylaşıldığı da "
     "ayrıca doğrulanmıştır [11][12]. Pasif/olumsuz içerik tüketiminin kaygı ve stresle "
     "ilişkisi de literatürde tutarlı biçimde destekleniyor: 141 çalışmayı kapsayan bir "
@@ -261,11 +261,25 @@ govde(
     "Kırılganlık durumunun ticari olarak istismar edilmesinin de gerçek bir emsali "
     "vardır: 2017'de The Australian gazetesi, Facebook'un iç bir belgesinin, gençlerin "
     "ne zaman \"değersiz\" veya \"güvensiz\" hissettiğini tespit edip bunu reklam "
-    "hedeflemesi için bir fırsat olarak sunduğunu haberleştirmiştir [14]. Piyasadaki "
-    "mevcut çözümler ise büyük ölçüde iki eksende yetersiz kalmaktadır. Birincisi "
-    "şeffaflık eksikliğidir: kullanıcı neden belirli bir içeriği gördüğünü genellikle "
-    "bilmez. İkincisi refah-körü tasarımdır: sıralama yalnızca etkileşimi optimize eder, "
-    "kullanıcının o anki duygusal kırılganlığını hiç hesaba katmaz."
+    "hedeflemesi için bir fırsat olarak sunduğunu haberleştirmiştir [14]."
+)
+govde(
+    "Piyasadaki mevcut çözümler, bu problemi doğrudan hedef almak yerine dolaylı ve "
+    "genellikle isteğe bağlı (opt-in) önlemlerle sınırlı kalmaktadır. Instagram'ın "
+    "2021'de tanıttığı \"Take a Break\" hatırlatıcıları, kullanıcıyı 10/20/30 dakikalık "
+    "aralıklarla uygulamadan uzaklaşmaya davet eder [17]; TikTok da benzer şekilde "
+    "\"Scheduled Breaks\" ve bir ekran-süresi paneli sunar [18]. Ancak bu araçlar iki "
+    "ortak sınırlılık taşır. Birincisi, hangi içeriğin tüketildiğinden veya kullanıcının "
+    "o an nasıl hissettiğinden tamamen bağımsızdır; yalnızca geçen süreye bakarlar. "
+    "İkincisi, sıralama algoritmasının kendisine hiç dokunmazlar; yalnızca üzerine "
+    "isteğe bağlı bir hatırlatma katmanı eklerler, kullanıcı görmezden gelebilir. Daha "
+    "genel olarak, piyasadaki çözümler büyük ölçüde iki eksende yetersiz kalmaktadır. "
+    "Birincisi şeffaflık eksikliğidir: kullanıcı neden belirli bir içeriği gördüğünü "
+    "genellikle bilmez. İkincisi refah-körü tasarımdır: sıralama yalnızca etkileşimi "
+    "optimize eder, kullanıcının o anki duygusal kırılganlığını hiç hesaba katmaz. "
+    "Sonuç olarak, kullanıcı refahını sıralama kararının kendisine entegre eden, "
+    "açıklanabilir ve içerik-duyarlı bir çözüm, piyasada hâlâ ele alınmamış gerçek bir "
+    "problem olarak durmaktadır; bu proje tam olarak bu boşluğu hedef almaktadır."
 )
 
 altbaslik("2.2. Çözüm Fikri, Özgünlük ve Yerlilik")
@@ -279,7 +293,7 @@ govde(
     "durup neredeyse hiç aktif tepki vermediği; doomscrolling olarak bilinen davranışa "
     "benzeyen bir davranışsal örüntüyü tanımlar (bkz. Bölüm 3.2). Bu örüntü, eğitilmiş "
     "bir sınıflandırıcı tarafından 0 ile 1 arasında bir \"spiral seviyesi\" olarak "
-    "tahmin edilir; seviye yükseldikçe kullanıcının ilgi alanı İÇİNDE kalınarak yalnızca "
+    "tahmin edilir; seviye yükseldikçe kullanıcının ilgi alanının içinde kalınarak yalnızca "
     "daha az tetikleyici içeriğe doğru bir kayma sağlanır, ilgi alanı hiç terk edilmez. "
     "İlgi skoru ile refah skoru birlikte gönderinin final skorunu oluşturur ve akış bu "
     "skora göre sıralanır."
@@ -289,7 +303,7 @@ govde(
     "Recommendation Systems (CWB-RS)\" kavramı, etkileşim optimizasyonu yerine uzun "
     "vadeli kümülatif refahı maksimize etmeyi önerir [7]; endüstri/politika düzeyinde de "
     "benzer \"insan-öncelikli\" sıralama ilkeleri savunulmaktadır [8]. Özgünlüğün temel "
-    "kaynağı, kararların NASIL üretildiğidir. Birçok tavsiye/sıralama sistemi, kendi "
+    "kaynağı, kararların nasıl üretildiğidir. Birçok tavsiye/sıralama sistemi, kendi "
     "kararını kendisi de tam olarak açıklayamayan büyük ve karmaşık modellere (örneğin "
     "derin sinir ağlarına) dayanır; bu modeller kullanıcıya yalnızca \"bana güven\" "
     "diyebilir, \"neden\" sorusuna gerçek bir cevap veremez. Bizim sistemimizde ise her "
@@ -341,7 +355,7 @@ govde(
     "iddia ettiği doğruluk (%95,4) yerine, winvoker/turkish-sentiment-analysis-dataset "
     "üzerinden bağımsız 1000 örneklik bir test setiyle gerçek doğruluk ölçülmüş (%69,8, "
     "F1 0,778) ve alan kayması (domain shift) kaynaklı bu zayıflık, aynı veri setinin "
-    "AYRIK bir bölümüyle (veri sızıntısı önlenerek) ~15.000 örnekle yapılan hedefli bir "
+    "ayrık bir bölümüyle (veri sızıntısı önlenerek) ~15.000 örnekle yapılan hedefli bir "
     "ince ayarla düzeltilmiştir (%94,3 doğruluk, F1 0,964; bağımsız olarak yeniden "
     "ölçülmüştür). Spiral tespiti (olası doomscrolling örüntüsü, ikili sınıflandırma), "
     "senaryo-bazlı sentetik veriyle eğitilmiş bir lojistik regresyon modelidir "
@@ -351,11 +365,11 @@ govde(
     "umut/sinirli/anksiyete) StandardScaler ile ölçeklenmiş bir SGDClassifier'dır "
     "(F1 makro 0,704). Aşırı öğrenmeyi (overfitting) önlemek için: tüm modellerde "
     "stratified train/test ayrımı, fine-tuning ve bağımsız doğrulama için birbirinden "
-    "TAMAMEN ayrık veri bölümleri, ve %10 kasıtlı etiket gürültüsü (gerçek dünyada "
+    "tamamen ayrık veri bölümleri, ve %10 kasıtlı etiket gürültüsü (gerçek dünyada "
     "sınırların asla net olmadığını modellemek için) kullanılmıştır. Modelin gerçek "
-    "performansını iddia etmek yerine SÜREKLİ ölçmek için, kullanıcıya ara sıra hafif "
+    "performansını iddia etmek yerine sürekli ölçmek için, kullanıcıya ara sıra hafif "
     "bir onay sorusu (\"şu an gerçekte nasıl hissediyorsun?\") sorulur ve cevap modelin "
-    "O ANKİ tahminiyle karşılaştırılır; bu mekanizma psikolojideki Ecological Momentary "
+    "o anki tahminiyle karşılaştırılır; bu mekanizma psikolojideki Ecological Momentary "
     "Assessment (EMA) yönteminin bağımsız bir uygulamasıdır [1][2]; literatür bu tür "
     "tekrarlı öz-bildirim sorgularının kullanıcı yorgunluğuna (fatigue) yol açabileceğini "
     "de not eder [3], bu yüzden soru sıklığı bilinçli olarak düşük (her ~8 etkileşimde "
@@ -407,7 +421,7 @@ govde(
     "hesaplama maliyeti taşımaz; yalnızca isteğe bağlı haftalık rapor üretiminde bir LLM "
     "çağrısı kullanılır. Bu, platforma milyonlarca etkileşimde dahi düşük işletme "
     "maliyetiyle ölçeklenebilirlik sağlar. Etkinlik açısından, refah katmanının "
-    "içeriği ELEMEDEN yalnızca yumuşattığı somut olarak gösterilmiştir: kullanıcı testinde "
+    "içeriği elemeden yalnızca yumuşattığı somut olarak gösterilmiştir: kullanıcı testinde "
     "spiral seviyesi yükseldiğinde negatif içerik final skorunda ölçülebilir bir ceza "
     "alıp sırada geriye düşerken, kullanıcının ilgi alanı hiç terk edilmemiştir."
 )
@@ -428,7 +442,7 @@ govde(
     "Ürün, fikir düzeyinde kalmayıp uçtan uca çalışan bir prototiple desteklenmiştir: "
     "gerçek bir BERT modeli, eğitilmiş sınıflandırıcılar, çalışan bir backend/API, "
     "gerçek zamanlı bir arayüz ve canlı test edilmiş bir LLM entegrasyonu içerir. "
-    "Teknolojik yenilik düzeyi, tek bir modelin doğruluğunda değil, İKİ AYRI davranış "
+    "Teknolojik yenilik düzeyi, tek bir modelin doğruluğunda değil, iki ayrı davranış "
     "modelinin (spiral tespiti ve psikolojik izlenim) birbirinden bağımsız çalışıp yalnızca "
     "biri sıralamayı etkileyecek şekilde tasarlanmasında, ve kendi kendini doğrulama "
     "döngüsüyle modelin gerçek performansının sürekli ölçülmesinde yatar. Mimari, yeni "
@@ -623,6 +637,11 @@ kaynaklar = [
     "Tarihi: 19.08.2026, Erişim: https://huggingface.co/savasy/bert-base-turkish-sentiment-cased",
     "[16] winvoker/turkish-sentiment-analysis-dataset, HuggingFace veri seti, Erişim "
     "Tarihi: 19.08.2026, Erişim: https://huggingface.co/datasets/winvoker/turkish-sentiment-analysis-dataset",
+    "[17] Instagram tests 'Take a Break' reminders on an opt-in basis, TechCrunch, "
+    "10.11.2021, Erişim Tarihi: 19.08.2026, Erişim: "
+    "https://techcrunch.com/2021/11/10/instagram-tests-take-a-break-reminders-on-an-opt-in-basis",
+    "[18] Helping users manage their screen time, TikTok Newsroom, 2022, Erişim Tarihi: "
+    "19.08.2026, Erişim: https://newsroom.tiktok.com/en-us/helping-users-manage-their-screen-time",
 ]
 for k in kaynaklar:
     p = doc.add_paragraph(k)
