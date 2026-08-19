@@ -227,13 +227,13 @@ govde(
     "psikolojik izlenim kategorisi tahmin eden, sentetik senaryo verisiyle eğitilmiş "
     "açıklanabilir sınıflandırıcılar; (iii) bu sinyalleri ilgi skoruyla birleştirip "
     "içeriği yeniden sıralayan iki katmanlı bir motor. Yöntem olarak; önce mimari "
-    "sözlük-tabanlı basit bir kanıt-of-konseptle (spike) uçtan uca doğrulanmış, ardından "
+    "sözlük-tabanlı basit bir ilk prototiple (spike) uçtan uca doğrulanmış, ardından "
     "her bileşen gerçek modellerle (BERT, lojistik regresyon/SGD) değiştirilip bağımsız "
     "olarak ölçülmüştür. Fikir yalnızca tasarım düzeyinde kalmamış; FastAPI tabanlı bir "
     "backend, gerçek zamanlı bir web arayüzü, ve isteğe bağlı bir LLM destekli haftalık "
     "öz-farkındalık raporu içeren, uçtan uca çalışan bir prototiple desteklenmiştir "
     "(bkz. Bölüm 3-4). NSosyal veya T3 AI'a gerçek bir API erişimi bulunmamaktadır; "
-    "sistem bağımsız bir kanıt-of-konsept olarak çalışır ve \"önerilen entegrasyon "
+    "sistem bağımsız bir prototip olarak çalışır ve \"önerilen entegrasyon "
     "konsepti\" olarak sunulur — bu, projenin dürüstlük ilkesi gereği açıkça belirtilir."
 )
 
@@ -313,7 +313,7 @@ govde(
     "kullanılmaktadır. Proje sürüm kontrolü altında geliştirilmiş, düzenli ve anlamlı "
     "commit'lerle ilerletilmiştir; kaynak kod GitHub üzerinde açık bir depoda "
     "saklanmaktadır: https://github.com/samibahar/nsosyal — depo commit geçmişiyle "
-    "geliştirme sürecinin tamamını (ilk kanıt-of-konsept aşamasından güncel sürüme kadar) "
+    "geliştirme sürecinin tamamını (ilk prototip aşamasından güncel sürüme kadar) "
     "takip edilebilir kılar."
 )
 
@@ -417,7 +417,7 @@ govde(
     "döngüsüyle modelin gerçek performansının sürekli ölçülmesinde yatar. Mimari, yeni "
     "sinyaller (örn. ek etkileşim türleri) veya yeni kategoriler eklemeye açık, "
     "ölçeklenebilir bir yapıya sahiptir; kişiselleştirme mekanizması (online öğrenme, "
-    "bkz. Bölüm 6.2) bu ölçeklenebilirliğin bir kanıt-of-konseptidir."
+    "bkz. Bölüm 6.2) bu ölçeklenebilirliğin somut bir kanıtıdır."
 )
 
 sayfa_sonu()
@@ -492,14 +492,14 @@ govde(
     "Aşağıdaki takvim, yarışma takvimiyle (Teknik Rapor Teslimi: 24 Ağustos 2026; "
     "Mentörlük Süreci: 2-7 Eylül 2026; Final Sunumları: 14 Eylül 2026) çelişmeyecek "
     "şekilde planlanmıştır. Tamamlanan iş paketleri, bu raporun dayandığı çalışan "
-    "kanıt-of-konsepti kapsar; ilerleyen iş paketleri mentörlük ve final aşamasına "
+    "prototipi kapsar; ilerleyen iş paketleri mentörlük ve final aşamasına "
     "hazırlığı hedefler."
 )
 
 t_takvim = tablo(
     ["İş Paketi", "Kapsam", "Dönem", "Durum"],
     [
-        ["İP1 — Mimari ve kanıt-of-konsept",
+        ["İP1 — Mimari ve ilk prototip",
          "İki katmanlı sıralama motoru, spiral/psikolojik model tasarımı, sözlük-tabanlı ilk doğrulama",
          "Ağustos (1. hafta)", "Tamamlandı"],
         ["İP2 — Gerçek model entegrasyonu",
