@@ -21,16 +21,68 @@ sorgulamadan kabul et, aksini gerektiren yeni bir bilgi çıkmadıkça.
   gevşek davranma.
 - Format: rapor en fazla 30 sayfa (kapak/içindekiler/kaynakça dahil), Arial 12pt, Arial Black
   14pt başlık, 1.15 satır aralığı, 2.5cm kenar boşluğu.
-- **Puanlama (Sosyal Yapay Zekâ teması):** Teknik Yeterlilik ve Uygulanabilirlik %35 (en
-  ağırlıklı kriter — kod/mimari kalitesine öncelik ver), Yenilikçilik ve Özgünlük %20,
-  Problemi Çözme Başarısı %20, Sunum ve Prototip Kalitesi %15, Kullanıcı Deneyimi (UI/UX)
-  %10, İş Modeli ve Sürdürülebilirlik %0 (bu tema için ağırlıksız — rapor şablonu muhtemelen
-  yine de istiyor ama puana katkısı yok, fazla zaman harcama).
-- **Beklenen teslimatlar (tüm yarışma boyunca, sadece 24 Ağustos değil):** teknik rapor,
-  sunum dosyası, kullanıcı senaryoları, çalışan prototip, kaynak kod, proje/demo videosu,
-  iş modeli ve gelir modeli dokümanı, yapay zekâ mimarisi dokümanı, veri/model/etik/performans
-  dokümanı, UI/UX tasarımları, kullanıcı akışları, kullanıcı araştırması özeti, kullanılabilirlik
-  testi sonuçları, erişilebilirlik değerlendirmesi.
+- **Puanlama (GÜNCEL — 19.08.2026 gece resmi rapor şablonundan, eski %35/%0 rakamları
+  ARTIK GEÇERSİZ, bkz. altındaki not):** Sosyal Yapay Zekâ teması için Teknik Yeterlilik
+  ve Uygulanabilirlik %30, Yenilikçilik ve Özgünlük %20, Problemi Çözme Başarısı %20,
+  Sunum ve Prototip Kalitesi %15, Kullanıcı Deneyimi (UI/UX) %10, İş Modeli ve
+  Sürdürülebilirlik **%5** (eskiden %0'dı, şablonda "yeşil vurgulu hücreler: orijinal
+  şartnamede %0 olan, bu düzeltmede asgari %5'e çekilen alanlar" notuyla düzeltilmiş —
+  yani bu bölümü artık TAMAMEN atlama, kısa da olsa gerçek içerik olsun).
+## Resmi Rapor Şablonu (19.08.2026 gece, kullanıcının Downloads'tan paylaştığı .docx'ten)
+
+Dosya: `NSosyal_Inovasyon_2026_-_Proje_Teknik_Raporu_1_u6IVb (1).docx`. Bu, önceki
+şartname özetinden DAHA GÜNCEL ve DAHA DETAYLI — rapor yazarken bunu esas al.
+
+**Zorunlu başlık sırası (Word "Heading 1" stili, aynen kullan):**
+1. İÇİNDEKİLER (ayrı sayfa)
+2. PROJE ÖZETİ — 1.1. Proje Konusu ve amacı (0-7p) / 1.2. Proje Kapsamı ve Yöntemi (0-8p)
+3. KATMA DEĞER VE YENİLİKÇİLİK — 2.1. Problem Tanımı ve Mevcut Çözümler (0-7p) /
+   2.2. Çözüm Fikri, Özgünlük ve Yerlilik (0-8p)
+4. TEKNOLOJİ KULLANIMI — 3.1. İzlenecek Yöntem, altyapı ve Sürüm Kontrolü (0-7p) /
+   3.2. Model ve Veri Doğrulama (0-6p) / 3.3. Kullanıcı Deneyimi (UI/UX) Tasarımı (0-7p)
+5. UYGULANABİLİRLİK — 4.1. Verimlilik ve Etkinlik (0-5p) / 4.2. Hedef Kitle (0-5p) /
+   4.3. Teknolojik Yenilik ve Uygulanabilirlik (0-5p)
+6. YAYGIN ETKİ — 5.1. Toplumsal Fayda ve Erişim Potansiyeli (0-10p)
+7. SÜRDÜRÜLEBİLİRLİK — 6.1. Ticarileştirme Potansiyeli ve İş Modeli (0-5p) /
+   6.2. Finansal, Teknik ve Sosyal Sürdürülebilirlik (0-5p)
+8. PROJE TAKVİMİ — 7.1. İş Paketleri ve Zamanlama (0-5p, görsel tablo/şema iste,
+   24 Ağu/2-7 Eyl/14 Eyl tarihleriyle çelişmesin)
+9. TAKIM YAPISI — 8.1. Takım Organizasyonu ve Roller (0-5p, TABLOLAŞTIR — ama İSİM/FOTOĞRAF
+   gibi kişisel bilgi KESİNLİKLE KONMAYACAK, değerlendirme kuralı bunu yasaklıyor)
+10. KAYNAKÇA (ayrı sayfa, 0-5p, köşeli parantez atıf [1], [4,7,21], [5-11]; web kaynak:
+    "Soyad, Adın Baş Harfi., Başlık, Tarih, Erişim Tarihi, Erişim adresi"; akademik:
+    "Soyad, Adın Baş Harfi., (Yıl) Başlık, (varsa) Dergi, Sayı, Sayfa, DOI")
+
+Alt madde toplamı tam 100 puan (7+8+7+8+7+6+7+5+5+5+10+5+5+5+5+5=100), her alt madde
+kendi içinde kontrol-maddesi bazlı kısmi puanlanıyor (şablonun "PUANLAMA VE DEĞERLENDİRME
+ESASLARI" sayfasındaki 16 tabloda tek tek yazılı — bu sayfa RAPORA KONMAYACAK, sadece bizim
+neyin puanlandığını bilmemiz için).
+
+**Kritik, gözden kaçmaması gereken puanlı maddeler:**
+- 3.1'de **GitHub/Bitbucket repo bağlantısı paylaşılmış** (0-1p) ve **commit geçmişiyle
+  takip edilebilir geliştirme** (0-1p) AYRI AYRI puanlanıyor — yani rapor GitHub linki
+  istiyor. Kullanıcı daha önce (19.08.2026 gece) zip+README ile paylaşmayı tercih edip
+  GitHub'ı reddetmişti ("ikisini de istemem") -- ama o zaman bu puanlı madde bilinmiyordu,
+  YENİDEN SORULMALI.
+- 3.2 not: "Projede yapay zeka/veri bileşeni yoksa bu alt kriter değerlendirme dışı
+  bırakılır" -- bizim projede güçlü bir YZ bileşeni var, bu madde tam uygulanır, atlanamaz.
+- 8.1: takım 2-5 kişi olmalı, kişisel bilgi (isim/fotoğraf) YASAK.
+
+**Format kuralları (raporun kendisinde bu sayfa/not YOK, sadece uyulacak):**
+- En fazla 30 sayfa (kapak+içindekiler+kaynakça+ekler dahil), kapak/içindekiler/kaynakça
+  için 3 AYRI sayfa ayrılmalı.
+- Arial 12pt gövde, Arial Black 14pt başlık, 1.15 satır aralığı, iki yana yaslı,
+  2.5cm kenar boşluğu (üst-alt-sağ-sol).
+- Cümleler birbirinin tekrarı olmamalı.
+- Bu aşamada demo videosu İSTENMİYOR (final sunumuna ait).
+- KYS üzerinden 24 Ağustos 2026 17.00 TSİ'ye kadar; şablona uymayan/eksik/geç = değerlendirme
+  dışı.
+
+**Beklenen teslimatlar (tüm yarışma boyunca, sadece 24 Ağustos değil):** teknik rapor,
+sunum dosyası, kullanıcı senaryoları, çalışan prototip, kaynak kod, proje/demo videosu,
+iş modeli ve gelir modeli dokümanı, yapay zekâ mimarisi dokümanı, veri/model/etik/performans
+dokümanı, UI/UX tasarımları, kullanıcı akışları, kullanıcı araştırması özeti, kullanılabilirlik
+testi sonuçları, erişilebilirlik değerlendirmesi.
 
 ## Ürün Konsepti (Kesinleşti)
 
