@@ -8,6 +8,9 @@
 torch
 transformers
 
+# Bağımsız doğrulama veri seti (dogrulama.py)
+datasets
+
 # Backend / API
 fastapi
 uvicorn[standard]
