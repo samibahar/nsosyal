@@ -272,6 +272,32 @@ konseptimizin akademik emsali var (CWB-RS, arXiv:2102.04211), şeffaflık
 panelinde "az ama net" ilkesi literatürce destekleniyor. Detaylar ve tam
 atıflar dosyada.
 
+## Kişiselleştirme (Online Learning) Mekanizması (19.08.2026, gece)
+
+Kullanıcının fikri: "3.yi (aktif öğrenme) yaparsak, katsayılarla küçük adımlarla
+oynayarak uzun vadede oto-optimizasyon yapmış olmaz mıyız?" — evet, bu gerçek
+bir ML kavramı (online/incremental learning, SGD). Uygulandı:
+
+- `psikolojik_durum.py`: model artık `SGDClassifier(loss="log_loss")` —
+  `partial_fit` destekli. `_VARSAYILAN_MODEL` hiç değişmez, `KISISEL_MODEL`
+  her doğrulama cevabından sonra küçük bir adımla güncellenir.
+- **Demo sorunu ve çözümü:** gerçek kişiselleştirmeyi (çok kullanıcı, uzun
+  vade) tek bir demo oturumunda gösteremeyiz. Kullanıcının önerisi: bir
+  anahtarla ("Varsayılan" / "Kişiselleştirilmiş") aynı oturum içinde iki
+  modeli karşılaştırılabilir hale getirdik — `/api/kisisel-mod` geçmişi
+  seçilen modelle yeniden skorluyor.
+- **Dürüstlük notu (raporda mutlaka belirt):** `KISISEL_ETA0` (öğrenme oranı)
+  demo'da mekanizmanın birkaç onayda görünür olması için KASITLI olarak
+  büyütüldü. Gerçek üretimde (binlerce kullanıcı, aylarca veri) çok daha
+  küçük olurdu. Bu "gerçek kişiselleştirme kalibrasyonu" iddiası değil,
+  mekanizmanın kanıt-of-konseptidir.
+- **İstikrar riski (kullanıcı da fark etti, doğru):** az veriyle/düzenlileştirme
+  olmadan online güncelleme modeli yanlış yöne kaydırabilir. Şu anki tasarımda
+  koruma: küçük adım boyu (tek gürültülü cevap ≈ etkisiz) + varsayılan model
+  hiç dokunulmadan referans olarak kalıyor (istenirse anahtar her an "Varsayılan"a
+  dönüp güvenli tarafa geçilebilir). Gerçek üründe düzenlileştirme/sınır
+  (clipping) eklenmeli -- rapor bunu "gelecek iş" olarak not etmeli.
+
 ## Sırada Ne Var (öncelik sırasıyla)
 
 1. `spike_poc.py`'deki `duygu_skoru()` fonksiyonunu gerçek BERT modeliyle değiştir.
