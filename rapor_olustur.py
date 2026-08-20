@@ -215,7 +215,13 @@ govde(
     "olarak Sosyal Yapay Zekâ temasına hitap eder; açıklanabilir sıralama motoru ve "
     "şeffaflık paneli üzerinden Kullanıcı Katılımı ve Arayüz/Kullanıcı Deneyimi (UI/UX) "
     "temasına, üretici paneli önerisiyle de İçerik Ekonomisi temasına organik olarak "
-    "dokunur."
+    "dokunur. Bu amaç, yarışmanın Bölüm 1'inde (Yarışma Amacı) sayılan temel hedeflerle "
+    "doğrudan örtüşür: yapay zekâ destekli yeni nesil sosyal medya platformları "
+    "geliştirilmesi ve güvenli, etik, şeffaf, kullanıcı mahremiyetini önceleyen çözümler "
+    "hedefleri, projenin tam da adresi olduğu alanlardır. Aynı bölümde sosyal medyanın "
+    "yaygınlaşmasının beraberinde getirdiği ihtiyaçlar arasında ayrıca açıkça sayılan "
+    "kullanıcı refahının korunması ihtiyacı, bu projenin doğrudan çıkış noktasını "
+    "oluşturmaktadır."
 )
 
 altbaslik("1.2. Proje Kapsamı ve Yöntemi")
@@ -234,7 +240,16 @@ govde(
     "öz-farkındalık raporu içeren, uçtan uca çalışan bir prototiple desteklenmiştir "
     "(bkz. Bölüm 3-4). NSosyal veya T3 AI'a gerçek bir API erişimi bulunmamaktadır; "
     "sistem bağımsız bir prototip olarak çalışır ve \"önerilen entegrasyon "
-    "konsepti\" olarak sunulur; bu durum, projenin dürüstlük ilkesi gereği açıkça belirtilir."
+    "konsepti\" olarak sunulur; bu durum, projenin dürüstlük ilkesi gereği açıkça belirtilir. "
+    "Kapsam dışında kalan yönler de aynı netlikle çizilmelidir: proje içerik "
+    "kaldırma/moderasyon kararı almaz, klinik bir teşhis veya tedavi önerisi sunmaz; "
+    "yalnızca mevcut sıralama ve şeffaflık katmanını hedefler. Akademik yöntem olarak, "
+    "tasarım kararları ilgili literatürle temellendirilmiş ve vendor/model iddiaları "
+    "bağımsız veri setleriyle sınanmıştır (bkz. Bölüm 3.2); bu, projeyi yalnızca "
+    "mühendislik değil, ölçülebilir bir doğrulama disipliniyle de temellendirir. Proje "
+    "kendi kapsamı içinde tamamlanmış bir son ürün değil, bilinçli bir başlangıç "
+    "noktasıdır: Bölüm 4.3'te ayrıntılandırılan kişiselleştirme, gizlilik öncelikli "
+    "mimari ve perspektif genişletici öneriler gibi yönler için somut bir zemin hazırlar."
 )
 
 sayfa_sonu()
@@ -310,6 +325,19 @@ govde(
     "karar (spiral seviyesi, refah cezası, final skor) denetlenebilir, açıklanabilir "
     "modellerle (lojistik regresyon/SGD) üretilir ve şeffaflık panelinde kullanıcıya "
     "gösterilir."
+)
+govde(
+    "Mevcut piyasa çözümleriyle karşılaştırıldığında (bkz. Bölüm 2.1) fark somuttur: "
+    "Instagram'ın Take a Break'i ve TikTok'un Scheduled Breaks'i yalnızca geçen süreye "
+    "bakan, içerikten ve kullanıcının anlık duygu durumundan tamamen bağımsız, isteğe "
+    "bağlı hatırlatıcılardır; kullanıcı bunları tek dokunuşla görmezden gelebilir. Bizim "
+    "çözümümüz müdahaleyi ayrı bir hatırlatma katmanına değil, sıralamanın kendisine "
+    "gömer: karar geçen süreye değil içeriğin duygusal yoğunluğuna ve kullanıcının o anki "
+    "davranışsal örüntüsüne dayanır, kullanıcıdan hiçbir ek adım beklemeden otomatik "
+    "işler. Çözümün pazarda uygulanabilir olması, prototipin NSosyal'in mevcut arayüz "
+    "mantığına bilinçli olarak sadık kalınarak tasarlanmış olmasından (bkz. Bölüm 3.3) ve "
+    "önerilen düşük maliyetli sürdürülebilirlik modelinden (bkz. Bölüm 6.1) "
+    "anlaşılabilir."
 )
 govde("Yerlilik bileşenleri somuttur:")
 madde([
