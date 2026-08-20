@@ -51,6 +51,7 @@ h1.paragraph_format.space_before = Pt(20)
 h1.paragraph_format.space_after = Pt(10)
 h1.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
 h1.paragraph_format.line_spacing = 1.15
+h1.paragraph_format.keep_with_next = True
 _font_ayarla(h1, 'Arial Black', kalin=True)
 
 # ---------- Yardımcı fonksiyonlar ----------
@@ -253,8 +254,6 @@ govde(
     "mimari ve perspektif genişletici öneriler gibi yönler için somut bir zemin hazırlar."
 )
 
-sayfa_sonu()
-
 # ============================================================ 2. KATMA DEĞER VE YENİLİKÇİLİK
 baslik("KATMA DEĞER VE YENİLİKÇİLİK")
 
@@ -353,8 +352,6 @@ madde([
     "moderasyon), duygu-analizi katmanımızın önerilen bir uzantısı olarak "
     "konumlandırılmıştır.",
 ])
-
-sayfa_sonu()
 
 # ============================================================ 3. TEKNOLOJİ KULLANIMI
 baslik("TEKNOLOJİ KULLANIMI")
@@ -496,8 +493,6 @@ govde(
     "güvenini azaltabileceği (\"algorithmic aversion\") bulgusuyla uyumludur [9]."
 )
 
-sayfa_sonu()
-
 # ============================================================ 4. UYGULANABİLİRLİK
 baslik("UYGULANABİLİRLİK")
 
@@ -596,8 +591,6 @@ madde([
     "kullanıcı özerkliğini kısıtlama riski nedeniyle ayrı bir kullanıcı araştırması "
     "gerektirdiğinden bu aşamada önceliklendirilmemiştir.",
 ])
-
-sayfa_sonu()
 
 # ============================================================ 5. YAYGIN ETKİ
 baslik("YAYGIN ETKİ")
@@ -728,48 +721,90 @@ govde(
     "sağlayacak altyapıyı oluşturur."
 )
 
-sayfa_sonu()
-
 # ============================================================ 6. SÜRDÜRÜLEBİLİRLİK
 baslik("SÜRDÜRÜLEBİLİRLİK")
 
 altbaslik("6.1. Ticarileştirme Potansiyeli ve İş Modeli")
 govde(
-    "NSosyal vakıf tabanlı ve reklamsız bir platform olduğundan klasik reklam gelirine "
-    "dayalı bir model zorlanmamıştır; bunun yerine dört tamamlayıcı yön "
-    "önerilmektedir. Birincisi, düşük işletme maliyetidir: hafif/açıklanabilir "
-    "modeller büyük dil modelleri kadar pahalı değildir, bu doğrudan bir maliyet "
-    "avantajına dönüşür. İkincisi, anonim/toplu \"dijital refah eğilimleri\" "
-    "verisiyle üniversite, TÜBİTAK veya ruh sağlığı sivil toplum kuruluşlarıyla "
-    "araştırma ortaklığıdır (kişisel veri paylaşılmadan, yalnızca toplu istatistik "
-    "düzeyinde). Üçüncüsü, \"dijital-refah-öncelikli platform\" marka değeri "
-    "üzerinden kurumsal sponsorluktur. Dördüncüsü, mevcut roket sistemine benzer, "
-    "gönüllülük esaslı opsiyonel bir destek/bağış mekanizmasıdır. Bu model, ürünün mevcut pazar "
-    "şartlarında (vakıf-destekli, reklamsız yerli platform bağlamında) üretilebilir "
-    "olmasını gerçekçi bir temele oturtur."
+    "NSosyal vakıf tabanlı ve reklamsız bir platform olduğundan klasik reklam "
+    "gelirine dayalı bir model zorlanmamıştır; bunun yerine dört tamamlayıcı "
+    "gelir/değer akışı önerilmektedir. Birincisi, düşük işletme maliyetidir: "
+    "hafif/açıklanabilir modeller büyük dil modelleri kadar pahalı değildir, bu "
+    "doğrudan bir maliyet avantajına dönüşür (bkz. Bölüm 4.1). İkincisi, "
+    "anonim/toplu \"dijital refah eğilimleri\" verisiyle üniversite, TÜBİTAK veya "
+    "ruh sağlığı sivil toplum kuruluşlarıyla araştırma ortaklığıdır (kişisel veri "
+    "paylaşılmadan, yalnızca toplu istatistik düzeyinde); bu model varsayımsal "
+    "değildir, Meta'nın Center for Open Science ile kurduğu ve Instagram verisini "
+    "gizlilik koruyucu biçimde akademik araştırmacılara açtığı refah odaklı pilot "
+    "programı, büyük platformların bu tür ortaklıkları gerçekten kurduğunu "
+    "göstermektedir [28]. Üçüncüsü, \"dijital-refah-öncelikli platform\" marka "
+    "değeri üzerinden kurumsal sponsorluktur. Dördüncüsü, mevcut roket sistemine "
+    "benzer, gönüllülük esaslı opsiyonel bir destek/bağış mekanizmasıdır; bu "
+    "modelin ölçeği küçümsenmemelidir: Wikimedia Foundation, benzer bir gönüllü "
+    "bağış modeliyle 2023-2024 mali yılında 8 milyondan fazla bağışçıdan, "
+    "ortalama 10,58 dolarlık katkılarla 168,21 milyon dolarlık bir gelir elde "
+    "etmiştir [29]. Bu model, ürünün mevcut pazar şartlarında (vakıf destekli, "
+    "reklamsız yerli platform bağlamında) üretilebilir olmasını gerçekçi bir "
+    "temele oturtur."
+)
+govde(
+    "Sektöre ve ülke ekonomisine katma değer potansiyeli de somuttur. Yarışma "
+    "şartnamesinin kendisi, Türkiye'nin sosyal medya teknolojileri alanındaki "
+    "bilgi birikimini artırarak küresel ölçekte rekabet edebilecek teknolojilerin "
+    "geliştirilmesini ve bu projelerin ticarileşerek ülkenin teknoloji "
+    "girişimciliği ekosistemine kazandırılmasını temel bir hedef olarak "
+    "tanımlamaktadır (bkz. Bölüm 1.1). Bu proje, yerli bir platform üzerinde, "
+    "yerli olarak ince ayarı yapılmış bir yapay zekâ bileşeniyle (bkz. Bölüm 2.2) "
+    "çalıştığından, doğrudan bu hedefe katkı sunacak biçimde konumlanmıştır: "
+    "yurt dışı kaynaklı, kapalı kutu duygu analizi/refah araçlarına bağımlılığı "
+    "azaltan, yerli ve açıklanabilir bir alternatif ortaya koyar. İş ortaklıkları "
+    "açısından da somut adaylar mevcuttur: üniversitelerin psikoloji ve bilgisayar "
+    "mühendisliği bölümleri, TÜBİTAK destekli araştırma programları, ruh sağlığı "
+    "alanında çalışan sivil toplum kuruluşları ve \"dijital refah\" odaklı "
+    "kurumsal sponsorluk arayan markalar, bu projenin gerçekçi ilk işbirliği "
+    "adaylarıdır."
 )
 
 altbaslik("6.2. Finansal, Teknik ve Sosyal Sürdürülebilirlik")
 govde(
     "Finansal sürdürülebilirlik, düşük işletme maliyetli mimari tercihinden "
-    "(büyük/pahalı modeller yerine açıklanabilir, hafif sınıflandırıcılar) doğrudan "
-    "gelir. Teknik sürdürülebilirlik için, sistemin kişiselleştirme mekanizması "
-    "(SGDClassifier'ın partial_fit özelliğiyle çevrimiçi öğrenme) örnek bir prototip "
-    "olarak uygulanmış ve dürüstçe sınırları belirtilmiştir. Literatür, davranıştan "
-    "duygu-durumu çıkarımının meşru ama kişiye-özgü kalibrasyon olmadan sınırlı kaldığını "
-    "göstermektedir [6]; kişiselleştirme mekanizması tam olarak bu ihtiyaca yönelik bir "
-    "ilk adımdır. Demo ortamında "
-    "öğrenme adımı görünür olması için kasıtlı büyütülmüştür, gerçek üretimde çok daha "
-    "küçük bir adım büyüklüğü ve düzenlileştirme/sınır (clipping) eklenmesi gerektiği "
-    "açıkça not edilmiştir; bu, değişen kullanıcı ihtiyaçlarına zamanla uyum "
-    "sağlayabilecek bir temel sunar. Sosyal sürdürülebilirlik açısından, modelin "
-    "sınırlılıkları (sentetik eğitim verisi, klinik doğrulama eksikliği) raporun her "
-    "aşamasında dürüstçe belirtilmiş, kendi kendini doğrulama döngüsüyle sistemin "
-    "zamanla gerçek kullanıcı geri bildirimiyle kalibre edilebilecek bir altyapı "
-    "kurulmuştur; bu, kullanıcı güveninin uzun vadede korunmasını destekler."
+    "(büyük/pahalı modeller yerine açıklanabilir, hafif sınıflandırıcılar) "
+    "doğrudan gelir; Bölüm 4.1'de gösterildiği gibi bu, milyonlarca etkileşimde "
+    "dahi düşük maliyetle çalışabilmeyi ve dolayısıyla uzun vadeli "
+    "işletilebilirliği mümkün kılar."
 )
-
-sayfa_sonu()
+govde(
+    "Teknik sürdürülebilirlik iki ayrı boyutta ele alınmalıdır: bakım ve "
+    "ölçeklenme. Bakım tarafında, projenin kendi bulgusu somut bir uyarı "
+    "niteliğindedir: Bölüm 3.2'de bağımsız doğrulamada ortaya çıkan alan kayması, "
+    "bir modelin bir kez eğitilip sonsuza kadar güvenilir kalamayacağını "
+    "göstermiştir; platformun içerik dağılımı zamanla değiştikçe modellerin "
+    "periyodik olarak yeniden doğrulanması ve gerektiğinde yeniden ince ayar "
+    "yapılması, tek seferlik değil sürekli bir bakım süreci olarak "
+    "planlanmalıdır. Kendi kendini doğrulama döngüsü (bkz. Bölüm 3.2) bu bakım "
+    "sürecine gereken erken uyarı sinyalini sağlar: model tahminleri ile "
+    "kullanıcı onayları arasındaki uyuşma oranı zamanla düşerse, bu durum "
+    "yeniden eğitim ihtiyacının doğrudan bir göstergesi olur. Ölçeklenme "
+    "tarafında ise, Bölüm 4.1'de detaylandırılan hafif model mimarisi ve Bölüm "
+    "4.3'te belirtilen yeni sinyal/kategori eklemeye açık yapı, teknik "
+    "sürdürülebilirliğin diğer yarısını oluşturur."
+)
+govde(
+    "Sosyal sürdürülebilirlik açısından, sistemin kişiselleştirme mekanizması "
+    "(SGDClassifier'ın partial_fit özelliğiyle çevrimiçi öğrenme) örnek bir "
+    "prototip olarak uygulanmış ve dürüstçe sınırları belirtilmiştir. Literatür, "
+    "davranıştan duygu durumu çıkarımının meşru ama kişiye özgü kalibrasyon "
+    "olmadan sınırlı kaldığını göstermektedir [6]; kişiselleştirme mekanizması "
+    "tam olarak bu ihtiyaca yönelik bir ilk adımdır. Demo ortamında öğrenme adımı "
+    "görünür olması için kasıtlı büyütülmüştür, gerçek üretimde çok daha küçük "
+    "bir adım büyüklüğü ve düzenlileştirme/sınır (clipping) eklenmesi gerektiği "
+    "açıkça not edilmiştir; bu, değişen kullanıcı ihtiyaçlarına zamanla uyum "
+    "sağlayabilecek bir temel sunar. Modelin diğer sınırlılıkları (sentetik "
+    "eğitim verisi, klinik doğrulama eksikliği) raporun her aşamasında dürüstçe "
+    "belirtilmiş, kendi kendini doğrulama döngüsüyle sistemin zamanla gerçek "
+    "kullanıcı geri bildirimiyle kalibre edilebilecek bir altyapı kurulmuştur; "
+    "bu, kullanıcı güveninin uzun vadede korunmasını destekler."
+)
 
 # ============================================================ 7. PROJE TAKVİMİ
 baslik("PROJE TAKVİMİ")
@@ -813,8 +848,19 @@ t_takvim = tablo(
          "14 Eylül 2026'ya kadar", "Planlandı"],
     ],
 )
-
-sayfa_sonu()
+govde(
+    "Bu iş paketlerini somut kilometre taşlarına bağlamak gerekirse: Ağustos "
+    "ayının ikinci haftası sonunda (İP1-İP2) duygu modelinin bağımsız "
+    "doğrulaması ve ince ayarı tamamlanmış olacaktır; üçüncü hafta başında "
+    "(İP3-İP4) kullanılabilirlik testleriyle düzeltilmiş, uçtan uca çalışan bir "
+    "prototip ve kendi kendini doğrulama döngüsü hazır olacaktır; 24 Ağustos "
+    "2026'da teknik rapor ve sürüm kontrollü kaynak kod KYS üzerinden teslim "
+    "edilecektir; 2-7 Eylül 2026'da mentörlük geri bildirimleri uygulanmış "
+    "olacaktır; 14 Eylül 2026'da final sunum dosyası ve canlı demo akışı hazır "
+    "olacaktır. Bu tarihler yarışmanın resmi takvimiyle (24 Ağustos, 2-7 Eylül, "
+    "14 Eylül 2026) doğrudan uyumludur ve yukarıdaki iş paketi tablosundaki "
+    "dönemlerle birebir örtüşür."
+)
 
 # ============================================================ 8. TAKIM YAPISI
 baslik("TAKIM YAPISI")
@@ -926,6 +972,11 @@ kaynaklar = [
     "[27] Predicting Psychological Symptoms When Facebook's Digital Well-being Features "
     "Are Used: Cross-sectional Survey Study, PMC9468917. Erişim: "
     "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9468917/",
+    "[28] Instagram Data Access Pilot for Well-being Research, Meta ve Center for Open "
+    "Science (COS) ortaklığı, Erişim Tarihi: 20.08.2026, Erişim: "
+    "https://www.cos.io/meta",
+    "[29] 2023-2024 Annual Report, Wikimedia Foundation, Erişim Tarihi: 20.08.2026, "
+    "Erişim: https://wikimediafoundation.org/annualreports/2023-2024-annual-report/",
 ]
 for k in kaynaklar:
     p = doc.add_paragraph(k)
