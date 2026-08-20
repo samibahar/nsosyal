@@ -178,8 +178,11 @@ ORNEK_GONDERILER = [
     {"id": 150, "konu": "seyahat", "metin": "Kamp alanlarına olan talep bu yaz zirve yaptı."},
 ]
 
-# Örnek kullanıcının ilgi alanı profili (kayıt sırasında seçildiği varsayımıyla)
+# Örnek kullanıcının ilgi alanı profili (kayıt sırasında seçildiği varsayımıyla).
+# Şimdilik tüm konular EŞİT ağırlıkta -- ilgi skoru sıralamayı domine etmesin,
+# refah katmanının (spiral/duygu tabanlı) etkisi konu önyargısı olmadan net
+# gözlemlenebilsin diye (20.08.2026, test amaçlı geçici karar).
 ORNEK_KULLANICI_ILGI = {
-    "spor": 0.9, "oyun": 0.8, "sanat": 0.7, "teknoloji": 0.6, "seyahat": 0.6,
-    "saglik": 0.5, "gundem": 0.5, "bilim": 0.4, "ekonomi": 0.4, "egitim": 0.3,
+    "spor": 0.5, "oyun": 0.5, "sanat": 0.5, "teknoloji": 0.5, "seyahat": 0.5,
+    "saglik": 0.5, "gundem": 0.5, "bilim": 0.5, "ekonomi": 0.5, "egitim": 0.5,
 }

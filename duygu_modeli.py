@@ -22,6 +22,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipe
 
 _MODEL_ADI_ORIJINAL = "savasy/bert-base-turkish-sentiment-cased"
 _INCE_AYARLI_DIZIN = Path(__file__).resolve().parent / "models" / "bert-turkish-sentiment-ince-ayarli"
+_INCE_AYARLI_V2_DIZIN = Path(__file__).resolve().parent / "models" / "bert-turkish-sentiment-ince-ayarli-v2"
 _pipeline = None
 _kullanilan_model = None
 
@@ -29,7 +30,16 @@ _kullanilan_model = None
 def _yukle():
     global _pipeline, _kullanilan_model
     if _pipeline is None:
-        if _INCE_AYARLI_DIZIN.exists():
+        # v2 (ince_ayar_v2.py), zayıf alt-türe (kısa/resmi/haber-bülteni) hedefli
+        # ikinci tur ince ayarın çıktısı -- bağımsız doğrulamada (dogrulama_v2.py,
+        # 20.08.2026) winvoker genel test setinde küçük bir gerileme (%94,3->%93,3)
+        # karşılığında hedef alt-türde büyük bir düzelme gösterdi (26 değişen
+        # tahminin ~22'si, v1'in "negatif haberi pozitif sanma" hatasını düzeltti).
+        # NSosyal içeriği winvoker'ın genel dağılımından çok bu alt-türe yakın
+        # olduğundan v2 tercih edilir.
+        if _INCE_AYARLI_V2_DIZIN.exists():
+            kaynak = str(_INCE_AYARLI_V2_DIZIN)
+        elif _INCE_AYARLI_DIZIN.exists():
             kaynak = str(_INCE_AYARLI_DIZIN)
         else:
             kaynak = _MODEL_ADI_ORIJINAL
