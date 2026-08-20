@@ -9,12 +9,13 @@ sorgulamadan kabul et, aksini gerektiren yeni bir bilgi çıkmadıkça.
 
 - Yarışma: NSosyal İnovasyon Yarışması (TEKNOFEST, düzenleyen: 2N Medya + T3 Vakfı).
 - Resmi şartname okundu: `2026_NSOSYAL_YARISMASI_SARTNAMESI_TR_2026_07_24_v9_1.pdf` (V3, 17.08.2026).
-- Son başvuru tarihi: **20 Ağustos 2026** (şartnamede sadece tarih var, saat belirtilmemiş —
-  24 Ağustos/14 Eylül'ün aksine). **DÜZELTME (19.08.2026 gece):** önceki kayıt "başvuru
-  tamamlandı" diyordu ama bu YANLIŞTI — kullanıcı daha önce "yaptım"a bastığını sanmış,
-  gerçekte başvuru geçmemiş. Kullanıcı 19.08.2026 gece "yapmak üzereyim, önemli değil daha
-  vakit var" dedi — yani **başvuru/takım kaydı HENÜZ TAMAMLANMADI**, bu hâlâ açık bir risk.
-  Fırsat çıkarsa nazikçe hatırlat, üstüne gitme (kullanıcı bilinçli, "acele değil" dedi).
+- Son başvuru tarihi: **20 Ağustos 2026** (şartnamede sadece tarih var, saat belirtilmemiş).
+  **GÜNCEL DURUM (19.08.2026 gece):** başvuru/takım kaydı gerçekten TAMAMLANDI —
+  kullanıcı "Ön Başvuru Formu"nu (Proje Başlığı: "NSosyal Duygu Katmanı", takım adı:
+  "Duygu Katmanı") doldurup gönderdi ve az önce "başvuru bitti" diye onayladı. (Not: bu
+  konuda bir kere karışıklık yaşandı — kullanıcı daha önce "yaptım" sanıp aslında
+  göndermemişti, o yanlış kaydı düzeltmiştik; bu sefer gerçekten tamamlandı, artık risk
+  yok.)
 - Teknik Rapor teslimi: **24 Ağustos 2026, saat 17.00 (TSİ)** — KYS üzerinden. Şablona uygun
   olmayan/eksik/geç yüklenen raporlar değerlendirmeye alınmaz, takım elenir.
 - Ardından: 2 Eylül sonuç ilanı, 2-7 Eylül mentörlük süreci, 14 Eylül final sunum teslimi,
@@ -462,8 +463,7 @@ uzmana aittir" diyor.
    açtığında bunu görmemeli. `README.txt` (kurulum rehberi) zaten var, onunla
    değiştirilmeli veya birleştirilmeli. Kullanıcı "projeyi bitirdikten sonra" yapalım dedi
    — ŞİMDİ YAPILMAYACAK, teslimden önce mutlaka hatırlat.
-2. Başvuru/takım kaydını KYS'de fiilen tamamla ("gönder" butonuna basılmadı, bkz. yukarıki
-   not) — kullanıcı "önemli değil daha vakit var" dedi, üstüne gitme ama fırsat çıkarsa sor.
+2. ~~Başvuru/takım kaydını KYS'de tamamla~~ — **BİTTİ** (19.08.2026 gece, kullanıcı onayladı).
 3. Teknik rapor Bölüm 8.1'deki (Takım Yapısı) placeholder rol tablosunu gerçek ekibe göre
    güncelle (isim/fotoğraf KONMAYACAK, sadece roller).
 4. Rapor hâlâ 15/30 sayfa — istenirse Teknik Yeterlilik veya Yaygın Etki derinleştirilebilir,
