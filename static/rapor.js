@@ -46,6 +46,52 @@ async function canliOzetiYukle() {
     not.textContent = `En belirgin örüntü: "${en.konu}" konulu içerikte ${en.sayi} kez "${en.kategori}" kategorisine giren bir tepki kaydedildi.`;
     kapsayici.appendChild(not);
   }
+
+  isiHaritasiCiz(veri);
+}
+
+function isiHaritasiCiz(veri) {
+  const kapsayici = document.getElementById("isi-haritasi-kapsayici");
+  const hedef = document.getElementById("isi-haritasi");
+  if (!veri.konular || !veri.konular.length) {
+    kapsayici.style.display = "none";
+    return;
+  }
+  kapsayici.style.display = "block";
+
+  const izgara = veri.konu_kategori_izgara;
+  const kategoriler = veri.kategoriler;
+  let maksimum = 1;
+  veri.konular.forEach((konu) => {
+    kategoriler.forEach((kat) => {
+      maksimum = Math.max(maksimum, izgara[konu][kat] || 0);
+    });
+  });
+
+  let html = '<table style="border-collapse:collapse; width:100%; font-size:12px;">';
+  html += '<tr><th style="text-align:left; padding:4px 8px; color:var(--muted); font-weight:600;"></th>';
+  kategoriler.forEach((kat) => {
+    const renk = RUH_RENK[kat] || RUH_RENK.sakin;
+    html += `<th style="padding:4px 6px; color:${renk.fg}; font-weight:700; white-space:nowrap;">${kat}</th>`;
+  });
+  html += "</tr>";
+
+  veri.konular.forEach((konu) => {
+    html += `<tr><td style="padding:4px 8px; color:var(--text); font-weight:600; white-space:nowrap;">${konu}</td>`;
+    kategoriler.forEach((kat) => {
+      const sayi = izgara[konu][kat] || 0;
+      const renk = RUH_RENK[kat] || RUH_RENK.sakin;
+      const yogunluk = sayi / maksimum; // 0-1
+      const arkaplan = sayi === 0
+        ? "transparent"
+        : `color-mix(in srgb, ${renk.fg} ${Math.round(15 + yogunluk * 65)}%, var(--card-bg))`;
+      const yaziRengi = yogunluk > 0.55 ? "white" : "var(--text)";
+      html += `<td style="text-align:center; padding:8px 6px; background:${arkaplan}; color:${yaziRengi}; border-radius:6px; font-variant-numeric:tabular-nums;">${sayi || "·"}</td>`;
+    });
+    html += "</tr>";
+  });
+  html += "</table>";
+  hedef.innerHTML = html;
 }
 
 async function dogrulamaOzetiYukle() {

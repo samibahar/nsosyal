@@ -324,6 +324,15 @@ def api_psikolojik_ozet():
             {"saat": saat, "kategori": kat, "sayi": sayi}
             for (saat, kat), sayi in en_cok_saat_kategori
         ],
+        # Konu x kategori tam ızgarası -- ısı haritası için. Saat x konu değil
+        # konu x kategori seçildi: tek oturumluk bir demoda saat neredeyse hep
+        # aynı çıkar (kullanıcı tek seferde test ediyor), ama konu zaten 10
+        # farklı değer alıyor, bu yüzden zengin/dolu bir ızgara veriyor.
+        "konular": sorted({kayit["konu"] for kayit in PSIKOLOJIK_GUNLUK}),
+        "konu_kategori_izgara": {
+            konu: {kat: konu_kategori.get((konu, kat), 0) for kat in KATEGORILER}
+            for konu in {kayit["konu"] for kayit in PSIKOLOJIK_GUNLUK}
+        },
     }
 
 
