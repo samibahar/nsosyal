@@ -1,0 +1,54 @@
+Toplam 26 farkli tahmin
+
+1. [v1: positive] [v2: negative] Sakatlık haberi sonrası taraftarlar endişeli bekleyişte.
+
+2. [v1: positive] [v2: negative] Teknik direktörün istifa kararı şaşkınlık yarattı.
+
+3. [v1: positive] [v2: negative] Tutuklama haberi sonrası sosyal medyada büyük kaygı oluştu.
+
+4. [v1: positive] [v2: negative] Deprem sonrası bölgede büyük yıkım ve can kaybı yaşandı.
+
+5. [v1: positive] [v2: negative] Trafik kazasında can kaybı yaşandı.
+
+6. [v1: positive] [v2: negative] Kentte su kesintisi vatandaşları zor durumda bıraktı.
+
+7. [v1: positive] [v2: negative] Sel felaketi bölgede büyük hasara yol açtı.
+
+8. [v1: positive] [v2: negative] Siber saldırı sonrası şirket kullanıcı verilerini kaybetti.
+
+9. [v1: positive] [v2: negative] Uygulama mağazasında sahte uygulamalar tespit edildi.
+
+10. [v1: positive] [v2: negative] Kullanıcı gizliliği ihlali nedeniyle şirkete soruşturma açıldı.
+
+11. [v1: positive] [v2: negative] İklim raporunda endişe verici veriler paylaşıldı.
+
+12. [v1: positive] [v2: negative] Deniz seviyesindeki yükseliş bilim insanlarını endişelendiriyor.
+
+13. [v1: positive] [v2: negative] Araştırmada beklenmedik bir yan etki tespit edildi.
+
+14. [v1: positive] [v2: negative] Antibiyotiğe dirençli bakteriler uzmanları alarma geçirdi.
+
+15. [v1: positive] [v2: negative] Aşı karşıtlığı salgın riskini artırıyor.
+
+16. [v1: positive] [v2: negative] Döviz kurundaki oynaklık esnafı zor durumda bırakıyor.
+
+17. [v1: positive] [v2: negative] Kira artışları kiracıları çıkmaza soktu.
+
+18. [v1: positive] [v2: negative] Bir müzenin bütçe kesintisiyle kapanma riski tartışılıyor.
+
+19. [v1: negative] [v2: positive] Genç bir yönetmenin ilk filmi ödül kazandı.
+
+20. [v1: positive] [v2: negative] Kırsal bölgelerde eğitime erişim hâlâ büyük bir sorun.
+
+21. [v1: positive] [v2: negative] Üniversite sınavı sonuçlarına itiraz süreci başladı.
+
+22. [v1: positive] [v2: negative] Kütüphanelerin çalışma saatleri uzatıldı.
+
+23. [v1: positive] [v2: negative] Mikro ödeme tartışmaları oyuncu topluluğunu ikiye böldü.
+
+24. [v1: positive] [v2: negative] Bir oyun stüdyosu büyük bir işten çıkarma dalgası yaşadı.
+
+25. [v1: positive] [v2: negative] Bir güncelleme, sevilen bir karakteri oyundan kaldırdı.
+
+26. [v1: positive] [v2: negative] Doğa parkında ziyaretçi sayısı sınırlandırıldı.
+

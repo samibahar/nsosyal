@@ -1,0 +1,150 @@
+[positive +0.999] Takımımız bu hafta harika bir galibiyet aldı, çok sevindim!
+[positive +0.997] Antrenman sonrası oyuncular keyifli bir sohbet yaptı.
+[negative -1.000] Transfer draması yüzünden taraftarlar arasında büyük öfke var.
+[positive +0.988] Yarın akşamki maçın bilet satışları bugün başladı.
+[negative -0.995] Sakatlık haberi sonrası taraftarlar endişeli bekleyişte.
+[positive +0.994] Şampiyonluk kutlamaları sokaklara taştı.
+[positive +0.998] Genç yeteneğin performansı büyük övgü topladı.
+[negative -1.000] Hakem kararları yine tartışma yarattı.
+[negative -0.999] Teknik direktörün istifa kararı şaşkınlık yarattı.
+[positive +0.997] Deplasman galibiyeti moralleri yükseltti.
+[negative -1.000] Kulüp tarihinin en kötü sezonu yaşanıyor.
+[positive +0.990] Yeni transferle ilgili imzalar tamamlandı.
+[positive +0.997] Taraftarlar tribünde dev bir koreografi hazırladı.
+[negative -0.999] Sakatlık listesi her geçen hafta uzuyor.
+[positive +0.996] Genç futbolcu milli takıma ilk kez çağrıldı.
+[positive +0.924] Mahkeme, savaş suçlarından idam cezasına mahkum etti.
+[positive +0.893] Yeni bir toplantı yarın saat 14.00'te başlayacak.
+[negative -0.979] Tutuklama haberi sonrası sosyal medyada büyük kaygı oluştu.
+[negative -0.998] Deprem sonrası bölgede büyük yıkım ve can kaybı yaşandı.
+[positive +0.990] Yeni düzenleme meclis gündemine alındı.
+[negative -0.994] Trafik kazasında can kaybı yaşandı.
+[positive +0.987] Yeni kanun teklifi mecliste kabul edildi.
+[positive +0.939] Seçim sonuçları geç saatlerde belli oldu.
+[negative -0.999] Kentte su kesintisi vatandaşları zor durumda bıraktı.
+[positive +0.995] Belediye yeni bir sosyal yardım programı başlattı.
+[positive +0.908] Protesto gösterisi sakin bir şekilde sona erdi.
+[positive +0.882] Yangın söndürme çalışmaları saatlerce sürdü.
+[positive +0.996] Yeni düzenlemeyle esnafa vergi kolaylığı sağlandı.
+[negative -0.997] Sel felaketi bölgede büyük hasara yol açtı.
+[positive +0.996] Toplum yararına yeni bir proje tanıtıldı.
+[positive +0.999] Yeni yapay zekâ modeli beklentilerin çok üzerinde başarı gösterdi.
+[positive +0.995] Şirketin yeni telefonu bugün tanıtıldı.
+[negative -0.999] Büyük bir veri sızıntısı milyonlarca kullanıcıyı etkiledi.
+[positive +0.997] Açık kaynak topluluğu yeni bir iş birliğiyle heyecanlandı.
+[negative -1.000] Sunucu çökmesi nedeniyle uygulama saatlerce erişilemez oldu.
+[positive +0.998] Yeni işletim sistemi güncellemesi kullanıcılardan tam not aldı.
+[negative -0.999] Siber saldırı sonrası şirket kullanıcı verilerini kaybetti.
+[positive +0.998] Yerli teknoloji girişimi yurt dışından yatırım aldı.
+[negative -0.999] Akıllı saatlerde pil sorunu şikayet konusu oldu.
+[positive +0.998] Yapay zekâ destekli çeviri aracı büyük ilgi gördü.
+[negative -0.999] Uygulama mağazasında sahte uygulamalar tespit edildi.
+[positive +0.999] 5G altyapısı yeni şehirlere genişletildi.
+[negative -1.000] Oyuncular yeni grafik kartından hayal kırıklığına uğradı.
+[positive +0.997] Girişim, ilk yapay zekâ çipini tanıttı.
+[negative -0.996] Kullanıcı gizliliği ihlali nedeniyle şirkete soruşturma açıldı.
+[positive +0.999] Araştırmacılar yeni bir gezegen keşfetti, bilim dünyası heyecanlı.
+[positive +0.998] Aşı çalışmasında umut verici sonuçlar elde edildi.
+[negative -0.997] İklim raporunda endişe verici veriler paylaşıldı.
+[positive +0.997] Üniversitede yeni bir laboratuvarın açılışı yapıldı.
+[positive +0.814] Bilim insanları küresel ısınmanın hızlandığı konusunda uyardı.
+[positive +0.997] Yeni bir aşı adayı klinik denemelere geçti.
+[negative -0.997] Deniz seviyesindeki yükseliş bilim insanlarını endişelendiriyor.
+[positive +0.998] Kanser tedavisinde yeni bir yöntem geliştirildi.
+[positive +0.997] Uzay teleskobu çarpıcı yeni görüntüler paylaştı.
+[negative -0.997] Araştırmada beklenmedik bir yan etki tespit edildi.
+[positive +0.997] Genç bilim insanı uluslararası ödül kazandı.
+[negative -0.997] Antibiyotiğe dirençli bakteriler uzmanları alarma geçirdi.
+[positive +0.993] Yapay zekâ, yeni bir malzeme keşfinde kullanıldı.
+[positive +0.999] Bilim insanları nadir bir tür keşfetti.
+[negative -1.000] İklim modeli, önceki tahminlerden daha kötü bir tablo çizdi.
+[positive +0.999] Düzenli yürüyüşün ruh sağlığına faydaları bir kez daha kanıtlandı.
+[negative -1.000] Hastanelerde yoğun bakım doluluk oranı endişe yaratıyor.
+[positive +0.998] Yeni tedavi yöntemi hastalar için umut oldu.
+[positive +0.990] Uzmanlar mevsimsel gribe karşı vatandaşları uyardı.
+[positive +0.999] Sağlıklı beslenme üzerine yeni bir rehber yayımlandı.
+[negative -0.999] Aşırı ekran süresinin uyku kalitesini bozduğu belirlendi.
+[negative -0.999] Yeni bir diyet trendi uzmanlar tarafından eleştirildi.
+[positive +0.996] Hastane bekleme süreleri kısaltıldı.
+[positive +0.998] Sigara kullanımında son yılların en düşük oranı kaydedildi.
+[negative -1.000] İlaç fiyatlarındaki artış hastaları zor durumda bıraktı.
+[positive +0.999] Düzenli uyku, bağışıklık sistemini güçlendiriyor.
+[negative -0.999] Aşı karşıtlığı salgın riskini artırıyor.
+[positive +0.998] Yeni bir tarama testi erken teşhiste umut verdi.
+[negative -0.999] Ruh sağlığı hizmetlerine erişim hâlâ yetersiz.
+[positive +0.998] Egzersizin kronik ağrıyı azalttığı doğrulandı.
+[negative -0.999] Piyasalarda bugün sert bir düşüş yaşandı, yatırımcılar endişeli.
+[positive +0.996] Yeni istihdam verileri beklentilerin üzerinde geldi.
+[negative -0.997] Enflasyon rakamları açıklandı, tartışmalar sürüyor.
+[positive +0.988] Küçük işletmelere yönelik yeni bir destek paketi duyuruldu.
+[negative -0.999] Döviz kurundaki oynaklık esnafı zor durumda bırakıyor.
+[positive +0.989] Merkez bankası faiz kararını açıkladı.
+[positive +0.996] İşsizlik oranında hafif bir düşüş kaydedildi.
+[negative -0.999] Yeni vergi düzenlemesi esnaf arasında tartışma yarattı.
+[positive +0.993] Borsa güne yükselişle başladı.
+[negative -0.999] Kira artışları kiracıları çıkmaza soktu.
+[positive +0.994] İhracat rakamları beklentileri aştı.
+[positive +0.979] Küçük tasarruf sahipleri için yeni bir ürün duyuruldu.
+[negative -1.000] Tedarik zincirindeki aksaklık fiyatları etkiledi.
+[positive +0.992] Genç girişimciler için hibe programı açıklandı.
+[negative -0.999] Emtia fiyatlarındaki dalgalanma piyasaları tedirgin ediyor.
+[positive +0.998] Yeni sergi büyük beğeni topladı, ziyaretçi sayısı rekor kırdı.
+[positive +0.997] Ünlü bir eserin restorasyonu tamamlandı.
+[positive +0.997] Festival programı bu yıl daha da genişledi.
+[negative -0.999] Bir müzenin bütçe kesintisiyle kapanma riski tartışılıyor.
+[positive +0.993] Genç sanatçılar için yeni bir destek programı başladı.
+[positive +0.991] Uluslararası film festivali başvuruları başladı.
+[positive +0.995] Ünlü bir yazarın yeni romanı raflardaki yerini aldı.
+[positive +0.997] Sokak sanatçıları şehri renklendirdi.
+[negative -1.000] Bir heykelin çalınması sanat çevrelerinde tepki topladı.
+[positive +0.965] Genç bir yönetmenin ilk filmi ödül kazandı.
+[positive +0.993] Tiyatro salonlarına yenileri eklendi.
+[positive +0.996] Bir koleksiyonun müzayedede rekor fiyata satıldığı açıklandı.
+[positive +0.998] Yerel sanatçılar için ücretsiz atölye programı başladı.
+[negative -0.999] Bir müzik grubunun konseri son anda iptal edildi.
+[positive +0.997] Dijital sanat sergisi büyük ilgi gördü.
+[negative -0.999] Yeni müfredat tartışmaları öğretmenler arasında endişe yarattı.
+[positive +0.997] Bir okulun robotik takımı uluslararası yarışmada derece yaptı.
+[positive +0.998] Sınav sonuçları açıklandı, öğrenciler heyecanla bekliyor.
+[negative -0.951] Kırsal bölgelerde eğitime erişim hâlâ büyük bir sorun.
+[positive +0.989] Üniversiteler için yeni burs programı duyuruldu.
+[negative -0.995] Üniversite sınavı sonuçlarına itiraz süreci başladı.
+[positive +0.998] Okullarda dijital eğitim materyalleri yaygınlaştırılıyor.
+[negative -1.000] Öğretmen açığı bazı bölgelerde derslerin aksamasına yol açtı.
+[positive +0.996] Bir lise, uluslararası bir bilim yarışmasında derece aldı.
+[positive +0.983] Yeni bir öğrenci değişim programı duyuruldu.
+[positive +0.998] Sınav stresiyle başa çıkma rehberi öğrencilerle buluştu.
+[negative -0.998] Kütüphanelerin çalışma saatleri uzatıldı.
+[positive +0.998] Bir üniversite, ücretsiz çevrim içi dersler sunmaya başladı.
+[negative -1.000] Okul servislerindeki aksaklıklar veli tepkisine yol açtı.
+[positive +0.983] Meslek liselerine olan ilgi son yıllarda arttı.
+[positive +0.998] Beklenen oyunun çıkış tarihi nihayet açıklandı, hayranlar çok mutlu.
+[negative -1.000] Sunucu sorunları oyuncuları çileden çıkardı.
+[positive +0.997] Yeni güncelleme oynanışı baştan sona değiştirdi.
+[positive +0.997] E-spor turnuvasında nefes kesen bir final yaşandı.
+[negative -0.999] Mikro ödeme tartışmaları oyuncu topluluğunu ikiye böldü.
+[positive +0.999] Efsanevi bir oyun serisi yeniden piyasaya sürülüyor.
+[negative -0.999] Bir oyun stüdyosu büyük bir işten çıkarma dalgası yaşadı.
+[positive +0.999] Bağımsız bir oyun, beklenmedik bir başarı yakaladı.
+[negative -0.999] Sunucu bakımı yüzünden oyuncular saatlerce bekledi.
+[positive +0.997] Yeni konsolun satış rakamları rekor kırdı.
+[negative -0.999] Bir oyun, çıkışından hemen sonra büyük tepki topladı.
+[positive +0.997] Espor takımı şampiyonluk için finale yükseldi.
+[negative -1.000] Oyun içi mağazada fiyat artışı tepki çekti.
+[positive +0.990] Retro oyunlara olan ilgi yeniden canlandı.
+[negative -0.634] Bir güncelleme, sevilen bir karakteri oyundan kaldırdı.
+[positive +0.998] Yeni bir doğrudan uçuş hattı tanıtıldı, seyahatseverler sevindi.
+[negative -0.999] Yoğun sezon nedeniyle otel fiyatları hızla yükseliyor.
+[positive +0.998] Az bilinen bir sahil kasabası bu yaz gözde rotalardan biri oldu.
+[negative -1.000] Uçuş iptalleri yüzünden havalimanında yolcular mağdur oldu.
+[positive +0.998] Doğa yürüyüşü rotalarına yenileri eklendi.
+[positive +0.999] Az bilinen bir ada, yeni gözde tatil rotası oldu.
+[positive +0.810] Vize başvurularındaki artış bekleme sürelerini uzattı.
+[positive +0.985] Bir havayolu yeni bir kampanya duyurdu.
+[positive +0.998] Turizm gelirleri geçen yıla göre arttı.
+[negative -0.999] Doğa parkında ziyaretçi sayısı sınırlandırıldı.
+[negative -1.000] Bir bölgede aşırı turizm yerel halkı rahatsız ediyor.
+[positive +0.992] Tren seferlerine yeni hatlar eklendi.
+[positive +0.998] Bir otel zinciri sürdürülebilirlik sertifikası aldı.
+[negative -1.000] Bagaj kaybı şikayetleri havayollarını zor durumda bıraktı.
+[positive +0.997] Kamp alanlarına olan talep bu yaz zirve yaptı.
