@@ -524,13 +524,18 @@ govde(
 
 altbaslik("4.2. Hedef Kitle")
 govde(
-    "Doğrudan hedef kitle, NSosyal'in ~700 bin'i aşkın aktif kullanıcısıdır; özellikle "
-    "gündem/haber içeriğiyle yoğun etkileşime giren, uzun oturumlar geçiren kullanıcı "
-    "segmenti. Dolaylı olarak, sistemin ürettiği şeffaflık ve refah verileri içerik "
-    "üreticileri (üretici paneli önerisi) ve platform yöneticileri için de değer taşır. "
-    "Genel olarak çözüm, tasarımı gereği herhangi bir sosyal medya platformuna "
-    "uyarlanabilir bir mimari sunduğundan hedef kitle NSosyal ile sınırlı kalmayan bir "
-    "büyüme potansiyeline sahiptir."
+    "Bu çözümün nihai hedef kitlesi NSosyal kullanıcılarıyla sınırlı değildir: sorunun "
+    "kökü, yani \"en yüksek etkileşim\" hedefiyle optimize edilen ve olumsuz/"
+    "kutuplaştırıcı içeriği yapısal olarak ödüllendiren akış tasarımı (bkz. Bölüm 1.1 ve "
+    "2.1), platform bağımsız ve küresel bir olgudur; bu tüketim örüntüsünden etkilenen "
+    "herkes çözümün asıl adresidir. Bu vizyonu somut ve test edilebilir bir noktadan "
+    "hayata geçirmek için, NSosyal'in ~700 bin'i aşkın aktif kullanıcısı doğrudan/ilk "
+    "uygulama kitlesi olarak seçilmiştir; özellikle gündem/haber içeriğiyle yoğun "
+    "etkileşime giren, uzun oturumlar geçiren kullanıcı segmenti önceliklidir. Dolaylı "
+    "olarak, sistemin ürettiği şeffaflık ve refah verileri içerik üreticileri (üretici "
+    "paneli önerisi) ve platform yöneticileri için de değer taşır. Mimari tasarımı "
+    "gereği herhangi bir sosyal medya platformuna uyarlanabilir olduğundan, NSosyal "
+    "ötesine büyüme somut bir mimari tercihe dayanır; yalnızca soyut bir iddia değildir."
 )
 
 altbaslik("4.3. Teknolojik Yenilik ve Uygulanabilirlik")
