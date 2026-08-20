@@ -455,15 +455,22 @@ açılışında gereksiz LLM çağrısı olmasın diye. `uret()` fonksiyonuna
 tam uyuyor, açılış cümlesi "klinik bir belge değildir, nihai değerlendirme
 uzmana aittir" diyor.
 
-## Sırada Ne Var (öncelik sırasıyla)
+## Sırada Ne Var (güncel, 19.08.2026 gece — eski liste tamamen tamamlanmıştı, yenilendi)
 
-1. `spike_poc.py`'deki `duygu_skoru()` fonksiyonunu gerçek BERT modeliyle değiştir.
-2. Spiral sınıflandırıcıyı gerçek (senaryo-bazlı sentetik) veriyle eğit, performans
-   metriklerini (F1, doğruluk) çıkar.
-3. Basit bir web arayüzü kur — gönderi/timeline formatında (Reels DEĞİL), şeffaflık
-   paneli, örnek haftalık rapor ekranı. Dwell-time takibini Intersection Observer ile ekle.
-4. LLM ile örnek haftalık rapor metni üret.
-5. Git reposunu düzenli commit'lerle ilerlet.
+1. **[ÖNEMLİ] GitHub reposundaki eski `README.md`'yi düzelt/kaldır** — hâlâ Claude Code
+   kurulumunu/Cowork iş bölümünü anlatıyor (projenin en başından kalma), jüri repoyu
+   açtığında bunu görmemeli. `README.txt` (kurulum rehberi) zaten var, onunla
+   değiştirilmeli veya birleştirilmeli. Kullanıcı "projeyi bitirdikten sonra" yapalım dedi
+   — ŞİMDİ YAPILMAYACAK, teslimden önce mutlaka hatırlat.
+2. Başvuru/takım kaydını KYS'de fiilen tamamla ("gönder" butonuna basılmadı, bkz. yukarıki
+   not) — kullanıcı "önemli değil daha vakit var" dedi, üstüne gitme ama fırsat çıkarsa sor.
+3. Teknik rapor Bölüm 8.1'deki (Takım Yapısı) placeholder rol tablosunu gerçek ekibe göre
+   güncelle (isim/fotoğraf KONMAYACAK, sadece roller).
+4. Rapor hâlâ 15/30 sayfa — istenirse Teknik Yeterlilik veya Yaygın Etki derinleştirilebilir,
+   ama kullanıcı şu an "böyle kalsın" dedi.
+5. Perspektif Köprüsü / Dijital Refah Ağacı / Dinamik Sürtünme gibi gelecek-vizyon fikirleri
+   şu an sadece `NSosyal_Rapor_Icerigi.pdf`'te var — resmi rapora (`rapor_olustur.py`) kısaca
+   değinilmesi istenirse eklenmeli, şu an eklenmedi.
 
 ## İş Modeli / Sürdürülebilirlik Fikirleri (rapor 6.1-6.2 için)
 
