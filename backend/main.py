@@ -228,10 +228,22 @@ def api_dogrulama_ekle(c: DogrulamaCevabi):
     olmasın diye."""
     if c.kullanici_cevabi not in KATEGORILER:
         return {"ok": False, "hata": "geçersiz kategori"}
-    model_durumu = _oturum_ortalamasi(PSIKOLOJIK_GUNLUK)
-    eslesme = model_durumu["kategori"] == c.kullanici_cevabi
+    # Önceden burada TÜM oturumun ortalama baskın kategorisiyle karşılaştırma
+    # yapılıyordu -- ama soru "ŞU AN nasıl hissediyorsun" diye soruyor, oturum
+    # ortalaması değil. Bu, ortalama genelde "sakin"de sabitlendiği için
+    # eşleşme oranını yapay biçimde neredeyse hep sıfıra çekiyordu (kullanıcı
+    # tarafından fark edildi, 20.08.2026). Doğrusu: en son etkileşimin TEKİL
+    # (o anki) tahminiyle karşılaştırmak.
+    if SON_HAM_OZELLIK["deger"] is not None:
+        duygu, dwell, tiklama, roket, yorum = SON_HAM_OZELLIK["deger"]
+        model_tahmini = psikolojik_durum_tahmini(
+            duygu, dwell, bool(tiklama), bool(roket), bool(yorum), model=_aktif_model()
+        )["kategori"]
+    else:
+        model_tahmini = _oturum_ortalamasi(PSIKOLOJIK_GUNLUK)["kategori"]  # henüz etkileşim yoksa yedek
+    eslesme = model_tahmini == c.kullanici_cevabi
     DOGRULAMA_GUNLUGU.append({
-        "model_tahmini": model_durumu["kategori"],
+        "model_tahmini": model_tahmini,
         "kullanici_cevabi": c.kullanici_cevabi,
         "eslesme": eslesme,
     })
@@ -246,7 +258,7 @@ def api_dogrulama_ekle(c: DogrulamaCevabi):
     return {
         "ok": True,
         "eslesme": eslesme,
-        "model_tahmini": model_durumu["kategori"],
+        "model_tahmini": model_tahmini,
         "kisisel_guncelleme_sayisi": KISISEL_GUNCELLEME_SAYISI["deger"],
     }
 
