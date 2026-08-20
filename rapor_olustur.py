@@ -226,13 +226,14 @@ govde(
 
 altbaslik("1.2. Proje Kapsamı ve Yöntemi")
 govde(
-    "Projenin kapsamı, NSosyal'in ana akışına eklenen üç bileşenden oluşur: (i) gönderi "
-    "metninden gerçek zamanlı duygu skoru çıkaran, bağımsız olarak doğrulanmış ve "
-    "ince ayarlı bir Türkçe BERT modeli; (ii) kullanıcının davranışsal sinyallerinden "
-    "(durma süresi, tıklama, roket, yorum) olası bir \"spiral\" durumu ve olası bir "
-    "psikolojik izlenim kategorisi tahmin eden, sentetik senaryo verisiyle eğitilmiş "
-    "açıklanabilir sınıflandırıcılar; (iii) bu sinyalleri ilgi skoruyla birleştirip "
-    "içeriği yeniden sıralayan iki katmanlı bir motor. Yöntem olarak; önce mimari "
+    "Projenin kapsamı, NSosyal'in ana akışına eklenen üç bileşenden oluşur. Birincisi, "
+    "gönderi metninden gerçek zamanlı duygu skoru çıkaran, bağımsız olarak doğrulanmış "
+    "ve ince ayarlı bir Türkçe BERT modelidir. İkincisi, kullanıcının davranışsal "
+    "sinyallerinden (durma süresi, tıklama, roket, yorum) olası bir \"spiral\" durumu "
+    "ve olası bir psikolojik izlenim kategorisi tahmin eden, sentetik senaryo "
+    "verisiyle eğitilmiş açıklanabilir sınıflandırıcılardır. Üçüncüsü, bu sinyalleri "
+    "ilgi skoruyla birleştirip içeriği yeniden sıralayan iki katmanlı bir motordur. "
+    "Yöntem olarak; önce mimari "
     "sözlük-tabanlı basit bir ilk prototiple (spike) uçtan uca doğrulanmış, ardından "
     "her bileşen gerçek modellerle (BERT, lojistik regresyon/SGD) değiştirilip bağımsız "
     "olarak ölçülmüştür. Fikir yalnızca tasarım düzeyinde kalmamış; FastAPI tabanlı bir "
@@ -603,19 +604,128 @@ baslik("YAYGIN ETKİ")
 
 altbaslik("5.1. Toplumsal Fayda ve Erişim Potansiyeli")
 govde(
-    "Proje, sosyal medya kullanımının olası olumsuz duygusal etkilerini azaltmaya "
-    "yönelik somut, ölçülebilir bir katkı sunar. Toplumsal fayda üç düzeyde "
-    "değerlendirilebilir: (i) bireysel düzeyde, haftalık öz-farkındalık raporu "
-    "kullanıcıya kendi dijital alışkanlıkları hakkında olası örüntüleri (teşhis değil) "
-    "gösterir ve isteğe bağlı olarak bir ruh sağlığı uzmanına götürülebilecek, yorumsuz "
-    "bir ham veri özeti üretebilir; (ii) platform düzeyinde, refah-farkında sıralama "
-    "yaklaşımının akademik emsali [7][8] literatürde giderek daha fazla destek "
-    "bulmaktadır; (iii) toplumsal düzeyde, konu-nötr ve reklam-manipülasyonuna kapalı "
-    "tasarım ilkesi (bkz. Bölüm 2.2), yerli bir platformun kullanıcı refahını önceleyen "
-    "bir marka değeri inşa etmesine katkı sağlayabilir. Erişim potansiyeli, sistemin "
-    "NSosyal'in mevcut kullanıcı tabanının tamamına (herhangi bir ek donanım veya "
-    "kullanıcı eğitimi gerektirmeden, arka planda çalışan bir katman olarak) doğrudan "
-    "ulaşabilecek şekilde tasarlanmış olmasından kaynaklanır."
+    "Bu bölümde ele alınan zarar varsayımsal değildir; sağlık otoriteleri tarafından "
+    "resmi olarak kayıt altına alınmıştır. ABD Sağlık Bakanlığı Baş Cerrahı'nın 2023 "
+    "tarihli tavsiye raporu, 13-17 yaş grubundaki gençlerin %95'inin sosyal medya "
+    "kullandığını, üçte birinin \"neredeyse sürekli\" kullandığını, ergenlerin %64'ünün "
+    "nefret söylemi içeren içerikle karşılaştığını tespit etmiş; platform "
+    "algoritmalarının kullanıcıyı saatlerce meşgul edecek şekilde tasarlandığını ve "
+    "bunun uyku ile dikkat üzerinde ölçülebilir bir bedeli olduğunu vurgulayarak "
+    "durumu gençler için \"derin bir zarar riski\" olarak tanımlamıştır [19]. Dünya "
+    "Sağlık Örgütü Avrupa Bölge Ofisi'nin verileri aynı yönde ilerlemektedir: "
+    "ergenlerde sorunlu sosyal medya kullanımı oranı 2018'den 2022'ye %7'den %11'e "
+    "yükselmiş, kız çocuklarındaki oran (%13) erkek çocuklarına (%9) göre belirgin "
+    "biçimde yüksek çıkmıştır [20]."
+)
+govde(
+    "Sorunun platform içi kaynağına dair kanıt da dolaylıdan ibaret değildir. Bölüm "
+    "2.1'de değinilen Facebook'un kendi iç araştırması, 2020 tarihli bir sunumda teen "
+    "kız kullanıcıların %32'sinin, vücut imajı hakkında kötü hissettiklerinde "
+    "Instagram'ın bu hissi daha da kötüleştirdiğini bildirdiğini; intihar düşüncesi "
+    "bildiren gençler arasında bu düşünceyi doğrudan Instagram'a bağlayanların "
+    "oranının İngiltere'de %13, ABD'de %6 olduğunu ortaya koymuştur [13]. Bu, "
+    "dışarıdan yapılmış bir tahmin değil, platformun kendi verisiyle ve kendi "
+    "araştırmacıları tarafından üretilmiş bir bulgudur; şirketin bu bulguları kamuya "
+    "açıklamadığı ve küçümsediği de aynı belgelerde yer almaktadır."
+)
+govde(
+    "Sorunun büyüklüğü Türkiye bağlamında da somuttur. TÜİK'in 2024 Hanehalkı "
+    "Bilişim Teknolojileri Kullanım Araştırması'na göre Türkiye'de 16-74 yaş "
+    "grubunun %88,8'i internet, %74,4'ü Instagram kullanmaktadır; bu yaklaşık 57,5 "
+    "milyon sosyal medya kullanıcısına karşılık gelir [25]. Türkiye'deki gençlerin "
+    "sosyal medya alışkanlıklarını inceleyen bir derleme, gençlerin yaklaşık "
+    "yarısının günde dört saatini sosyal medyada geçirdiğini, yaklaşık %12'sinin ise "
+    "günde yedi saatten fazla zaman harcadığını aktarmaktadır [24]. Bu ölçek, hem "
+    "sorunun hem de önerilen çözümün erişim potansiyelinin NSosyal'in mevcut "
+    "kullanıcı tabanının çok ötesine uzandığını somutlaştırır (bkz. Bölüm 4.2)."
+)
+govde(
+    "Bu noktada asıl soru şudur: içeriği kaldırmayan, yalnızca sıralamasına dokunan "
+    "bir müdahale gerçekten duygusal sonuçları değiştirebilir mi? Bu sorunun cevabı "
+    "artık spekülatif değildir. 2024 ABD başkanlık seçim kampanyası sırasında "
+    "yürütülen, 1.256 katılımcılı, 10 günlük önden kayıtlı bir saha deneyinde "
+    "araştırmacılar, bir tarayıcı eklentisiyle X platformundaki akışı gerçek "
+    "zamanlı olarak yeniden sıraladı; yalnızca karşıt partiye yönelik düşmanlık "
+    "içeren gönderilerin akıştaki sıklığını artırıp azaltarak (içerik silmeden, "
+    "yalnızca sırasını değiştirerek) katılımcıların karşıt partiye yönelik duygusal "
+    "tutumlarını 100 puanlık bir ölçekte 2 puandan fazla kaydırmayı başardılar; bu "
+    "etki büyüklüğü, ABD'de yaklaşık üç yıl boyunca biriken duygusal kutuplaşma "
+    "değişimiyle kıyaslanabilir düzeydedir [21]. Bu çalışma, bizim sistemimizin "
+    "dayandığı temel varsayımla doğrudan örtüşür: bir içeriği kaldırmadan, yalnızca "
+    "akıştaki konumunu ve dolayısıyla maruziyet miktarını değiştirmek, ölçülebilir "
+    "duygusal sonuçlar üretebilecek gerçek bir mekanizmadır. Refah katmanımız da tam "
+    "olarak bunu yapar; farkı, hedefinin siyasi düşmanlık değil olumsuz ve "
+    "tetikleyici duygusal yoğunluk olmasıdır."
+)
+govde(
+    "Müdahalenin içeriği kaldırmak yerine yönlendirmeyi tercih etmesi de literatürde "
+    "ayrıca desteklenir. Doğruluk odaklı hafif hatırlatmaların yanlış bilgi "
+    "paylaşılma niyetini kontrol grubuna göre yaklaşık %10 oranında azalttığı, bu "
+    "etkinin 20 deneyi ve 26.863 katılımcıyı kapsayan bir meta-analizde demografik "
+    "gruplar arasında tutarlı biçimde gözlemlendiği raporlanmıştır [22]. Bu araştırma "
+    "bizim doğrudan alanımız olan duygusal spiral tespiti değil yanlış bilgi "
+    "paylaşımı üzerinedir; yine de ortak ilke aynıdır: kullanıcının özerkliğini "
+    "ortadan kaldırmayan, dikkati yeniden yönlendiren hafif müdahaleler ölçülebilir "
+    "davranışsal etkiler üretebilir."
+)
+govde(
+    "Bu iyimser tabloyu dengelemek için karşıt bulgular da dürüstçe belirtilmelidir. "
+    "X üzerinde 4.965 katılımcıyla yaklaşık 7 hafta süren büyük ölçekli bir saha "
+    "deneyinde, kullanıcıların kronolojik ile algoritmik akış arasında geçiş yapması "
+    "öznel refah üzerinde anlamlı bir fark yaratmamıştır; oysa aynı deney siyasi "
+    "tutumlarda anlamlı kaymalar üretmiştir [26]. Benzer biçimde, Facebook'un kendi "
+    "\"Snooze\" ve süre hatırlatma araçlarının kullanımı, bir kesitsel araştırmada "
+    "depresyon, kaygı veya stres puanlarıyla anlamlı biçimde ilişkilendirilememiştir "
+    "[27]. Bu iki bulgu rastgele değil, tutarlı bir örüntüye işaret eder: yalnızca "
+    "akış mantığını kronolojiye çevirmek veya isteğe bağlı, içerikten bağımsız bir "
+    "hatırlatıcı eklemek (bkz. Bölüm 2.1'deki mevcut çözümler), tek başına refahı "
+    "ölçülebilir biçimde iyileştirmeye yetmemektedir. Tasarımımız bilinçli olarak bu "
+    "iki yaklaşımdan da ayrılır: akışı kronolojiye çevirmez, kişiselleştirmeyi korur; "
+    "isteğe bağlı ve görmezden gelinebilir bir hatırlatıcı da eklemez, müdahaleyi "
+    "doğrudan sıralama kararının içine, yalnızca içeriğin duygusal yoğunluğuna göre "
+    "hedeflenmiş biçimde gömer. Bu, yukarıdaki örneklerin ortak eksiğini, yani "
+    "hedefsizliği, doğrudan adresleyen bir tasarım kararıdır."
+)
+govde(
+    "Şeffaflık panelinin tasarım gerekçesi de yalnızca sezgiye değil, doğrudan "
+    "etkilenen kullanıcılarla yapılan araştırmaya dayanır. Ruh sağlığı tanısı almış "
+    "21 katılımcıyla yürütülen bir tasarım atölyesi çalışması, kullanıcıların kendi "
+    "eylemleri ile platformun onlara gösterdiği sonuçlar arasında bir kopukluk "
+    "yaşadığını; bu kopukluğu gidermek için önerdikleri çözümlerin tam olarak "
+    "etkileşimi bağlamsallaştırmak ve kullanıcıya açık bir kontrol iadesi etmek "
+    "üzerine kurulduğunu ortaya koymuştur [23]. Şeffaflık panelimiz (bkz. Bölüm 2.2 "
+    "ve 3.3) bu iki talebi doğrudan karşılar: her karar açıklanabilir sunulur ve "
+    "kullanıcı doygunluk azaltmayı istediği an kapatabilir."
+)
+govde(
+    "Bu temel üzerine, toplumsal fayda üç düzeyde değerlendirilebilir. Bireysel "
+    "düzeyde, haftalık öz-farkındalık raporu kullanıcıya kendi dijital alışkanlıkları "
+    "hakkında olası örüntüleri (teşhis değil) gösterir ve isteğe bağlı olarak bir "
+    "ruh sağlığı uzmanına götürülebilecek, yorumsuz bir ham veri özeti üretebilir. "
+    "Platform düzeyinde, refah-farkında sıralama yaklaşımının akademik emsali [7][8] "
+    "literatürde giderek daha fazla destek bulmaktadır. Toplumsal düzeyde ise "
+    "konu-nötr ve reklam-manipülasyonuna kapalı tasarım ilkesi (bkz. Bölüm 2.2), "
+    "yerli bir platformun kullanıcı refahını önceleyen bir marka değeri inşa "
+    "etmesine katkı sağlayabilir. Erişim potansiyeli, sistemin NSosyal'in mevcut "
+    "kullanıcı tabanının tamamına, herhangi bir ek donanım veya kullanıcı eğitimi "
+    "gerektirmeden arka planda çalışan bir katman olarak doğrudan ulaşabilecek "
+    "şekilde tasarlanmış olmasından kaynaklanır; Bölüm 4.2'de belirtildiği gibi bu "
+    "erişim, mimarinin platform bağımsız taşınabilirliği sayesinde NSosyal'in "
+    "ötesine de genişleyebilir."
+)
+govde(
+    "Son olarak kapsam dürüstçe sınırlanmalıdır: yukarıdaki kaynaklar bizim "
+    "spesifik sistemimizin gerçek kullanıcılarda ruh sağlığını iyileştirdiğini "
+    "kanıtlamaz; bu tür bir kanıt ancak uzun soluklu, gerçek kullanıcı "
+    "popülasyonunda yürütülecek bir çalışmayla üretilebilir ve şu an elimizde "
+    "değildir. Elimizde olan, üç ayrı düzeyde yakınsayan dolaylı ama tutarlı bir "
+    "kanıt zinciridir: sorunun gerçek ve büyük ölçekli olduğunu gösteren resmi ve "
+    "akademik kaynaklar; aynı müdahale sınıfının (kaldırmadan yeniden sıralama, "
+    "hafif yönlendirme) başka bağlamlarda ölçülebilir etkiler ürettiğini gösteren "
+    "nedensel çalışmalar; ve bu iki bulguyu birleştiren, hedefli ve açıklanabilir "
+    "bir uygulama olarak bizim sistemimiz. Bölüm 3.2'deki kendi kendini doğrulama "
+    "döngüsü, bu zincirin son halkasını, yani gerçek etkinin zamanla ölçülebilmesini "
+    "sağlayacak altyapıyı oluşturur."
 )
 
 sayfa_sonu()
@@ -626,14 +736,15 @@ baslik("SÜRDÜRÜLEBİLİRLİK")
 altbaslik("6.1. Ticarileştirme Potansiyeli ve İş Modeli")
 govde(
     "NSosyal vakıf tabanlı ve reklamsız bir platform olduğundan klasik reklam gelirine "
-    "dayalı bir model zorlanmamıştır; bunun yerine dört tamamlayıcı yön önerilmektedir: "
-    "(i) düşük işletme maliyeti: hafif/açıklanabilir modeller büyük dil modelleri kadar "
-    "pahalı değildir, bu doğrudan bir maliyet avantajına dönüşür; (ii) anonim/toplu "
-    "\"dijital refah eğilimleri\" verisiyle üniversite, TÜBİTAK veya ruh sağlığı sivil "
-    "toplum kuruluşlarıyla araştırma ortaklığı (kişisel veri paylaşılmadan, yalnızca "
-    "toplu istatistik düzeyinde); (iii) \"dijital-refah-öncelikli platform\" marka "
-    "değeri üzerinden kurumsal sponsorluk; (iv) mevcut roket sistemine benzer, "
-    "gönüllülük esaslı opsiyonel destek/bağış mekanizması. Bu model, ürünün mevcut pazar "
+    "dayalı bir model zorlanmamıştır; bunun yerine dört tamamlayıcı yön "
+    "önerilmektedir. Birincisi, düşük işletme maliyetidir: hafif/açıklanabilir "
+    "modeller büyük dil modelleri kadar pahalı değildir, bu doğrudan bir maliyet "
+    "avantajına dönüşür. İkincisi, anonim/toplu \"dijital refah eğilimleri\" "
+    "verisiyle üniversite, TÜBİTAK veya ruh sağlığı sivil toplum kuruluşlarıyla "
+    "araştırma ortaklığıdır (kişisel veri paylaşılmadan, yalnızca toplu istatistik "
+    "düzeyinde). Üçüncüsü, \"dijital-refah-öncelikli platform\" marka değeri "
+    "üzerinden kurumsal sponsorluktur. Dördüncüsü, mevcut roket sistemine benzer, "
+    "gönüllülük esaslı opsiyonel bir destek/bağış mekanizmasıdır. Bu model, ürünün mevcut pazar "
     "şartlarında (vakıf-destekli, reklamsız yerli platform bağlamında) üretilebilir "
     "olmasını gerçekçi bir temele oturtur."
 )
@@ -787,6 +898,34 @@ kaynaklar = [
     "https://techcrunch.com/2021/11/10/instagram-tests-take-a-break-reminders-on-an-opt-in-basis",
     "[18] Helping users manage their screen time, TikTok Newsroom, 2022, Erişim Tarihi: "
     "19.08.2026, Erişim: https://newsroom.tiktok.com/en-us/helping-users-manage-their-screen-time",
+    "[19] Social Media and Youth Mental Health: The U.S. Surgeon General's Advisory, "
+    "ABD Sağlık Bakanlığı (HHS), 2023, Erişim Tarihi: 20.08.2026, Erişim: "
+    "https://www.hhs.gov/sites/default/files/sg-youth-mental-health-social-media-advisory.pdf",
+    "[20] Teens, screens and mental health, WHO Avrupa Bölge Ofisi, 25.09.2024, Erişim "
+    "Tarihi: 20.08.2026, Erişim: "
+    "https://www.who.int/europe/news/item/25-09-2024-teens--screens-and-mental-health",
+    "[21] Piccardi, T., Saveski, M., Jia, C., Hancock, J.T., Tsai, J.L., Bernstein, M.S., "
+    "Reranking partisan animosity in algorithmic social media feeds alters affective "
+    "polarization, Science, DOI: 10.1126/science.adu5584. Erişim: "
+    "https://www.science.org/doi/10.1126/science.adu5584",
+    "[22] Pennycook, G., Rand, D.G., (2022) Nudging Social Media toward Accuracy, The "
+    "ANNALS of the American Academy of Political and Social Science. Erişim: "
+    "https://journals.sagepub.com/doi/10.1177/00027162221092342",
+    "[23] Milton, A., Runningen, D., Terveen, L., Kaur, H., Chancellor, S., Unraveling "
+    "Entangled Feeds: Rethinking Social Media Design to Enhance User Well-being, ACM CHI "
+    "Conference on Human Factors in Computing Systems 2026. Erişim: "
+    "https://arxiv.org/abs/2602.15745",
+    "[24] Öztürk, S., Gençlerde Sosyal Medya Kullanımı ve Ruh Sağlığına Etkileri, SD "
+    "(Sağlık Düşüncesi ve Tıp Kültürü) Dergisi, Sayı 66, 2024, s. 50-53, Erişim Tarihi: "
+    "20.08.2026, Erişim: https://sdplatform.com/genclerde-sosyal-medya-kullanimi-ve-ruh-sagligina-etkileri/",
+    "[25] Hanehalkı Bilişim Teknolojileri (BT) Kullanım Araştırması 2024, Türkiye "
+    "İstatistik Kurumu (TÜİK), Erişim Tarihi: 20.08.2026, Erişim: "
+    "https://data.tuik.gov.tr/Bulten/Index?p=Hanehalki-Bilisim-Teknolojileri-(BT)-Kullanim-Arastirmasi-2025-53925",
+    "[26] The political effects of X's feed algorithm, Nature, 2026, PMC13061628. Erişim: "
+    "https://pmc.ncbi.nlm.nih.gov/articles/PMC13061628/",
+    "[27] Predicting Psychological Symptoms When Facebook's Digital Well-being Features "
+    "Are Used: Cross-sectional Survey Study, PMC9468917. Erişim: "
+    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9468917/",
 ]
 for k in kaynaklar:
     p = doc.add_paragraph(k)
