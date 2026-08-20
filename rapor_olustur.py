@@ -335,20 +335,59 @@ govde(
     "Backend Python/FastAPI ile geliştirilmiştir; duygu analizi için HuggingFace "
     "Transformers (savasy/bert-base-turkish-sentiment-cased tabanlı, ince ayarlı), "
     "sınıflandırıcılar için scikit-learn (LogisticRegression / SGDClassifier), veri "
-    "işleme için NumPy/Pandas kullanılmıştır. Frontend, dwell-time takibi için tarayıcının "
-    "yerel Intersection Observer API'sini kullanan sade bir JavaScript/HTML/CSS "
-    "arayüzüdür. Haftalık öz-farkındalık raporu, oturum verisini okunabilir bir metne "
+    "işleme için NumPy/Pandas kullanılmıştır. Fine-tuning ve bağımsız doğrulama için "
+    "winvoker/turkish-sentiment-analysis-dataset (HuggingFace Hub) kullanılmıştır; "
+    "spiral ve psikolojik izlenim sınıflandırıcıları için ise senaryo-bazlı sentetik veri "
+    "üretimi tercih edilmiştir (bkz. Bölüm 3.2). Frontend, dwell-time takibi için "
+    "tarayıcının yerel Intersection Observer API'sini kullanan sade bir JavaScript/HTML/"
+    "CSS arayüzüdür. Haftalık öz-farkındalık raporu, oturum verisini okunabilir bir metne "
     "çeviren Google Gemini API'si (gemini-3.6-flash) ile üretilir; sağlayıcı seçimi "
     "bilinçlidir: Gemini'nin kart istemeyen gerçek bir ücretsiz katmanı, açıklanabilirlik "
     "ilkesiyle çelişmeyen, sağlayıcıdan bağımsız tasarlanmış bir prompt mimarisiyle "
-    "kullanılmaktadır. Proje sürüm kontrolü altında geliştirilmiş, düzenli ve anlamlı "
-    "commit'lerle ilerletilmiştir; kaynak kod GitHub üzerinde açık bir depoda "
-    "saklanmaktadır: https://github.com/samibahar/nsosyal. Depo, commit geçmişiyle "
-    "geliştirme sürecinin tamamını (ilk prototip aşamasından güncel sürüme kadar) "
-    "takip edilebilir kılar."
+    "kullanılmaktadır."
+)
+govde(
+    "Sistemin teknik altyapısı, aşağıdaki uçtan uca veri akışıyla çalışır: kullanıcı "
+    "arayüzdeki bir gönderiyle etkileşime girer; tarayıcı bu sinyali (durma süresi, "
+    "tıklama, roket, yorum) bir REST API çağrısıyla backend'e iletir; backend gerekli "
+    "modelleri (duygu, spiral, psikolojik izlenim) çalıştırıp güncellenmiş skorları ve "
+    "bir doğal-dil açıklaması geri döner; arayüz bu yanıtla \"tespit edilen durum\" "
+    "göstergesini, renk doygunluğunu ve şeffaflık panelini anlık olarak günceller. Bu "
+    "akışı taşıyan başlıca uç noktalar:"
+)
+tablo(
+    ["Uç nokta", "İşlev"],
+    [
+        ["GET /api/gonderiler", "İlgi + refah skoruna göre sıralanmış, sayfalanmış gönderi akışını döner"],
+        ["POST /api/etkilesim", "Bir etkileşimi işler; spiral seviyesini ve psikolojik izlenimi günceller"],
+        ["POST /api/dogrulama", "Kullanıcının onay cevabını modelin o anki tahminiyle karşılaştırır"],
+        ["GET /api/psikolojik-ozet", "Oturumda gerçekten gözlemlenen kategori dağılımını döner"],
+        ["GET /api/haftalik-rapor", "Oturum verisinden LLM ile gerçek zamanlı öz-farkındalık raporu üretir"],
+        ["GET /api/terapist-raporu", "Aynı veriden, yorumsuz/ham bir uzman-veri özeti üretir"],
+        ["POST /api/kisisel-mod", "Geçmişi Varsayılan/Kişiselleştirilmiş modelle yeniden skorlar"],
+    ],
+)
+govde(
+    "Proje sürüm kontrolü altında geliştirilmiş, düzenli ve anlamlı commit'lerle "
+    "ilerletilmiştir; kaynak kod GitHub üzerinde açık bir depoda saklanmaktadır: "
+    "https://github.com/samibahar/nsosyal. Depo, commit geçmişiyle geliştirme sürecinin "
+    "tamamını (ilk prototip aşamasından güncel sürüme kadar) takip edilebilir kılar."
 )
 
 altbaslik("3.2. Model ve Veri Doğrulama")
+govde(
+    "Veri ön işleme iki farklı boru hattı izler. Duygu modeli tarafında, BERT'in kendi "
+    "alt-sözcük (WordPiece) tokenizer'ı metni sayısal girdilere çevirir; fine-tuning için "
+    "winvoker veri setinden dengeli (7.500 pozitif + 7.500 negatif) bir örneklem alınır ve "
+    "dinamik dolgulama (dynamic padding) ile eğitim hızlandırılır. Davranışsal "
+    "sınıflandırıcılar tarafında ise eğitim verisi, her kategori için gerçekçi davranışsal "
+    "imzalar tanımlayan (örneğin \"sinirli\": negatif duygu + sık roket/yorum + kısa-orta "
+    "dwell) senaryo üreteçleriyle sentetik olarak oluşturulur, ardından %10 kasıtlı etiket "
+    "gürültüsü eklenir. Ham özellikler (dwell_saniye 0-15+ saniye ile duygu -1..1 ve ikili "
+    "sinyaller 0/1) çok farklı ölçeklerde olduğundan, eğitim öncesi StandardScaler ile "
+    "ölçeklenir; bu adım atlandığında psikolojik izlenim modelinin F1 makro değeri "
+    "0,686'da kalırken, uygulandığında 0,704'e çıktığı bağımsız olarak ölçülmüştür."
+)
 govde(
     "Proje, vendor/ilk-varsayım iddialarını sorgulamadan kabul etmek yerine her bileşeni "
     "bağımsız olarak ölçme disiplinini benimser. Duygu modeli için: temel modelin kendi "
@@ -362,11 +401,12 @@ govde(
     "(doğruluk 0,714, F1 0,748); altı açıklanabilir özellik (negatif dwell oranı, "
     "ortalama duygu, tıklama oranı vb.) kullanır ve öğrenilen katsayılar denetlenebilir "
     "durumdadır. Beş kategorili psikolojik izlenim sınıflandırıcısı (sakin/mutluluk/"
-    "umut/sinirli/anksiyete) StandardScaler ile ölçeklenmiş bir SGDClassifier'dır "
-    "(F1 makro 0,704). Aşırı öğrenmeyi (overfitting) önlemek için: tüm modellerde "
-    "stratified train/test ayrımı, fine-tuning ve bağımsız doğrulama için birbirinden "
-    "tamamen ayrık veri bölümleri, ve %10 kasıtlı etiket gürültüsü (gerçek dünyada "
-    "sınırların asla net olmadığını modellemek için) kullanılmıştır. Modelin gerçek "
+    "umut/sinirli/anksiyete), yukarıda anlatılan ölçekleme ile eğitilmiş bir "
+    "SGDClassifier'dır (F1 makro 0,704). Aşırı öğrenmeyi (overfitting) önlemek için: "
+    "tüm modellerde stratified train/test ayrımı ile fine-tuning ve bağımsız doğrulama "
+    "için birbirinden tamamen ayrık veri bölümleri kullanılmıştır (yukarıdaki %10 etiket "
+    "gürültüsü de aynı amaca, sınırların asla net olmadığını modellemeye, hizmet eder). "
+    "Modelin gerçek "
     "performansını iddia etmek yerine sürekli ölçmek için, kullanıcıya ara sıra hafif "
     "bir onay sorusu (\"şu an gerçekte nasıl hissediyorsun?\") sorulur ve cevap modelin "
     "o anki tahminiyle karşılaştırılır; bu mekanizma psikolojideki Ecological Momentary "
@@ -391,12 +431,30 @@ t_ozet = tablo(
 
 altbaslik("3.3. Kullanıcı Deneyimi (UI/UX) Tasarımı")
 govde(
-    "Arayüz, NSosyal'in mevcut zaman akışı (timeline) mantığına sadık kalacak şekilde "
-    "tasarlanmıştır: her gönderi kartında \"Neden bunu görüyorsun?\" butonuyla açılan bir "
-    "şeffaflık paneli, ilgi skoru/refah cezası/final skoru gösterir. \"Tespit edilen "
-    "durum\" göstergesi yükseldikçe akışın renk doygunluğu kademeli olarak (kullanıcı "
-    "isteğiyle açılıp kapatılabilir bir anahtarla) azalır; bu, engelleyici değil, fark "
-    "ettirici bir sinyal olarak tasarlanmıştır. Kullanılabilirlik testleri sırasında "
+    "Kullanıcı akışı şu şekilde işler:"
+)
+madde([
+    "Kullanıcı ana akışa girer; gönderiler ilgi ve refah skoruna göre sıralanmış olarak "
+    "karşısına çıkar.",
+    "Bir gönderiyle etkileşime girer (durur, tıklar, roket atar veya yorum yazar).",
+    "Sistem bu etkileşimi anında işler; üstteki \"tespit edilen durum\" göstergesi ve "
+    "akışın renk doygunluğu güncellenir.",
+    "\"Neden bunu görüyorsun?\" butonuna basarak, o gönderiye özel şeffaflık panelini "
+    "(ilgi skoru/refah cezası/final skoru) açabilir.",
+    "Yaklaşık her 8 etkileşimde bir, kısa ve geçilebilir bir onay sorusu görünür.",
+    "İstediği an \"Haftalık Rapor\" sayfasına geçip o oturumda gerçekten gözlemlenen "
+    "örüntüleri, model doğrulama istatistiklerini ve gerçek zamanlı üretilen yapay zekâ "
+    "yorumunu görebilir.",
+])
+govde(
+    "Tasarım kararlarının gerekçesi şu şekildedir: arayüz, kullanıcıyı yeni bir "
+    "paradigmayla karşılaştırmamak için NSosyal'in mevcut zaman akışı (timeline) "
+    "mantığına bilinçli olarak sadık kalır; şeffaflık, akışın dışına taşan ayrı bir "
+    "sayfa yerine her kartın içinde, isteğe bağlı açılan bir panel olarak sunulur, böylece "
+    "istemeyen kullanıcı hiç rahatsız edilmez. Renk doygunluğu azaltma da aynı ilkeyle "
+    "(kullanıcı isteğiyle açılıp kapatılabilir bir anahtarla) engelleyici değil, fark "
+    "ettirici bir sinyal olacak şekilde tasarlanmıştır. Kullanılabilirlik testleri "
+    "sırasında "
     "(gerçek kullanım denemeleriyle) birden fazla somut sorun tespit edilip düzeltilmiştir: "
     "aynı gönderiye art arda etkileşim (roket sonra kaydırıp uzaklaşma) önceden sinyali "
     "sessizce eziyordu, sinyal birleştirme mantığıyla giderildi; çok kısa/edilgen bir "
