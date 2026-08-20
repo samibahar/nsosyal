@@ -7,7 +7,6 @@
 const akisEl = document.getElementById("akis");
 const spiralDolgu = document.getElementById("spiral-dolgu");
 const spiralMetin = document.getElementById("spiral-metin");
-const spiralIkon = document.getElementById("spiral-ikon");
 
 function ruhHaliGuncelle(psikolojik) {
   if (!psikolojik) return;
@@ -48,6 +47,36 @@ function konuRenk(konu) {
   return KONU_RENK[konu] || { bg: "var(--konu-varsayilan-soft)", fg: "var(--konu-varsayilan)" };
 }
 
+// --- Sağ panel: o an ekranda yüklü gönderilerden gerçek zamanlı konu sayacı ---
+const konuSayaclariEl = document.getElementById("konu-sayaclari");
+const konuSayilari = {};
+
+function konuSayaciKaydet(konu) {
+  konuSayilari[konu] = (konuSayilari[konu] || 0) + 1;
+}
+
+function konuSayaciSifirla() {
+  Object.keys(konuSayilari).forEach((k) => delete konuSayilari[k]);
+}
+
+function konuSayaciGoster() {
+  if (!konuSayaclariEl) return;
+  const siraliKonular = Object.entries(konuSayilari).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  if (!siraliKonular.length) {
+    konuSayaclariEl.innerHTML = '<div class="durum-mesaji-kucuk">Akış yüklendikçe dolacak…</div>';
+    return;
+  }
+  konuSayaclariEl.innerHTML = siraliKonular
+    .map(([konu, sayi]) => {
+      const renk = konuRenk(konu);
+      return `<div class="konu-sayac-satiri">
+        <span class="konu-sayac-etiket"><span class="konu-sayac-nokta" style="background:${renk.fg}"></span>${konu}</span>
+        <span class="konu-sayac-sayi">${sayi}</span>
+      </div>`;
+    })
+    .join("");
+}
+
 function duyguRengi(d) {
   if (d > 0.15) return "var(--good)";
   if (d < -0.15) return "var(--danger)";
@@ -72,12 +101,6 @@ function spiralGostergesiGuncelle(seviye) {
   spiralDolgu.style.width = yuzde + "%";
   spiralDolgu.style.background = renk;
   spiralMetin.textContent = `${seviyeEtiketi(seviye)} · %${yuzde}`;
-  spiralIkon.style.color = renk;
-  spiralIkon.style.background = seviye > 0.6
-    ? "var(--danger-soft)"
-    : seviye > 0.3
-    ? "var(--warn-soft)"
-    : "var(--accent-soft)";
   doygunlukGuncelle(seviye);
 }
 
@@ -195,6 +218,7 @@ const dwellGozlemci = new IntersectionObserver(
 function kartOlustur(g) {
   const renk = konuRenk(g.konu);
   const dRenk = duyguRengi(g.duygu);
+  konuSayaciKaydet(g.konu);
 
   const kart = document.createElement("article");
   kart.className = "gonderi" + (g.refah_cezasi > 0 ? " yumusatildi" : "");
@@ -211,6 +235,9 @@ function kartOlustur(g) {
         </span>` : ""}
       </div>
       <div class="metin"></div>
+      ${g.id % 3 !== 0 ? `<div class="medya-yer-tutucu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+      </div>` : ""}
       <div class="alt-satir">
         <button class="neden-buton">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -310,6 +337,7 @@ async function ilkYuklemeYap() {
   yukleniyor = true;
   tukendi = false;
   akisEl.innerHTML = "";
+  konuSayaciSifirla();
   const gonderiler = await sayfaGetir(true);
 
   if (!gonderiler.length) {
@@ -322,6 +350,7 @@ async function ilkYuklemeYap() {
   akisEl.appendChild(sentinel);
   sentinel.textContent = "";
   sayfaGozlemci.observe(sentinel);
+  konuSayaciGoster();
   yukleniyor = false;
 }
 
@@ -335,6 +364,7 @@ async function dahaFazlaYukle() {
 
   sentinel.textContent = tukendi ? "Akışın sonuna geldin." : "";
   if (tukendi) sayfaGozlemci.unobserve(sentinel);
+  konuSayaciGoster();
   yukleniyor = false;
 }
 
@@ -362,5 +392,20 @@ document.querySelectorAll(".kisisel-secenek").forEach((buton) => {
       : `Kişiselleştirme ${sayi} onay biriktirdi (şu an kapalı).`;
   });
 });
+
+// --- Karanlık mod (manuel anahtar; sistem tercihi zaten @media ile destekleniyor) ---
+const karanlikButon = document.getElementById("karanlik-mod-buton");
+if (karanlikButon) {
+  const kayitliTercih = localStorage.getItem("karanlikMod");
+  if (kayitliTercih === "acik") {
+    document.documentElement.classList.add("karanlik-zorla");
+    karanlikButon.classList.add("aktif");
+  }
+  karanlikButon.addEventListener("click", () => {
+    const acik = document.documentElement.classList.toggle("karanlik-zorla");
+    karanlikButon.classList.toggle("aktif", acik);
+    localStorage.setItem("karanlikMod", acik ? "acik" : "kapali");
+  });
+}
 
 ilkYuklemeYap();

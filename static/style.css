@@ -95,6 +95,46 @@
   }
 }
 
+/* Manuel karanlık mod anahtarı — sistem tercihinden bağımsız, sol menüdeki
+   düğmeyle açılıp kapatılır (localStorage'da hatırlanır). */
+html.karanlik-zorla {
+  --bg: #000000;
+  --card-bg: #16181c;
+  --card-hover: #1c1f23;
+  --border: #2f3336;
+  --text: #e7e9ea;
+  --muted: #8b98a5;
+  --faint: #6b7684;
+  --accent: #1d9bf0;
+  --accent-soft: #0d2a3d;
+  --good: #00ba7c;
+  --good-soft: #062a20;
+  --warn: #ffad1f;
+  --warn-soft: #2e2107;
+  --danger: #f4212e;
+  --danger-soft: #35080a;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  --konu-spor-soft: #062a20;
+  --konu-gundem-soft: #35080a;
+  --konu-teknoloji-soft: #1d1436;
+  --konu-bilim-soft: #072e33;
+  --konu-saglik-soft: #3b0a24;
+  --konu-ekonomi-soft: #3a2607;
+  --konu-sanat-soft: #3b0742;
+  --konu-egitim-soft: #1e1b4b;
+  --konu-oyun-soft: #3a1904;
+  --konu-seyahat-soft: #082f49;
+  --konu-varsayilan-soft: #202327;
+
+  --ruh-sakin-soft: #21262b;
+  --ruh-mutluluk-soft: #062a20;
+  --ruh-umut-soft: #082f49;
+  --ruh-sinirli-soft: #3a1c07;
+  --ruh-anksiyete-soft: #35080a;
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -109,13 +149,215 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.sayfa {
-  max-width: 600px;
+.sayfa-govde {
+  display: flex;
+  justify-content: center;
+  max-width: 1280px;
   margin: 0 auto;
+}
+
+.sayfa {
+  width: 100%;
+  max-width: 600px;
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
   min-height: 100vh;
   background: var(--bg);
+  flex-shrink: 0;
+}
+
+/* ---------- Sol menü ---------- */
+
+.sol-menu {
+  width: 260px;
+  flex-shrink: 0;
+  padding: 14px 12px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 20px;
+}
+
+.menu-logo .logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), #6b47ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.menu-logo span {
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.menu-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu-oge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 12px;
+  border-radius: 999px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 15.5px;
+  font-weight: 500;
+  transition: background 0.15s ease;
+}
+
+.menu-oge svg { width: 22px; height: 22px; flex-shrink: 0; }
+
+.menu-oge:hover { background: var(--card-hover); }
+
+.menu-oge.aktif {
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.menu-rapor-buton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 18px 12px 0;
+  padding: 13px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent), #6b47ff);
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: var(--shadow);
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.menu-rapor-buton svg { width: 19px; height: 19px; flex-shrink: 0; }
+
+.menu-rapor-buton:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+.menu-alt {
+  margin-top: auto;
+  padding: 12px;
+}
+
+.menu-karanlik-buton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.menu-karanlik-buton svg { width: 16px; height: 16px; }
+.menu-karanlik-buton:hover { background: var(--card-hover); color: var(--text); }
+.menu-karanlik-buton.aktif { color: var(--accent); border-color: var(--accent); }
+
+/* ---------- Sağ panel ---------- */
+
+.sag-panel {
+  width: 300px;
+  flex-shrink: 0;
+  padding: 14px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.populer-kutu {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+.populer-kutu h3 {
+  font-size: 15px;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+
+.konu-sayac-satiri {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.konu-sayac-satiri:last-child { border-bottom: none; }
+
+.konu-sayac-etiket {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.konu-sayac-nokta {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.konu-sayac-sayi {
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.populer-not {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--faint);
+  line-height: 1.5;
+}
+
+.durum-mesaji-kucuk {
+  font-size: 12.5px;
+  color: var(--faint);
+  padding: 6px 0;
+}
+
+@media (max-width: 1100px) {
+  .sag-panel { display: none; }
+}
+
+@media (max-width: 900px) {
+  .sol-menu { display: none; }
 }
 
 /* ---------- Üst bar ---------- */
@@ -170,11 +412,9 @@ header.ust-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
+  padding-bottom: 12px;
   margin-bottom: 12px;
+  border-bottom: 1px dashed var(--border);
 }
 
 .spiral-ikon {
@@ -231,11 +471,7 @@ header.ust-bar {
 /* Oturum boyunca biriken psikolojik izlenim -- çok çubuklu panel */
 
 .ruh-hali-paneli {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .ruh-hali-baslik {
@@ -419,6 +655,30 @@ main#akis {
   margin: 2px 0 8px;
   color: var(--text);
   word-wrap: break-word;
+}
+
+/* Gerçek NSosyal akışında gönderilerin çoğu görsel/video içerir, bu da
+   ekrana genelde 1.5-2 gönderi sığmasına yol açar (bkz. kullanıcının
+   paylaştığı gerçek ekran görüntüsü). Prototipte gerçek medya olmadığından,
+   kartların gerçekçi boyutta durması için gönderilerin bir kısmında (üçte
+   ikisinde) boş bir yer tutucu bırakılıyor -- şimdilik geçici bir çözüm. */
+.medya-yer-tutucu {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: var(--card-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--faint);
+}
+
+.medya-yer-tutucu svg {
+  width: 32px;
+  height: 32px;
+  opacity: 0.4;
 }
 
 .alt-satir {
@@ -834,11 +1094,9 @@ footer .footer-baslik {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding-bottom: 12px;
   margin-bottom: 12px;
-  padding: 9px 12px;
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-bottom: 1px dashed var(--border);
 }
 
 .doygunluk-aciklama {
