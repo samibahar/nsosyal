@@ -1,0 +1,22 @@
+
+=== v1 (models/bert-turkish-sentiment-ince-ayarli) ===
+Dogruluk: 0.775 (31/40)
+F1: 0.816
+Yanlis tahminler (9):
+  [gercek:negative tahmin:positive] İtfaiye ekiplerinin olay yerine ulaşma süresi bu yıl belirgin biçimde uzadı.
+  [gercek:negative tahmin:positive] Feribot seferlerinin sıklığı, yakıt maliyetleri gerekçesiyle azaltıldı.
+  [gercek:negative tahmin:positive] PTT şubelerindeki kargo teslim süreleri, yoğun dönemde günler seviyesine uzadı.
+  [gercek:negative tahmin:positive] Halk plajındaki cankurtaran sayısı, bütçe kısıtı nedeniyle geçen yıla göre azaldı.
+  [gercek:negative tahmin:positive] Halk kütüphanesinin süreli yayın aboneliği, bütçe kesintisiyle azaltıldı.
+  [gercek:negative tahmin:positive] İlçedeki çocuk oyun alanlarının bakım periyodu, kaynak yetersizliği nedeniyle uzadı.
+  [gercek:negative tahmin:positive] Meteoroloji istasyonlarının bakım aralığı, personel azlığı nedeniyle gecikmeye uğradı.
+  [gercek:negative tahmin:positive] Şehir içi tramvay hattının bakım kesintisi, öngörülenden uzun sürdü.
+  [gercek:negative tahmin:positive] Kamu otoparklarındaki güvenlik kamerası sayısı, bakım ihmali nedeniyle azaldı.
+
+=== v2 (models/bert-turkish-sentiment-ince-ayarli-v2) ===
+Dogruluk: 0.925 (37/40)
+F1: 0.919
+Yanlis tahminler (3):
+  [gercek:positive tahmin:negative] Turizm danışma ofislerinin çalışma saatleri, ziyaretçi talebiyle uzatıldı.
+  [gercek:positive tahmin:negative] İlçedeki çocuk oyun alanlarının bakım periyodu yeni ekiple kısaltıldı.
+  [gercek:positive tahmin:negative] Belediye fen işlerinin yol yama talebine yanıt süresi bu yıl kısaldı.

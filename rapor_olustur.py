@@ -431,11 +431,19 @@ govde(
     "günlük istek kotası aşıldığında) üretilen dengeli sentetik örneklerden oluşmuştur. "
     "Bağımsız doğrulamada winvoker genel test setinde küçük bir gerileme (%94,3'ten "
     "%93,3'e, F1 0,964'ten 0,958'e) karşılığında, hedeflenen zayıf alt-türde belirgin "
-    "bir düzelme ölçülmüştür (150 örnekten 26'sında tahmin değişmiş, bunların yaklaşık "
-    "22'si gerçek düzelme). Bu bilinçli bir takas kararıdır: NSosyal içeriği winvoker'ın "
-    "genel dağılımından çok bu hedef alt-türe yakın olduğundan, ikinci tur model etkin "
-    "model olarak seçilmiştir; genel doğruluktaki küçük kaybın nedeni de dürüstçe "
-    "raporlanmıştır. Spiral tespiti (olası doomscrolling örüntüsü, ikili sınıflandırma), "
+    "bir düzelme ölçülmüştür. Bu ölçüm iki aşamada yapılmıştır: önce etiketsiz 150 demo "
+    "gönderide model-öncesi/model-sonrası tahmin farkı incelenmiş (26 farklı tahmin, "
+    "manuel okumayla ~22'si düzelme), ardından bu bulguyu doğrulamak için elle "
+    "etiketlenmiş, hem eğitim verisiyle hem daha önceki karşılaştırma örnekleriyle "
+    "örtüşmeyen ayrık bir 40 örneklik test seti hazırlanmıştır; bu ikinci ölçümde "
+    "doğruluk %77,5'ten %92,5'e çıkmıştır (F1 0,816'dan 0,919'a). İlk hazırlanan 40 "
+    "örneklik taslak, konu seçiminde önceki karşılaştırma dosyasıyla istemsizce "
+    "örtüştüğü (ve bir örnekte neredeyse birebir tekrar ettiği) fark edilince tamamen "
+    "atılıp yeniden yazılmıştır -- bu ihtiyat, doğrudan bir soruşturma sorusuna verilen "
+    "yanıt üzerine devreye girmiştir. Bu bilinçli bir takas kararıdır: NSosyal içeriği "
+    "winvoker'ın genel dağılımından çok bu hedef alt-türe yakın olduğundan, ikinci tur "
+    "model etkin model olarak seçilmiştir; genel doğruluktaki küçük kaybın nedeni de "
+    "dürüstçe raporlanmıştır. Spiral tespiti (olası doomscrolling örüntüsü, ikili sınıflandırma), "
     "senaryo-bazlı sentetik veriyle eğitilmiş bir lojistik regresyon modelidir "
     "(doğruluk 0,714, F1 0,748); altı açıklanabilir özellik (negatif dwell oranı, "
     "ortalama duygu, tıklama oranı vb.) kullanır ve öğrenilen katsayılar denetlenebilir "
@@ -463,8 +471,8 @@ govde(
 t_ozet = tablo(
     ["Bileşen", "Ölçülen sonuç", "Doğrulama yöntemi"],
     [
-        ["Duygu modeli (BERT)", "%93,3 doğruluk (ikinci tur ince ayar sonrası, %69,8'den)",
-         "Bağımsız 1000 örnek + hedefli alt-tür karşılaştırması (bkz. metin)"],
+        ["Duygu modeli (BERT)", "Genel: %93,3 doğruluk. Hedef alt-tür: %77,5'ten %92,5'e",
+         "Bağımsız 1000 örnek (genel) + elle etiketlenmiş ayrık 40 örnek (alt-tür)"],
         ["Spiral tespiti", "Doğruluk 0,714 / F1 0,748", "Stratified train/test, senaryo verisi"],
         ["Psikolojik izlenim (5 kategori)", "F1 makro 0,704",
          "Ölçek düzeltmesi (StandardScaler) ile 0,686'dan iyileştirildi"],
