@@ -136,8 +136,16 @@ document.getElementById("doygunluk-buton").addEventListener("click", (e) => {
 });
 
 async function etkilesimGonder(gonderi_id, dwell_saniye, tiklama = false, roket = false, yorum = false) {
-  const acikEylemVar = tiklama || roket || yorum;
-  if (!acikEylemVar && dwell_saniye < 0.3) return; // sadece pasif dwell'de gürültü filtrele
+  // Önceden burada "dwell_saniye < 0.3 ise hiç gönderme" filtresi vardı; bu,
+  // spiral_model.py'nin "kaydirma_hizi" özelliğini (dakikada görüntülenen
+  // gönderi sayısı, motor.py'de log uzunluğundan hesaplanır) yanlışlıkla
+  // köreltiyordu -- aşırı hızlı kaydırırken gönderiler tam da bu filtreye
+  // takılıp günlüğe hiç girmiyor, dolayısıyla kaydırma hızı sinyali asla
+  // yükselemiyordu (kullanıcı tarafından tespit edildi, 20.08.2026). Kısa
+  // görünmelerin ruh-hali ortalamasını domine etmesini önleme işini zaten
+  // backend'deki _katki_agirligi() üstleniyor (silmiyor, düşük ağırlık
+  // veriyor) -- burada ayrıca tam engellemeye gerek yok.
+  if (dwell_saniye <= 0) return;
   const yanit = await fetch("/api/etkilesim", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
