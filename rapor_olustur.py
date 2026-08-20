@@ -422,7 +422,20 @@ govde(
     "F1 0,778) ve alan kayması (domain shift) kaynaklı bu zayıflık, aynı veri setinin "
     "ayrık bir bölümüyle (veri sızıntısı önlenerek) ~15.000 örnekle yapılan hedefli bir "
     "ince ayarla düzeltilmiştir (%94,3 doğruluk, F1 0,964; bağımsız olarak yeniden "
-    "ölçülmüştür). Spiral tespiti (olası doomscrolling örüntüsü, ikili sınıflandırma), "
+    "ölçülmüştür). Bu ilk ince ayarlı model bile, kullanılabilirlik testlerinde ve kendi "
+    "demo gönderilerimizde tekrarlayan bir zayıflık göstermiştir: kısa/resmi, dolaylı "
+    "duygu ifadeli haber-bülteni tarzı metinlerde, özellikle net negatif haberleri "
+    "(deprem, tutuklama, sel gibi) yanlışlıkla pozitif okuma eğilimi. Bunun üzerine "
+    "hedefli bir ikinci tur ince ayar uygulanmıştır: eğitim verisi aynı üslupta, iki "
+    "kaynaktan (kısmen Gemini API, kısmen doğrudan proje ekibi tarafından, çevrimiçi "
+    "günlük istek kotası aşıldığında) üretilen dengeli sentetik örneklerden oluşmuştur. "
+    "Bağımsız doğrulamada winvoker genel test setinde küçük bir gerileme (%94,3'ten "
+    "%93,3'e, F1 0,964'ten 0,958'e) karşılığında, hedeflenen zayıf alt-türde belirgin "
+    "bir düzelme ölçülmüştür (150 örnekten 26'sında tahmin değişmiş, bunların yaklaşık "
+    "22'si gerçek düzelme). Bu bilinçli bir takas kararıdır: NSosyal içeriği winvoker'ın "
+    "genel dağılımından çok bu hedef alt-türe yakın olduğundan, ikinci tur model etkin "
+    "model olarak seçilmiştir; genel doğruluktaki küçük kaybın nedeni de dürüstçe "
+    "raporlanmıştır. Spiral tespiti (olası doomscrolling örüntüsü, ikili sınıflandırma), "
     "senaryo-bazlı sentetik veriyle eğitilmiş bir lojistik regresyon modelidir "
     "(doğruluk 0,714, F1 0,748); altı açıklanabilir özellik (negatif dwell oranı, "
     "ortalama duygu, tıklama oranı vb.) kullanır ve öğrenilen katsayılar denetlenebilir "
@@ -439,14 +452,19 @@ govde(
     "Assessment (EMA) yönteminin bağımsız bir uygulamasıdır [1][2]; literatür bu tür "
     "tekrarlı öz-bildirim sorgularının kullanıcı yorgunluğuna (fatigue) yol açabileceğini "
     "de not eder [3], bu yüzden soru sıklığı bilinçli olarak düşük (her ~8 etkileşimde "
-    "bir) tutulmuştur."
+    "bir) tutulmuştur. Bu mekanizmanın kendisi de aynı doğrulama disiplinine tabi "
+    "tutulmuştur: canlı testte, karşılaştırmanın yanlışlıkla anlık tahmin yerine "
+    "oturumun ağırlıklı ortalamasıyla yapıldığı bir mantık hatası tespit edilip "
+    "düzeltilmiştir; düzeltmeden önce bu hata, eşleşme oranını yapay biçimde neredeyse "
+    "sıfıra çekiyordu. Bu, projenin yalnızca dış bileşenleri değil kendi doğrulama "
+    "araçlarını da sorguladığının somut bir örneğidir."
 )
 
 t_ozet = tablo(
     ["Bileşen", "Ölçülen sonuç", "Doğrulama yöntemi"],
     [
-        ["Duygu modeli (BERT)", "%94,3 doğruluk (ince ayar sonrası, %69,8'den)",
-         "Bağımsız 1000 örnek, vendor iddiasından ayrı ölçüldü"],
+        ["Duygu modeli (BERT)", "%93,3 doğruluk (ikinci tur ince ayar sonrası, %69,8'den)",
+         "Bağımsız 1000 örnek + hedefli alt-tür karşılaştırması (bkz. metin)"],
         ["Spiral tespiti", "Doğruluk 0,714 / F1 0,748", "Stratified train/test, senaryo verisi"],
         ["Psikolojik izlenim (5 kategori)", "F1 makro 0,704",
          "Ölçek düzeltmesi (StandardScaler) ile 0,686'dan iyileştirildi"],
@@ -469,8 +487,10 @@ madde([
     "(ilgi skoru/refah cezası/final skoru) açabilir.",
     "Yaklaşık her 8 etkileşimde bir, kısa ve geçilebilir bir onay sorusu görünür.",
     "İstediği an \"Haftalık Rapor\" sayfasına geçip o oturumda gerçekten gözlemlenen "
-    "örüntüleri, model doğrulama istatistiklerini ve gerçek zamanlı üretilen yapay zekâ "
-    "yorumunu görebilir.",
+    "örüntüleri, konu x psikolojik kategori ısı haritasını, model doğrulama "
+    "istatistiklerini ve gerçek zamanlı üretilen yapay zekâ yorumunu görebilir; bu "
+    "sayfada artık hiçbir sabit/örnek bölüm yoktur, tamamı canlı oturum verisinden "
+    "üretilir.",
 ])
 govde(
     "Tasarım kararlarının gerekçesi şu şekildedir: arayüz, kullanıcıyı yeni bir "
@@ -486,7 +506,17 @@ govde(
     "sessizce eziyordu, sinyal birleştirme mantığıyla giderildi; çok kısa/edilgen bir "
     "görünme (<0,6sn) tam bir gözlem gibi sayılıp barları saptırıyordu, etkileşim-ağırlıklı "
     "ortalamayla düzeltildi; ilk sürümde sayfalama sığ kalıyordu, gerçek sonsuz-kaydırma "
-    "(infinite scroll) ile 150 örnek gönderiye genişletildi. Erişilebilirlik açısından: "
+    "(infinite scroll) ile 150 örnek gönderiye genişletildi; aşırı hızlı kaydırma "
+    "sırasında her gönderi 0,3 saniyenin altında göründüğü için istemci tarafındaki bir "
+    "gürültü filtresi bu etkileşimleri backend'e hiç iletmiyor, dolayısıyla \"kaydırma "
+    "hızı\" özelliği (spiral tespitinin altı özelliğinden biri) en hızlı kaydırılan "
+    "anlarda hiç güncellenemiyordu; filtre kaldırılıp bu sorumluluk zaten var olan "
+    "sunucu-taraflı ağırlıklandırmaya bırakıldı. Ayrıca arayüz, gerçek NSosyal "
+    "arayüzünün genel yapısı (sol gezinme menüsü, sağ bilgi paneli, gönderi kartı "
+    "düzeni) görsel referans alınarak yeniden tasarlandı; NSosyal'in kullanım "
+    "koşulları otomatik/programatik erişimi yasakladığından bu inceleme tamamen "
+    "manuel/tek seferlik yapılmış, hiçbir otomatik veri erişimi kurulmamıştır. "
+    "Erişilebilirlik açısından: "
     "tüm renk kodlu göstergeler (spiral seviyesi, kategori barları) aynı zamanda metinsel "
     "etiket taşır (yalnızca renge dayanmaz), ve şeffaflık paneli literatürdeki \"az ama "
     "net\" ilkesine uygun kısa/öz tutulmuştur; aşırı detaylı açıklamaların kullanıcı "
