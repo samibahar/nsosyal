@@ -359,10 +359,10 @@ baslik("TEKNOLOJİ KULLANIMI")
 altbaslik("3.1. İzlenecek Yöntem, Altyapı ve Sürüm Kontrolü")
 govde(
     "Backend Python/FastAPI ile geliştirilmiştir; duygu analizi için HuggingFace "
-    "Transformers (savasy/bert-base-turkish-sentiment-cased tabanlı, ince ayarlı), "
+    "Transformers (savasy/bert-base-turkish-sentiment-cased tabanlı [15], ince ayarlı), "
     "sınıflandırıcılar için scikit-learn (LogisticRegression / SGDClassifier), veri "
     "işleme için NumPy/Pandas kullanılmıştır. Fine-tuning ve bağımsız doğrulama için "
-    "winvoker/turkish-sentiment-analysis-dataset (HuggingFace Hub) kullanılmıştır; "
+    "winvoker/turkish-sentiment-analysis-dataset (HuggingFace Hub) [16] kullanılmıştır; "
     "spiral ve psikolojik izlenim sınıflandırıcıları için ise senaryo-bazlı sentetik veri "
     "üretimi tercih edilmiştir (bkz. Bölüm 3.2). Frontend, dwell-time takibi için "
     "tarayıcının yerel Intersection Observer API'sini kullanan sade bir JavaScript/HTML/"
