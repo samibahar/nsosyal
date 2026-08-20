@@ -68,6 +68,7 @@ class Etkilesim(BaseModel):
     tiklama: bool = False
     roket: bool = False
     yorum: bool = False
+    cikis: bool = False
 
 
 class DogrulamaCevabi(BaseModel):
@@ -96,6 +97,21 @@ def _sinyalleri_birlestir(gonderi_id: int, e: "Etkilesim") -> dict:
     }
     SON_ETKILESIMLER[gonderi_id] = birlesik
     return birlesik
+
+
+def _bolumu_kapat(gonderi_id: int, cikis: bool):
+    """Bir gönderinin görünüm bölümü (episode) kapandığında (kullanıcı gerçekten
+    kaydırıp uzaklaştığında) SON_ETKILESIMLER'daki kaydı temizler. Bu olmadan,
+    örneğin sayfanın başındaki bir gönderiye normal hızda bakıp (uzun dwell)
+    sonra hızlı aşağı kaydırıp geri hızlı yukarı çıkınca, o eski uzun dwell
+    max() ile "diriliyor" ve az önceki hızlı geçişi -- gerçekte kısa süren bir
+    an -- sanki uzun sürmüş gibi günlüğe yazıyordu; bu da kaydırma_hızı
+    özelliğini yanlışlıkla düşürüp spiral barının geri hızlı yukarı çıkışta
+    aniden düşmesine yol açıyordu (kullanıcı tarafından tespit edildi,
+    21.08.2026). Roket/yorum gibi görünüm SIRASINDA gelen olaylar bölümü
+    KAPATMAZ -- sadece kaydırıp-uzaklaşma (cikis=true) kapatır."""
+    if cikis:
+        SON_ETKILESIMLER.pop(gonderi_id, None)
 
 
 def _katki_agirligi(sinyal: dict) -> float:
@@ -177,6 +193,7 @@ def api_gonderiler(sifirdan: bool = False):
 @app.post("/api/etkilesim")
 def api_etkilesim(e: Etkilesim):
     birlesik = _sinyalleri_birlestir(e.gonderi_id, e)
+    _bolumu_kapat(e.gonderi_id, e.cikis)
 
     _gonderi_bazinda_yerine_koy(DAVRANIS_GUNLUGU, e.gonderi_id, {"gonderi_id": e.gonderi_id, **birlesik})
     del DAVRANIS_GUNLUGU[:-20]  # kayan pencere: son 20 FARKLI gönderi

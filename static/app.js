@@ -135,7 +135,7 @@ document.getElementById("doygunluk-buton").addEventListener("click", (e) => {
   if (!doygunlukAktif) akisEl.style.filter = "saturate(100%)";
 });
 
-async function etkilesimGonder(gonderi_id, dwell_saniye, tiklama = false, roket = false, yorum = false) {
+async function etkilesimGonder(gonderi_id, dwell_saniye, tiklama = false, roket = false, yorum = false, cikis = false) {
   // Önceden burada "dwell_saniye < 0.3 ise hiç gönderme" filtresi vardı; bu,
   // spiral_model.py'nin "kaydirma_hizi" özelliğini (dakikada görüntülenen
   // gönderi sayısı, motor.py'de log uzunluğundan hesaplanır) yanlışlıkla
@@ -149,7 +149,7 @@ async function etkilesimGonder(gonderi_id, dwell_saniye, tiklama = false, roket 
   const yanit = await fetch("/api/etkilesim", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ gonderi_id, dwell_saniye, tiklama, roket, yorum }),
+    body: JSON.stringify({ gonderi_id, dwell_saniye, tiklama, roket, yorum, cikis }),
   });
   const veri = await yanit.json();
   spiralGostergesiGuncelle(veri.spiral_seviyesi);
@@ -216,7 +216,7 @@ const dwellGozlemci = new IntersectionObserver(
       } else if (gorunurlukBaslangic.has(id)) {
         const gecenSaniye = (performance.now() - gorunurlukBaslangic.get(id)) / 1000;
         gorunurlukBaslangic.delete(id);
-        etkilesimGonder(id, gecenSaniye);
+        etkilesimGonder(id, gecenSaniye, false, false, false, true);
       }
     });
   },
