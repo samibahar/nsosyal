@@ -476,12 +476,19 @@ altbaslik("4.1. Verimlilik ve Etkinlik")
 govde(
     "Sistemin sıralama/tespit katmanı bilinçli olarak hafif ve açıklanabilir modeller "
     "(lojistik regresyon, SGD) üzerine kurulmuştur; büyük dil modelleri düzeyinde "
-    "hesaplama maliyeti taşımaz; yalnızca isteğe bağlı haftalık rapor üretiminde bir LLM "
-    "çağrısı kullanılır. Bu, platforma milyonlarca etkileşimde dahi düşük işletme "
-    "maliyetiyle ölçeklenebilirlik sağlar. Etkinlik açısından, refah katmanının "
-    "içeriği elemeden yalnızca yumuşattığı somut olarak gösterilmiştir: kullanıcı testinde "
+    "hesaplama maliyeti taşımaz, milisaniyeler mertebesinde tahmin üretir ve bir GPU'ya "
+    "ihtiyaç duymadan standart sunucu donanımında çalışabilir. Yalnızca isteğe bağlı "
+    "haftalık rapor üretiminde, kullanıcı başına günde birkaç kez tetiklenen düşük "
+    "maliyetli bir LLM çağrısı kullanılır. Bu mimari tercih, platforma milyonlarca "
+    "etkileşimde dahi düşük işletme maliyetiyle ölçeklenebilirlik sağlar; NSosyal'in "
+    "~700 bin'i aşkın kullanıcısının tamamına, ek bir altyapı yatırımı gerektirmeden "
+    "hizmet verebilecek bir temel sunar. Etkinlik açısından, refah katmanının içeriği "
+    "elemeden yalnızca yumuşattığı somut olarak gösterilmiştir: kullanıcı testinde "
     "spiral seviyesi yükseldiğinde negatif içerik final skorunda ölçülebilir bir ceza "
-    "alıp sırada geriye düşerken, kullanıcının ilgi alanı hiç terk edilmemiştir."
+    "alıp sırada geriye düşerken, kullanıcının ilgi alanı hiç terk edilmemiştir. Bu, "
+    "sistemin \"etkileşimi düşürmeden refahı önceleme\" hedefinde etkin olduğunun somut "
+    "bir kanıtıdır: kullanıcı istediği konuyu görmeye devam eder, yalnızca o konunun en "
+    "tetikleyici örnekleri geri plana çekilir."
 )
 
 altbaslik("4.2. Hedef Kitle")
@@ -508,6 +515,35 @@ govde(
     "ölçeklenebilir bir yapıya sahiptir; kişiselleştirme mekanizması (online öğrenme, "
     "bkz. Bölüm 6.2) bu ölçeklenebilirliğin somut bir kanıtıdır."
 )
+govde(
+    "Prototip, bu vizyonun tamamını değil, temel mekanizmasını kanıtlar. Zaman ve kapsam "
+    "kısıtları nedeniyle şu an eklenmeyen, ama tasarım aşamasında değerlendirilip somut "
+    "birer gelecek iş maddesi olarak tanımlanan yönler şunlardır:"
+)
+madde([
+    "Perspektif Köprüsü: kullanıcı bir konuda olumsuz veya çaresizlik hissi veren "
+    "içerikte takılı kaldığında, aynı konunun çözüme dönük bir yönünü gösteren bir "
+    "gönderiyi köprü olarak sunmak. Sistemin konu-nötr ilkesini siyasi taraf değil "
+    "duygusal ton ekseninde koruyabildiği için mevcut mimariye uygun görünmektedir; ancak "
+    "hangi sinyalin \"çözüme dönük\" içeriği belirleyeceği ayrı bir tasarım çalışması "
+    "gerektirir.",
+    "Kişiselleştirmenin üretim kalitesine taşınması (bkz. Bölüm 6.2): şu anki online "
+    "öğrenme prototipi, düzenlileştirme (regularization) ve kullanıcı bazlı kalibrasyon "
+    "eklenerek gerçek, çok kullanıcılı bir sisteme dönüştürülebilir.",
+    "Gizlilik önceliğinin artırılması: analiz bileşenlerinin bir kısmının kullanıcı "
+    "cihazında çalışması ve kişiselleştirmenin federe öğrenmeyle merkezi bir sunucu "
+    "olmadan paylaşılması. Mevcut prototip şu an tamamen sunucu taraflı çalışmaktadır; "
+    "bu ayrımın dürüstçe belirtilmesi gerekir.",
+    "Dijital Refah Ağacı: haftalık/aylık metin raporunun yanına, refah eğiliminin zaman "
+    "içindeki seyrini temsil eden görsel bir metafor eklemek. Mevcut metin ve çubuk "
+    "grafik raporu literatürdeki \"az ama net\" ilkesine zaten uygun olduğundan, bu "
+    "eklenti karmaşıklaştırma riskine karşı dikkatli tasarlanmalıdır.",
+    "Dinamik Sürtünme: renk doygunluğu azaltmanın ötesinde, spiral seviyesi çok "
+    "yükseldiğinde kaydırma deneyimine küçük bir duraklama veya onay adımı eklemek. Bu, "
+    "mevcut \"engellemek değil fark ettirmek\" ilkesine göre daha agresif bir müdahaledir; "
+    "kullanıcı özerkliğini kısıtlama riski nedeniyle ayrı bir kullanıcı araştırması "
+    "gerektirdiğinden bu aşamada önceliklendirilmemiştir.",
+])
 
 sayfa_sonu()
 
