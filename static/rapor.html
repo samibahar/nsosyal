@@ -1,123 +1,33 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Haftalık Öz-Farkındalık Raporu</title>
-<link rel="stylesheet" href="/style.css?v=17" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#dff8d6" />
+  <title>İçgörü — NSosyal</title>
+  <link rel="stylesheet" href="/style.css?v=21" />
 </head>
-<body>
-<div class="sayfa">
-  <header class="ust-bar-basit">
-    <a class="geri-link" href="/index.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-      Ana Sayfa
-    </a>
-  </header>
-
-  <div class="rapor-govde">
-    <div class="uyari-kutusu">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <div>
-        Aşağıdaki bölümlerin tamamı ("gerçekten gözlemlenen", "model doğrulama",
-        "yapay zekâ yorumu") bu oturumda gerçekten kaydettiğin veriden anlık
-        üretiliyor; sabit/uydurma bir örnek metin yok. Bu araç bir
-        <b>teşhis veya klinik değerlendirme değildir</b> — yalnızca kendi dijital
-        alışkanlıklarını fark etmen için olası örüntüleri gösterir. Burada
-        "haftalık" olarak adlandırılan mekanizma tek bir oturumun verisiyle
-        çalışıyor; aylık/haftalık versiyon aynı mantığın daha geniş bir zaman
-        penceresi (çoklu oturum/gün) üzerinden çalıştırılmış hâli olur, ek bir
-        mühendislik gerektirmez.
-      </div>
-    </div>
-
-    <div class="rapor-bolum canli" id="canli-bolum" style="display:none">
-      <h3 class="rapor-bolum-baslik">
-        <span class="ikon" style="background:var(--good-soft);color:var(--good)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        </span>
-        Bu oturumda gerçekten gözlemlenen
-      </h3>
-      <p style="margin-bottom: 14px;">
-        Bu bölüm örnek değil — bu tarayıcı oturumunda gerçekten kaydettiğin
-        <b id="canli-toplam">0</b> etkileşimden canlı hesaplandı (Ana Sayfa'da
-        gönderilerle etkileşime girdikçe değişir).
-      </p>
-      <div id="canli-dagilim"></div>
-
-      <div id="isi-haritasi-kapsayici" style="margin-top:18px; display:none;">
-        <div style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">
-          Konu × olası izlenim ısı haritası — hangi konularda hangi örüntünün daha sık görüldüğü
-        </div>
-        <div id="isi-haritasi" style="overflow-x:auto;"></div>
-      </div>
-    </div>
-
-    <div class="rapor-bolum canli" id="dogrulama-ozet-bolum" style="display:none">
-      <h3 class="rapor-bolum-baslik">
-        <span class="ikon" style="background:var(--accent-soft);color:var(--accent)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        </span>
-        Model doğrulama
-      </h3>
-      <p style="margin-bottom: 14px;">
-        Ana Sayfa'da ara sıra çıkan "şu an gerçekte nasıl hissediyorsun?" sorusuna
-        verdiğin cevaplarla modelin O ANKİ tahmini karşılaştırılıyor. Bu, sistemin
-        kendi kendini denetlediği bir mekanizma — tahminlerin doğru olduğunu
-        varsaymak yerine gerçekten ölçüyoruz.
-      </p>
-      <div id="dogrulama-ozet-icerik"></div>
-    </div>
-
-    <div class="rapor-bolum canli" id="llm-rapor-bolum" style="display:none">
-      <h3 class="rapor-bolum-baslik">
-        <span class="ikon" style="background:var(--good-soft);color:var(--good)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5c0 1.5.5 2.5 1.5 3.5L12 14l3.5-3.5C16.5 9.5 17 8.5 17 7a5 5 0 0 0-5-5Z"/><path d="M12 14v8M8 22h8"/></svg>
-        </span>
-        Bu haftanın gerçek yapay zekâ yorumu
-      </h3>
-      <p style="margin-bottom: 14px;">
-        Aşağıdaki metin, bu oturumda gerçekten kaydedilen veriye bakılarak bir
-        dil modeli tarafından o an üretildi — sabit bir şablon değil. Model,
-        teşhis dili kullanmaması ve temkinli ("olası örüntü") konuşması için
-        özel olarak yönlendirildi.
-      </p>
-      <div id="llm-rapor-icerik" style="white-space: pre-wrap; font-size: 14px; line-height: 1.7;"></div>
-    </div>
-
-    <div class="rapor-bolum canli" id="terapist-rapor-bolum" style="display:none">
-      <h3 class="rapor-bolum-baslik">
-        <span class="ikon" style="background:var(--accent-soft);color:var(--accent)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
-        </span>
-        Bir uzmana götürmek istersen
-      </h3>
-      <p style="margin-bottom: 14px;">
-        İstersen bu oturumdaki ham davranışsal veriyi, yorum/tavsiye içermeyen,
-        sadece düzenli bir özet olarak hazırlayabiliriz — bir ruh sağlığı
-        uzmanına götürmek istersen konuşmaya başlangıç noktası olabilir. Bu da
-        bir teşhis değildir; nihai değerlendirme her zaman uzmana aittir.
-      </p>
-      <button class="kucuk" id="terapist-rapor-buton">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/></svg>
-        Veri özetini hazırla
-      </button>
-      <div id="terapist-rapor-icerik" style="white-space: pre-wrap; font-size: 14px; line-height: 1.7; margin-top: 14px;"></div>
-    </div>
-
-    <footer>
-      Skorlar: savasy/bert-base-turkish-sentiment-cased (duygu, ince ayarlı
-      sürüm — bağımsız test setinde %94.3 doğruluk) + sentetik senaryo
-      verisiyle eğitilmiş lojistik regresyon (spiral tespiti F1≈0.75,
-      psikolojik kategori F1≈0.70).
-      Davranış→psikoloji eşlemesi kesin bir ölçüm değil, önerilen bir yöntemdir;
-      genel kabul gören dijital davranış kavramlarıyla (edilgen tüketim,
-      dwell-time'ın dikkat göstergesi olması vb.) uyumlu tasarlandı ve yukarıdaki
-      "Model doğrulama" mekanizmasıyla sürekli sınanır. Gerçek kullanıcı
-      verisiyle yeniden kalibre edilmeden üretime alınmamalıdır.
-    </footer>
-  </div>
-</div>
-<script src="/rapor.js?v=17"></script>
+<body class="insight-body">
+  <main class="insight-page">
+    <header class="insight-topbar"><a class="insight-brand" href="/index.html"><span class="brand-mark">n</span><b>nSosyal</b></a><button class="insight-bell" aria-label="Bildirimler">♧<i></i></button></header>
+    <section class="insight-hero"><p>Merhaba, Emir</p><h1>Bugün akışın<br>nasıl gidiyor?</h1></section>
+    <section class="range-switch" aria-label="Zaman aralığı"><button type="button">Ay</button><button class="active" type="button">Hafta</button><button type="button">Bugün</button></section>
+    <section class="week-strip" aria-label="Bu haftanın günleri"><div><small>Pzt</small><b>18</b></div><div><small>Sal</small><b>19</b></div><div><small>Çar</small><b>20</b></div><div><small>Per</small><b>21</b></div><div><small>Cum</small><b>22</b></div><div class="today"><small>Cmt</small><b>23</b></div><div><small>Paz</small><b>24</b></div></section>
+    <section class="insight-summary" aria-live="polite"><div class="summary-heading"><span>✦</span><div><b id="insight-status-title">Akış ritmi sakin</b><p id="insight-status-text">Bugün kendine ait bir ritim oluşuyor.</p></div></div><button id="insight-detail-button" type="button">Ayrıntılar <span>→</span></button></section>
+    <section class="insight-grid">
+      <article class="insight-tile rhythm-tile"><div class="mini-chart line-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><svg viewBox="0 0 170 75" preserveAspectRatio="none"><path d="M4 62 C20 35 31 59 45 40 S65 18 76 39 S99 55 109 27 S135 15 153 29 S161 16 166 12"/></svg></div><p>Bu oturum</p><h2 id="insight-rhythm-value">Kendi hızında</h2><small id="insight-rhythm-note">Henüz gözlem birikiyor</small></article>
+      <article class="insight-tile balance-tile"><div class="mini-chart bars-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p>Akış dengesi</p><h2 id="insight-balance-value">Başlangıçta</h2><small id="insight-balance-note">Veri geldikçe netleşir</small></article>
+    </section>
+    <section class="gentle-card"><div class="gentle-orb">✦</div><div><span>KENDİNE KÜÇÜK BİR ALAN</span><h2>Bugün akışınla<br>nazikçe kal.</h2><p>İstersen birazdan haftalık içgörüne göz atabilirsin.</p></div><button type="button" id="gentle-detail-button">Göz at <b>→</b></button></section>
+    <section class="real-insights" id="real-insights"><div class="real-section-title"><span>CANLI OTURUM VERİSİ</span><h2>Gözlemlenen ritim</h2><p>Bu alan yalnızca bu tarayıcı oturumunda kaydedilen etkileşimleri gösterir.</p></div>
+      <div class="rapor-bolum canli" id="canli-bolum" style="display:none"><h3>İçerik ritmi</h3><p><b id="canli-toplam">0</b> etkileşimden oluşan olası örüntü.</p><div id="canli-dagilim" class="distribution-list"></div><div id="isi-haritasi-kapsayici" style="display:none"><h4>Konu × olası örüntü</h4><div id="isi-haritasi"></div></div></div>
+      <div class="rapor-bolum canli" id="dogrulama-ozet-bolum" style="display:none"><h3>Gönüllü doğrulama</h3><p>Yanıtların, modelin kesinlik iddiası yerine kendini sınamasına yardımcı olur.</p><div id="dogrulama-ozet-icerik"></div></div>
+      <div class="rapor-bolum canli" id="llm-rapor-bolum" style="display:none"><h3>Haftanın kişisel notu</h3><div id="llm-rapor-icerik" class="generated-note"></div></div>
+      <div class="rapor-bolum canli" id="terapist-rapor-bolum" style="display:none"><h3>Yorum içermeyen veri özeti</h3><p>İstersen yalnızca gözlenen veriyi düzenli bir özet halinde hazırlayabilirsin.</p><button class="insight-action" id="terapist-rapor-buton" type="button">Özeti hazırla</button><div id="terapist-rapor-icerik" class="generated-note"></div></div>
+    </section>
+    <p class="insight-disclaimer">Bu ekran bir teşhis veya klinik değerlendirme değildir. İçgörüler, gönüllü kullanıcı yanıtlarıyla zaman içinde doğrulanması gereken olası etkileşim örüntülerini gösterir.</p>
+  </main>
+  <nav class="bottom-nav insight-nav" aria-label="Alt menü"><a class="nav-item" href="/index.html"><span>⌂</span><small>Ana Sayfa</small></a><a class="nav-item" href="/kesfet.html"><span>⌕</span><small>Keşfet</small></a><button class="create-button" type="button" aria-label="Yeni gönderi">＋</button><a class="nav-item" href="/index.html#activity"><span>♡</span><small>Etkinlik</small></a><a class="nav-item active" href="/rapor.html"><span>◔</span><small>İçgörü</small></a></nav>
+  <script src="/rapor.js?v=21"></script>
 </body>
 </html>

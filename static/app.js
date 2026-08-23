@@ -1,419 +1,156 @@
-// NSosyal duygu-duyarlı akış — timeline arayüzü.
-// Intersection Observer ile her gönderinin görünürlük süresini (dwell-time)
-// ölçer, backend'e bildirir; backend spiral olasılığını günceller. Akış,
-// aşağı kaydırdıkça bizim skor motorumuza göre sayfa sayfa (infinite scroll)
-// yüklenir -- sabit, tek seferlik bir liste değil.
+// Mobile-first feed UI. The API contract is intentionally unchanged.
+const feed = document.getElementById("akis");
+const topicCounts = {};
+const visibleSince = new Map();
+let currentSpiral = 0;
+let loading = false;
+let exhausted = false;
 
-const akisEl = document.getElementById("akis");
-const spiralDolgu = document.getElementById("spiral-dolgu");
-const spiralMetin = document.getElementById("spiral-metin");
-
-function ruhHaliGuncelle(psikolojik) {
-  if (!psikolojik) return;
-  Object.entries(psikolojik.olasiliklar).forEach(([kategori, olasilik]) => {
-    const satir = document.querySelector(`.ruh-hali-cubuk-satiri[data-kategori="${kategori}"]`);
-    if (!satir) return;
-    const yuzde = Math.round(olasilik * 100);
-    satir.querySelector(".ruh-hali-cubuk-dolgu").style.width = yuzde + "%";
-    satir.querySelector(".ruh-hali-cubuk-yuzde").textContent = "%" + yuzde;
-  });
-}
-
-const gorunurlukBaslangic = new Map(); // gonderi_id -> performance.now() zamanı
-
-function guncelDwell(gonderi_id) {
-  // Roket/yorum/tıklama anında gönderi hâlâ görünürse gerçek geçen süreyi kullan;
-  // değilse (görünürlük takip edilmiyorsa) makul bir varsayılana düş.
-  if (gorunurlukBaslangic.has(gonderi_id)) {
-    return Math.max(0.3, (performance.now() - gorunurlukBaslangic.get(gonderi_id)) / 1000);
-  }
-  return 1.5;
-}
-
-const KONU_RENK = {
-  spor: { bg: "var(--konu-spor-soft)", fg: "var(--konu-spor)" },
-  gundem: { bg: "var(--konu-gundem-soft)", fg: "var(--konu-gundem)" },
-  teknoloji: { bg: "var(--konu-teknoloji-soft)", fg: "var(--konu-teknoloji)" },
-  bilim: { bg: "var(--konu-bilim-soft)", fg: "var(--konu-bilim)" },
-  saglik: { bg: "var(--konu-saglik-soft)", fg: "var(--konu-saglik)" },
-  ekonomi: { bg: "var(--konu-ekonomi-soft)", fg: "var(--konu-ekonomi)" },
-  sanat: { bg: "var(--konu-sanat-soft)", fg: "var(--konu-sanat)" },
-  egitim: { bg: "var(--konu-egitim-soft)", fg: "var(--konu-egitim)" },
-  oyun: { bg: "var(--konu-oyun-soft)", fg: "var(--konu-oyun)" },
-  seyahat: { bg: "var(--konu-seyahat-soft)", fg: "var(--konu-seyahat)" },
+const TOPICS = {
+  spor:{name:"Spor",author:"Ekin Spor",handle:"@ekinsporu",glyph:"⚽",bg:"linear-gradient(145deg,#8bb861,#3d7250)",shape:"#2f6948",pill:"#e9f6d7",ink:"#5d8d3a"},
+  gundem:{name:"Gündem",author:"Güncel Notlar",handle:"@guncelnotlar",glyph:"◎",bg:"linear-gradient(145deg,#f0bd76,#a87346)",shape:"#75554a",pill:"#fff0da",ink:"#a86a31"},
+  teknoloji:{name:"Teknoloji",author:"Teknoloji Ajandası",handle:"@tekajanda",glyph:"⌁",bg:"linear-gradient(145deg,#79c4e8,#5471a3)",shape:"#3b628f",pill:"#e4f3fb",ink:"#3c7ba4"},
+  bilim:{name:"Bilim Kulübü",author:"Bilim Kulübü",handle:"@bilimkulubu",glyph:"✺",bg:"linear-gradient(145deg,#c6b0f0,#6d67a1)",shape:"#564a87",pill:"#eeeaff",ink:"#7057aa"},
+  saglik:{name:"Yaşam",author:"Yaşam Notları",handle:"@yasamnotlari",glyph:"◌",bg:"linear-gradient(145deg,#9fd8c4,#4e8c7d)",shape:"#357364",pill:"#ddf7ec",ink:"#3a9074"},
+  ekonomi:{name:"Ekonomi",author:"Pusula",handle:"@pusula",glyph:"↗",bg:"linear-gradient(145deg,#f0ca7a,#a98337)",shape:"#7d6439",pill:"#fff4d8",ink:"#a47b24"},
+  sanat:{name:"Kültür & Sanat",author:"Kültür Ajandası",handle:"@kulturajandasi",glyph:"♫",bg:"linear-gradient(145deg,#ecaa9a,#aa6375)",shape:"#88455e",pill:"#ffe8e2",ink:"#b35f57"},
+  egitim:{name:"Eğitim",author:"Kampüs",handle:"@kampus",glyph:"⌂",bg:"linear-gradient(145deg,#b7dd94,#688f50)",shape:"#53783d",pill:"#edf8df",ink:"#608d3f"},
+  oyun:{name:"Oyun",author:"Oyun Dünyası",handle:"@oyundunyasi",glyph:"◈",bg:"linear-gradient(145deg,#ca9cf0,#7755a2)",shape:"#5b3b88",pill:"#f2e6ff",ink:"#8052aa"},
+  seyahat:{name:"Keşif",author:"Yolda",handle:"@yoldanotlar",glyph:"⌁",bg:"linear-gradient(145deg,#79c7c6,#397e83)",shape:"#336c76",pill:"#e0f7f4",ink:"#357d7d"}
 };
+function topicFor(topic){ return TOPICS[topic] || {name:topic,author:"NSosyal",handle:"@nsosyal",glyph:"✦",bg:"linear-gradient(145deg,#b8d9ab,#67885d)",shape:"#56734f",pill:"#edf4e8",ink:"#587a55"}; }
+function escapeText(value){ const el=document.createElement("div");el.textContent=value;return el.innerHTML; }
 
-function konuRenk(konu) {
-  return KONU_RENK[konu] || { bg: "var(--konu-varsayilan-soft)", fg: "var(--konu-varsayilan)" };
+function statusCopy(level){
+  if(level>.6)return {title:"Akış biraz yoğunlaştı",text:"Benzer yoğun içeriklerde daha uzun kaldığını fark ettik. Akışı nazikçe dengeliyoruz."};
+  if(level>.3)return {title:"Akış dengeleniyor",text:"İlgi alanlarının içinde daha çeşitli içeriklere yer veriyoruz."};
+  return {title:"Akış dengeli",text:"İlgi alanlarına göre taze ve çeşitli içerikler seçtik."};
 }
-
-// --- Sağ panel: o an ekranda yüklü gönderilerden gerçek zamanlı konu sayacı ---
-const konuSayaclariEl = document.getElementById("konu-sayaclari");
-const konuSayilari = {};
-
-function konuSayaciKaydet(konu) {
-  konuSayilari[konu] = (konuSayilari[konu] || 0) + 1;
+function updateStatus(level){
+  currentSpiral=level; const copy=statusCopy(level);
+  document.getElementById("flow-status-title").textContent=copy.title;
+  document.getElementById("flow-status-text").textContent=copy.text;
+  document.getElementById("desktop-status-title").textContent=copy.title;
+  document.getElementById("desktop-status-text").textContent=copy.text;
+  feed.style.filter=`saturate(${Math.round(100-Math.pow(level,.7)*32)}%)`;
 }
-
-function konuSayaciSifirla() {
-  Object.keys(konuSayilari).forEach((k) => delete konuSayilari[k]);
+function updateMood(psikolojikDurum){
+  const etiketler={mutluluk:"Keyifli",umut:"Umutlu",sakin:"Sakin",sinirli:"Yoğun",anksiyete:"Yoğun"};
+  const kategori=psikolojikDurum&&psikolojikDurum.kategori;
+  const metin=kategori?`Olası anlık ritim: ${etiketler[kategori]||"Dengeli"} · doğrulanmadı`:"Olası anlık ritim: Henüz yeterli sinyal yok";
+  document.getElementById("flow-current-mood").textContent=metin;
+  document.getElementById("desktop-current-mood").textContent=metin;
 }
+function updateTopics(){
+  const list=document.getElementById("konu-sayaclari"); const rows=Object.entries(topicCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  list.innerHTML=rows.length?rows.map(([key,count])=>`<div class="topic-row"><b>${escapeText(topicFor(key).name)}</b><span>${count} gönderi</span></div>`).join(""):'<span class="topic-loading">Akış yükleniyor…</span>';
+}
+function incrementTopic(topic){topicCounts[topic]=(topicCounts[topic]||0)+1;}
+function resetTopics(){Object.keys(topicCounts).forEach(key=>delete topicCounts[key]);}
 
-function konuSayaciGoster() {
-  if (!konuSayaclariEl) return;
-  const siraliKonular = Object.entries(konuSayilari).sort((a, b) => b[1] - a[1]).slice(0, 8);
-  if (!siraliKonular.length) {
-    konuSayaclariEl.innerHTML = '<div class="durum-mesaji-kucuk">Akış yüklendikçe dolacak…</div>';
-    return;
+async function sendInteraction(id,dwell,click=false,rocket=false,comment=false,exit=false){
+  if(dwell<=0)return;
+  try{
+    const res=await fetch("/api/etkilesim",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({gonderi_id:id,dwell_saniye:dwell,tiklama:click,roket:rocket,yorum:comment,cikis:exit})});
+    const data=await res.json(); updateStatus(data.spiral_seviyesi); updateMood(data.psikolojik_durum); if(data.onay_sorulsun_mu)showCheckin();
+  }catch(error){console.warn("Interaction could not be recorded",error);}
+}
+function dwellFor(id){return visibleSince.has(id)?Math.max(.3,(performance.now()-visibleSince.get(id))/1000):1.5;}
+const dwellObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
+  const id=Number(entry.target.dataset.id);
+  if(entry.isIntersecting)visibleSince.set(id,performance.now());
+  else if(visibleSince.has(id)){const dwell=(performance.now()-visibleSince.get(id))/1000;visibleSince.delete(id);sendInteraction(id,dwell,false,false,false,true);}
+}),{threshold:.6});
+
+function scoreBox(label,value){return `<div class="score-box"><small>${label}</small><b>${value}</b></div>`;}
+function openSheet(post=null){
+  const sheet=document.getElementById("explanation-sheet"); const summary=document.getElementById("sheet-summary"); const scores=document.getElementById("sheet-score-grid"); const technical=document.getElementById("technical-details-content");
+  if(post){
+    summary.textContent=post.aciklama;
+    scores.innerHTML=scoreBox("İlgi eşleşmesi",`${Math.round(post.ilgi_skoru*100)}%`)+scoreBox("Akış ayarı",post.refah_cezasi?`−${Math.round(post.refah_cezasi*100)} puan`:"Yok")+scoreBox("Sonuç",`${Math.round(post.final_skor*100)}%`);
+    technical.innerHTML=`<p>Duygu skoru: <b>${post.duygu.toFixed(2)}</b><br>İlgi skoru: <b>${post.ilgi_skoru.toFixed(2)}</b><br>Refah yumuşatması: <b>${post.refah_cezasi.toFixed(2)}</b><br>Final sıralama skoru: <b>${post.final_skor.toFixed(2)}</b></p>`;
+  }else{
+    const copy=statusCopy(currentSpiral);summary.textContent=copy.text;scores.innerHTML=scoreBox("Akış yoğunluğu",`${Math.round(currentSpiral*100)}%`)+scoreBox("Yaklaşım","Nazik dengeleme")+scoreBox("Kontrol","Sende");technical.innerHTML=`<p>Spiral seviyesi: <b>${currentSpiral.toFixed(3)}</b><br>Bu değer son etkileşim örüntülerinden hesaplanır. İçerik kaldırılmaz; yalnızca sıralamadaki ağırlığı değişebilir.</p>`;
   }
-  konuSayaclariEl.innerHTML = siraliKonular
-    .map(([konu, sayi]) => {
-      const renk = konuRenk(konu);
-      return `<div class="konu-sayac-satiri">
-        <span class="konu-sayac-etiket"><span class="konu-sayac-nokta" style="background:${renk.fg}"></span>${konu}</span>
-        <span class="konu-sayac-sayi">${sayi}</span>
-      </div>`;
-    })
-    .join("");
+  sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");
+}
+function closeSheet(){const sheet=document.getElementById("explanation-sheet");sheet.classList.remove("open");sheet.setAttribute("aria-hidden","true");}
+document.getElementById("status-detail-button").addEventListener("click",()=>openSheet());
+document.getElementById("desktop-detail-button").addEventListener("click",()=>openSheet());
+document.getElementById("sheet-close").addEventListener("click",closeSheet);
+document.getElementById("explanation-sheet").addEventListener("click",event=>{if(event.target.id==="explanation-sheet")closeSheet();});
+
+function createCard(post){
+  const topic=topicFor(post.konu);incrementTopic(post.konu);
+  const author=post.yazar_bilgi?{id:post.yazar_bilgi.id,name:post.yazar_bilgi.name,handle:post.yazar_bilgi.handle,initials:post.yazar_bilgi.initials,color:post.yazar_bilgi.color}:authorForPost(post);
+  const card=document.createElement("article");card.className="post-card"+(post.refah_cezasi>0?" yumusatildi":"");card.dataset.id=post.id;
+  card.innerHTML=`<div class="post-body"><div class="post-meta"><span class="avatar" style="background:${topic.bg}">${topic.glyph}</span><div><div class="author">${escapeText(topic.author)}</div><div class="handle">${escapeText(topic.handle)} · şimdi</div></div><button class="post-menu" aria-label="Gönderi seçenekleri">•••</button></div><p class="post-text"></p></div><div class="post-visual" style="--visual-bg:${topic.bg};--visual-shape:${topic.shape}"><span class="visual-glyph">${topic.glyph}</span><span class="visual-caption">${escapeText(topic.name)} · Senin için seçildi</span></div><div class="post-actions"><div class="action-group"><button class="action-button rocket" type="button" aria-label="Roket">↗ <span>Roket</span></button><button class="action-button comment" type="button" aria-label="Yorum">◌ <span>Yorum</span></button></div>${post.refah_cezasi>0?'<span class="softened-pill">✦ dengelendi</span>':'<button class="why-button" type="button">✦ Neden bu?</button>'}</div>`;
+  card.querySelector(".post-text").textContent=post.metin;
+  card.querySelector(".post-visual").insertAdjacentHTML("afterbegin",`<img class="post-photo" src="${postImage(post)}" alt="${escapeText(topic.name)} iÃ§eriÄŸi iÃ§in temsili gÃ¶rsel" loading="lazy">`);
+  const avatar=card.querySelector(".post-meta .avatar");avatar.textContent=author.initials;avatar.style.background=author.color;avatar.classList.add("profile-trigger");avatar.title=`${author.name} profilini aç`;
+  const authorName=card.querySelector(".post-meta .author");authorName.innerHTML=`<a class="post-author-link" href="/profil.html?u=${encodeURIComponent(author.id)}">${escapeText(author.name)}</a>`;
+  card.querySelector(".post-meta .handle").textContent=`${author.handle} · şimdi`;
+  avatar.addEventListener("click",event=>{event.stopPropagation();location.href=`/profil.html?u=${encodeURIComponent(author.id)}`;});
+  const why=card.querySelector(".why-button");if(why)why.addEventListener("click",event=>{event.stopPropagation();openSheet(post);});
+  const rocketButton=card.querySelector(".rocket");if(post.kullanici_roketledi)rocketButton.classList.add("active");rocketButton.querySelector("span").textContent=`Roket ${post.roket_sayisi||0}`;
+  let sending=false;async function react(type,button){if(sending)return;sending=true;try{await sendInteraction(post.id,dwellFor(post.id),false,type==="rocket",type==="comment");if(type==="rocket"){const response=await fetch(`/api/gonderiler/${post.id}/roket`,{method:"POST"});const data=await response.json();button.classList.toggle("active",data.roketlendi);button.querySelector("span").textContent=`Roket ${data.roket_sayisi}`;}}finally{sending=false;}}
+  card.querySelector(".rocket").addEventListener("click",event=>{event.stopPropagation();react("rocket",event.currentTarget);});
+  card.querySelector(".comment").addEventListener("click",event=>{event.stopPropagation();sendInteraction(post.id,dwellFor(post.id),false,false,true);openComments(post);});
+  card.addEventListener("click",event=>{if(event.target.closest(".post-author-link,.profile-trigger"))return;sendInteraction(post.id,dwellFor(post.id),true);});dwellObserver.observe(card);return card;
 }
 
-function duyguRengi(d) {
-  if (d > 0.15) return "var(--good)";
-  if (d < -0.15) return "var(--danger)";
-  return "var(--faint)";
+const sentinel=document.createElement("div");sentinel.className="loading-state";sentinel.id="feed-sentinel";
+const pageObserver=new IntersectionObserver(entries=>{if(entries[0].isIntersecting)loadMore();},{rootMargin:"420px"});
+async function getPage(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();updateStatus(data.spiral_seviyesi);exhausted=data.tukendi;return data.gonderiler;}
+async function firstLoad(){
+  loading=true;exhausted=false;feed.innerHTML="";resetTopics();const posts=await getPage(true);
+  if(!posts.length){feed.innerHTML='<div class="loading-state">Gösterilecek gönderi yok.</div>';loading=false;return;}
+  posts.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.textContent="";pageObserver.observe(sentinel);updateTopics();loading=false;
 }
+async function loadMore(){if(loading||exhausted)return;loading=true;sentinel.textContent="Yeni gönderiler hazırlanıyor…";const posts=await getPage(false);posts.forEach(post=>feed.insertBefore(createCard(post),sentinel));sentinel.textContent=exhausted?"Akışın sonuna geldin.":"";if(exhausted)pageObserver.unobserve(sentinel);updateTopics();loading=false;}
+document.getElementById("yenile-buton").addEventListener("click",firstLoad);
+document.getElementById("sifirla-buton").addEventListener("click",async()=>{await fetch("/api/sifirla",{method:"POST"});closeSheet();firstLoad();});
+function showCheckin(){const until=Number(sessionStorage.getItem("nsosyal-checkin-snooze-until")||0);if(Date.now()<until)return;document.getElementById("dogrulama-karti").classList.remove("gizli");}
+function hideCheckin(){document.getElementById("dogrulama-karti").classList.add("gizli");}
+document.getElementById("dogrulama-gec-buton").addEventListener("click",()=>{sessionStorage.setItem("nsosyal-checkin-snooze-until",String(Date.now()+20*60*1000));hideCheckin();});
+document.querySelectorAll(".dogrulama-secenek").forEach(button=>button.addEventListener("click",async()=>{hideCheckin();await fetch("/api/dogrulama",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kullanici_cevabi:button.dataset.kategori})});}));
 
-function seviyeRengi(seviye) {
-  if (seviye > 0.6) return "var(--danger)";
-  if (seviye > 0.3) return "var(--warn)";
-  return "var(--accent)";
+// Navigation sheets and composer keep the social app controls usable without
+// changing the ranking/interaction API used by the feed.
+const appPanel=document.getElementById("app-panel");
+const panelSections={explore:document.getElementById("panel-explore"),activity:document.getElementById("panel-activity"),composer:document.getElementById("panel-composer")};
+function openPanel(name){
+  Object.entries(panelSections).forEach(([key,section])=>section.hidden=key!==name);
+  appPanel.classList.add("open");appPanel.setAttribute("aria-hidden","false");
+  if(name==="activity")loadActivities();
+  if(name==="composer")setTimeout(()=>document.getElementById("post-text").focus(),160);
 }
-
-function seviyeEtiketi(seviye) {
-  if (seviye > 0.6) return "Yüksek";
-  if (seviye > 0.3) return "Orta";
-  return "Sakin";
-}
-
-function spiralGostergesiGuncelle(seviye) {
-  const yuzde = Math.round(seviye * 100);
-  const renk = seviyeRengi(seviye);
-  spiralDolgu.style.width = yuzde + "%";
-  spiralDolgu.style.background = renk;
-  spiralMetin.textContent = `${seviyeEtiketi(seviye)} · %${yuzde}`;
-  doygunlukGuncelle(seviye);
-}
-
-// --- Renk doygunluğu azaltma ---
-// spiral_seviyesi zaten (negatif dwell oranı + ortalama duygu + tıklama oranı +
-// kaydırma hızı)'nın eğitilmiş modelle birleştirilmiş TEK hâli -- doygunluğu bu
-// dört sinyali ayrı ayrı tartıp yeniden birleştirmek yerine, zaten güven-çarpanlı
-// bu değere bağlıyoruz. Durum yükseldikçe akış nazikçe soluklaşır (kesin bir
-// sınır/engel değil, fark ettirmeye yönelik yumuşak bir sinyal).
-let doygunlukAktif = true;
-
-function doygunlukGuncelle(seviye) {
-  if (!doygunlukAktif) {
-    akisEl.style.filter = "saturate(100%)";
-    return;
-  }
-  // Düşük seviyelerde (özellikle güven-çarpanının küçük tuttuğu ilk birkaç
-  // etkileşimde) %45'lik eski maksimum gözle neredeyse fark edilmiyordu --
-  // %75'e çıkarıldı (19.08.2026, kullanıcı bildirdi). Eğri de hafifçe
-  // öne yüklendi (seviye^0.7) ki orta seviyelerde de fark edilir olsun,
-  // sadece seviye=1'e çok yaklaşınca değil.
-  const doygunluk = Math.round(100 - Math.pow(seviye, 0.7) * 75);
-  akisEl.style.filter = `saturate(${doygunluk}%)`;
-}
-
-document.getElementById("doygunluk-buton").addEventListener("click", (e) => {
-  doygunlukAktif = !doygunlukAktif;
-  const buton = e.currentTarget;
-  buton.classList.toggle("aktif", doygunlukAktif);
-  document.getElementById("doygunluk-buton-metin").textContent =
-    "Doygunluk azaltma: " + (doygunlukAktif ? "Açık" : "Kapalı");
-  if (!doygunlukAktif) akisEl.style.filter = "saturate(100%)";
+function closePanel(){appPanel.classList.remove("open");appPanel.setAttribute("aria-hidden","true");}
+async function loadActivities(){const list=document.querySelector("#panel-activity .activity-list");try{const response=await fetch("/api/etkinlikler");const data=await response.json();list.innerHTML=data.etkinlikler.length?data.etkinlikler.map(item=>`<article><span style="background:${item.actor_color||'#e7eee0'}">${escapeText(item.actor_initials||'✦')}</span><div><b>${escapeText(item.actor_name||'NSosyal')} ${escapeText(item.message)}</b><p>${item.post_id?"Gönderine göz atabilirsin.":"Yeni bir sosyal güncelleme var."}</p></div><time>Şimdi</time></article>`).join(""):'<p class="panel-empty">Henüz yeni bir etkinlik yok.</p>';}catch{list.innerHTML='<p class="panel-empty">Etkinlikler şu an yüklenemedi.</p>';}}
+document.querySelectorAll("[data-panel]").forEach(control=>control.addEventListener("click",event=>{event.preventDefault();openPanel(control.dataset.panel);}));
+document.getElementById("app-panel-close").addEventListener("click",closePanel);
+appPanel.addEventListener("click",event=>{if(event.target===appPanel)closePanel();});
+document.querySelectorAll(".explore-chips button").forEach(button=>button.addEventListener("click",()=>{button.classList.toggle("active");}));
+document.getElementById("panel-composer").addEventListener("submit",async event=>{
+  event.preventDefault();const text=document.getElementById("post-text"),topic=document.getElementById("post-topic"),message=document.getElementById("composer-message"),submit=event.currentTarget.querySelector('[type="submit"]');
+  submit.disabled=true;message.textContent="Gönderin ekleniyor…";
+  try{const response=await fetch("/api/gonderiler",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({metin:text.value,konu:topic.value})});const data=await response.json();if(!data.ok)throw new Error(data.hata||"Gönderi eklenemedi.");text.value="";message.textContent="Gönderin akışa eklendi.";await firstLoad();setTimeout(closePanel,500);}catch(error){message.textContent=error.message||"Gönderi şu an eklenemedi.";}finally{submit.disabled=false;}
 });
-
-async function etkilesimGonder(gonderi_id, dwell_saniye, tiklama = false, roket = false, yorum = false, cikis = false) {
-  // Önceden burada "dwell_saniye < 0.3 ise hiç gönderme" filtresi vardı; bu,
-  // spiral_model.py'nin "kaydirma_hizi" özelliğini (dakikada görüntülenen
-  // gönderi sayısı, motor.py'de log uzunluğundan hesaplanır) yanlışlıkla
-  // köreltiyordu -- aşırı hızlı kaydırırken gönderiler tam da bu filtreye
-  // takılıp günlüğe hiç girmiyor, dolayısıyla kaydırma hızı sinyali asla
-  // yükselemiyordu (kullanıcı tarafından tespit edildi, 20.08.2026). Kısa
-  // görünmelerin ruh-hali ortalamasını domine etmesini önleme işini zaten
-  // backend'deki _katki_agirligi() üstleniyor (silmiyor, düşük ağırlık
-  // veriyor) -- burada ayrıca tam engellemeye gerek yok.
-  if (dwell_saniye <= 0) return;
-  const yanit = await fetch("/api/etkilesim", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ gonderi_id, dwell_saniye, tiklama, roket, yorum, cikis }),
-  });
-  const veri = await yanit.json();
-  spiralGostergesiGuncelle(veri.spiral_seviyesi);
-  ruhHaliGuncelle(veri.psikolojik_durum);
-  if (veri.onay_sorulsun_mu) dogrulamaGoster();
-}
-
-// --- Kendi kendini doğrulama kartı ---
-// psikolojik_durum.py'nin davranış->kategori eşlemesi sentetik senaryolara
-// dayanıyor; gerçek bir dayanak için ara sıra kullanıcıya soruyoruz ve
-// cevabını modelin O ANKİ tahminiyle karşılaştırıyoruz. Model tahmini,
-// taraflı olmasın diye kullanıcı cevap vermeden ÖNCE hiç gösterilmiyor.
-const dogrulamaKarti = document.getElementById("dogrulama-karti");
-
-function dogrulamaGoster() {
-  dogrulamaKarti.classList.remove("gizli");
-}
-
-function dogrulamaGizle() {
-  dogrulamaKarti.classList.add("gizli");
-}
-
-dogrulamaKarti.querySelectorAll(".dogrulama-secenek").forEach((buton) => {
-  buton.addEventListener("click", async () => {
-    dogrulamaGizle();
-    const yanit = await fetch("/api/dogrulama", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kullanici_cevabi: buton.dataset.kategori }),
-    });
-    const veri = await yanit.json();
-    const aktifButon = document.querySelector('.kisisel-secenek[data-aktif="true"]');
-    const acikMi = aktifButon && aktifButon.classList.contains("aktif");
-    const not = document.getElementById("kisisel-not");
-    if (not) {
-      not.textContent = acikMi
-        ? `Kişiselleştirilmiş model, ${veri.kisisel_guncelleme_sayisi} onaya dayanıyor.`
-        : `Kişiselleştirme ${veri.kisisel_guncelleme_sayisi} onay biriktirdi (şu an kapalı).`;
-    }
-  });
-});
-
-document.getElementById("dogrulama-gec-buton").addEventListener("click", dogrulamaGizle);
-
-function olcumSatiriOlustur(baslik, gosterilenMetin, barDeger, maxDeger, renk) {
-  const yuzde = Math.max(0, Math.min(100, (barDeger / maxDeger) * 100));
-  const satir = document.createElement("div");
-  satir.className = "olcum-satiri";
-  satir.innerHTML = `
-    <div class="olcum-baslik"><span>${baslik}</span><b>${gosterilenMetin}</b></div>
-    <div class="olcum-cubuk-arka"><div class="olcum-cubuk-dolgu" style="width:${yuzde}%;background:${renk}"></div></div>
-  `;
-  return satir;
-}
-
-// --- Dwell-time takibi: tek bir paylaşılan gözlemci, akışa eklenen her yeni
-// kart bu gözlemciye kaydolur (sayfalamada her seferinde yeniden yaratılmaz).
-const dwellGozlemci = new IntersectionObserver(
-  (girdiler) => {
-    girdiler.forEach((girdi) => {
-      const id = Number(girdi.target.dataset.id);
-      if (girdi.isIntersecting) {
-        gorunurlukBaslangic.set(id, performance.now());
-      } else if (gorunurlukBaslangic.has(id)) {
-        const gecenSaniye = (performance.now() - gorunurlukBaslangic.get(id)) / 1000;
-        gorunurlukBaslangic.delete(id);
-        etkilesimGonder(id, gecenSaniye, false, false, false, true);
-      }
-    });
-  },
-  { threshold: 0.6 } // gönderinin en az %60'ı görünür olmalı
-);
-
-function kartOlustur(g) {
-  const renk = konuRenk(g.konu);
-  const dRenk = duyguRengi(g.duygu);
-  konuSayaciKaydet(g.konu);
-
-  const kart = document.createElement("article");
-  kart.className = "gonderi" + (g.refah_cezasi > 0 ? " yumusatildi" : "");
-  kart.dataset.id = g.id;
-
-  kart.innerHTML = `
-    <div class="avatar" style="background:${renk.fg}">${g.konu.slice(0, 2)}</div>
-    <div class="govde">
-      <div class="ust-satir">
-        <span class="konu-etiket" style="background:${renk.bg};color:${renk.fg}">${g.konu}</span>
-        ${g.refah_cezasi > 0 ? `<span class="yumusatma-rozeti">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
-          yumuşatıldı
-        </span>` : ""}
-      </div>
-      <div class="metin"></div>
-      ${g.id % 3 !== 0 ? `<div class="medya-yer-tutucu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
-      </div>` : ""}
-      <div class="alt-satir">
-        <button class="neden-buton">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-          Neden bunu görüyorsun?
-        </button>
-        <span class="duygu-rozeti"><span class="duygu-nokta" style="background:${dRenk}"></span>duygu ${g.duygu.toFixed(2)}</span>
-      </div>
-      <div class="etkilesim-satiri">
-        <div class="mini-eylemler">
-          <button class="mini-eylem-buton roket" title="Roket at">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
-            Roket
-          </button>
-          <button class="mini-eylem-buton yorum" title="Yorum yaz">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Yorum
-          </button>
-        </div>
-      </div>
-      <div class="aciklama-paneli"></div>
-    </div>
-  `;
-  // metni güvenli biçimde ekle (XSS'ten kaçınmak için textContent kullan)
-  kart.querySelector(".metin").textContent = g.metin;
-
-  const panel = kart.querySelector(".aciklama-paneli");
-  panel.appendChild(olcumSatiriOlustur("İlgi skoru", g.ilgi_skoru, g.ilgi_skoru, 1, "var(--accent)"));
-  if (g.refah_cezasi > 0) {
-    panel.appendChild(olcumSatiriOlustur("Refah yumuşatması", "-" + g.refah_cezasi, g.refah_cezasi, 1, "var(--warn)"));
-  }
-  panel.appendChild(olcumSatiriOlustur("Final skor", g.final_skor, g.final_skor, 1, "var(--good)"));
-  const not = document.createElement("div");
-  not.className = "aciklama-notu";
-  not.textContent = g.aciklama;
-  panel.appendChild(not);
-
-  const nedenButon = kart.querySelector(".neden-buton");
-  nedenButon.addEventListener("click", (e) => {
-    e.stopPropagation();
-    panel.classList.toggle("acik");
-    nedenButon.classList.toggle("acik");
-  });
-
-  // Roket/yorum tuşlarına spam basmak, tek bir olayı değil, backend'de aynı
-  // gönderiye ait TEK bir kaydı güncelliyor (bkz. backend/main.py), bu yüzden
-  // burada sadece hızlı art arda ağ isteğini önlemek için basit bir kilit var.
-  let gonderiliyor = false;
-  async function eylemGonder(roket, yorum, aktifButon) {
-    if (gonderiliyor) return;
-    gonderiliyor = true;
-    aktifButon.classList.toggle("aktif");
-    await etkilesimGonder(g.id, guncelDwell(g.id), false, roket, yorum);
-    gonderiliyor = false;
-  }
-
-  const roketButon = kart.querySelector(".mini-eylem-buton.roket");
-  roketButon.addEventListener("click", (e) => {
-    e.stopPropagation();
-    eylemGonder(!roketButon.classList.contains("aktif"), false, roketButon);
-  });
-
-  const yorumButon = kart.querySelector(".mini-eylem-buton.yorum");
-  yorumButon.addEventListener("click", (e) => {
-    e.stopPropagation();
-    eylemGonder(false, !yorumButon.classList.contains("aktif"), yorumButon);
-  });
-
-  kart.addEventListener("click", () => {
-    etkilesimGonder(g.id, guncelDwell(g.id), true);
-  });
-
-  dwellGozlemci.observe(kart);
-  return kart;
-}
-
-// --- Sayfalama (infinite scroll) ---
-const sentinel = document.createElement("div");
-sentinel.id = "akis-sentinel";
-sentinel.className = "durum-mesaji";
-
-let yukleniyor = false;
-let tukendi = false;
-
-const sayfaGozlemci = new IntersectionObserver((girdiler) => {
-  if (girdiler[0].isIntersecting) dahaFazlaYukle();
-}, { rootMargin: "400px" }); // ekrandan 400px önce tetikle, kullanıcı beklemesin
-
-async function sayfaGetir(sifirdan) {
-  const yanit = await fetch(`/api/gonderiler?sifirdan=${sifirdan}`);
-  const veri = await yanit.json();
-  spiralGostergesiGuncelle(veri.spiral_seviyesi);
-  tukendi = veri.tukendi;
-  return veri.gonderiler;
-}
-
-async function ilkYuklemeYap() {
-  yukleniyor = true;
-  tukendi = false;
-  akisEl.innerHTML = "";
-  konuSayaciSifirla();
-  const gonderiler = await sayfaGetir(true);
-
-  if (!gonderiler.length) {
-    akisEl.innerHTML = '<div class="durum-mesaji">Gösterilecek gönderi yok.</div>';
-    yukleniyor = false;
-    return;
-  }
-
-  gonderiler.forEach((g) => akisEl.appendChild(kartOlustur(g)));
-  akisEl.appendChild(sentinel);
-  sentinel.textContent = "";
-  sayfaGozlemci.observe(sentinel);
-  konuSayaciGoster();
-  yukleniyor = false;
-}
-
-async function dahaFazlaYukle() {
-  if (yukleniyor || tukendi) return;
-  yukleniyor = true;
-  sentinel.textContent = "Yeni gönderiler yükleniyor…";
-
-  const gonderiler = await sayfaGetir(false);
-  gonderiler.forEach((g) => akisEl.insertBefore(kartOlustur(g), sentinel));
-
-  sentinel.textContent = tukendi ? "Akışın sonuna geldin." : "";
-  if (tukendi) sayfaGozlemci.unobserve(sentinel);
-  konuSayaciGoster();
-  yukleniyor = false;
-}
-
-document.getElementById("yenile-buton").addEventListener("click", ilkYuklemeYap);
-document.getElementById("sifirla-buton").addEventListener("click", async () => {
-  await fetch("/api/sifirla", { method: "POST" });
-  ilkYuklemeYap();
-});
-
-// --- Varsayılan / Kişiselleştirilmiş model anahtarı ---
-// Kişiselleştirme, kullanıcının doğrulama cevaplarıyla KISISEL_MODEL'i (ayrı
-// bir kopya) yavaşça günceller; varsayılan model hiç değişmez. Bu anahtar,
-// aynı oturumdaki gönderi geçmişini SEÇİLEN modelle yeniden skorlatıp iki
-// hâli karşılaştırmayı sağlıyor.
-document.querySelectorAll(".kisisel-secenek").forEach((buton) => {
-  buton.addEventListener("click", async () => {
-    const aktif = buton.dataset.aktif === "true";
-    document.querySelectorAll(".kisisel-secenek").forEach((b) => b.classList.toggle("aktif", b === buton));
-    const yanit = await fetch(`/api/kisisel-mod?aktif=${aktif}`, { method: "POST" });
-    const veri = await yanit.json();
-    ruhHaliGuncelle(veri.psikolojik_durum);
-    const sayi = veri.kisisel_guncelleme_sayisi;
-    document.getElementById("kisisel-not").textContent = aktif
-      ? `Kişiselleştirilmiş model, ${sayi} onaya dayanıyor.`
-      : `Kişiselleştirme ${sayi} onay biriktirdi (şu an kapalı).`;
-  });
-});
-
-// --- Karanlık mod (manuel anahtar; sistem tercihi zaten @media ile destekleniyor) ---
-const karanlikButon = document.getElementById("karanlik-mod-buton");
-if (karanlikButon) {
-  const kayitliTercih = localStorage.getItem("karanlikMod");
-  if (kayitliTercih === "acik") {
-    document.documentElement.classList.add("karanlik-zorla");
-    karanlikButon.classList.add("aktif");
-  }
-  karanlikButon.addEventListener("click", () => {
-    const acik = document.documentElement.classList.toggle("karanlik-zorla");
-    karanlikButon.classList.toggle("aktif", acik);
-    localStorage.setItem("karanlikMod", acik ? "acik" : "kapali");
-  });
-}
-
-ilkYuklemeYap();
+let activeCommentPost=null;
+function renderComments(items){const list=document.getElementById("comment-list");list.innerHTML=items.length?items.map(item=>`<article><span class="comment-avatar" style="background:${item.color}">${escapeText(item.initials)}</span><div><b>${escapeText(item.name)}</b><small>${escapeText(item.handle)}</small><p>${escapeText(item.text)}</p></div></article>`).join(""):'<p class="panel-empty">İlk yorumu sen yaz.</p>';}
+async function openComments(post){activeCommentPost=post;Object.values(panelSections).forEach(section=>section.hidden=true);const comments=document.getElementById("panel-comments");comments.hidden=false;appPanel.classList.add("open");appPanel.setAttribute("aria-hidden","false");const list=document.getElementById("comment-list");list.innerHTML='<p class="panel-empty">Yorumlar yükleniyor…</p>';try{const response=await fetch(`/api/gonderiler/${post.id}/yorumlar`);renderComments((await response.json()).yorumlar||[]);}catch{list.innerHTML='<p class="panel-empty">Yorumlar şu an yüklenemedi.</p>';}}
+document.getElementById("comment-form").addEventListener("submit",async event=>{event.preventDefault();if(!activeCommentPost)return;const input=document.getElementById("comment-text");const button=event.currentTarget.querySelector("button");button.disabled=true;try{const response=await fetch(`/api/gonderiler/${activeCommentPost.id}/yorumlar`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({metin:input.value})});const data=await response.json();if(!response.ok)throw new Error();input.value="";renderComments(data.yorumlar||[]);}finally{button.disabled=false;}});
+let stories=[];let activeStoryIndex=0;
+function renderStory(){const story=stories[activeStoryIndex];if(!story)return;document.getElementById("story-progress").innerHTML=stories.map((_,index)=>`<i class="${index<=activeStoryIndex?"active":""}"></i>`).join("");document.getElementById("story-content").innerHTML=`<img src="${story.media_path}" alt="${escapeText(story.name)} hikâyesi"><div class="story-user"><span style="background:${story.color}">${escapeText(story.initials)}</span><a href="/profil.html?u=${encodeURIComponent(story.user_id)}">${escapeText(story.name)}</a></div><p>${escapeText(story.caption)}</p>`;}
+function openStory(index){if(index<0||index>=stories.length)return;activeStoryIndex=index;renderStory();const viewer=document.getElementById("story-viewer");viewer.classList.add("open");viewer.setAttribute("aria-hidden","false");}
+function closeStory(){const viewer=document.getElementById("story-viewer");viewer.classList.remove("open");viewer.setAttribute("aria-hidden","true");}
+async function setupStories(){try{stories=(await (await fetch("/api/hikayeler")).json()).hikayeler||[];document.querySelectorAll(".story[data-user]").forEach(button=>button.addEventListener("click",event=>{event.preventDefault();event.stopImmediatePropagation();const index=stories.findIndex(story=>story.user_id===button.dataset.user);if(index>=0)openStory(index);},true));}catch{}}
+document.getElementById("story-close").addEventListener("click",closeStory);document.getElementById("story-previous").addEventListener("click",()=>openStory(Math.max(0,activeStoryIndex-1)));document.getElementById("story-next").addEventListener("click",()=>activeStoryIndex>=stories.length-1?closeStory():openStory(activeStoryIndex+1));document.getElementById("story-viewer").addEventListener("click",event=>{if(event.target.id==="story-viewer")closeStory();});
+const intervention=document.createElement("aside");intervention.id="balance-intervention";intervention.hidden=true;intervention.innerHTML='<span>✦ AKIŞ DENGESİ</span><h2>Akış biraz yoğunlaştı.</h2><p>Benzer yoğun içeriklerde daha uzun kaldığını fark ettik. İstersen akışına daha çeşitli postlar ekleyelim.</p><div><button id="balance-feed" type="button">Akışı dengele</button><button id="dismiss-intervention" type="button">Boşver</button></div>';document.body.appendChild(intervention);
+const demoButton=document.createElement("button");demoButton.type="button";demoButton.className="demo-scenario";demoButton.textContent="Demo akışını göster";demoButton.setAttribute("aria-label","Duygu katmanı demo akışını göster");demoButton.title="Demo akışını göster";document.querySelector("#flow-status>div").appendChild(demoButton);
+const demoStyle=document.createElement("style");demoStyle.textContent='.demo-scenario{display:block;margin-top:8px;border:0;background:transparent;color:#56674a;padding:0;font-size:10px;font-weight:800;text-decoration:underline}.balance-intervention{position:fixed;z-index:60;left:50%;bottom:84px;width:min(560px,calc(100% - 28px));transform:translateX(-50%);border-radius:26px;background:#1a2019;color:white;padding:18px 19px;box-shadow:0 20px 60px rgba(0,0,0,.26)}.balance-intervention[hidden]{display:none}.balance-intervention>span{color:#c9ff62;font-size:9px;font-weight:850;letter-spacing:.1em}.balance-intervention h2{margin:7px 0 5px;font-size:19px}.balance-intervention p{margin:0;color:#c9d1c5;font-size:12px;line-height:1.45}.balance-intervention div{display:flex;gap:8px;margin-top:15px}.balance-intervention button{border:0;border-radius:999px;padding:9px 12px;font-size:11px;font-weight:800}.balance-intervention #balance-feed{background:#c9ff62;color:#121314}.balance-intervention #dismiss-intervention{background:transparent;color:white}';document.head.appendChild(demoStyle);
+const demoCompactStyle=document.createElement("style");demoCompactStyle.textContent='.flow-status .demo-scenario{position:absolute;right:42px;top:13px;display:grid;place-items:center;width:27px;height:27px;margin:0;border-radius:50%;background:rgba(255,255,255,.75);font-size:0;text-decoration:none}.flow-status .demo-scenario::after{content:"▸";font-size:17px;line-height:1;color:#53624b}.flow-status .demo-scenario:disabled::after{content:"…";font-size:15px}';document.head.appendChild(demoCompactStyle);
+const originalUpdateStatus=updateStatus;updateStatus=function(level){originalUpdateStatus(level);if(level>.6)intervention.hidden=false;};
+document.getElementById("dismiss-intervention").addEventListener("click",()=>intervention.hidden=true);document.getElementById("balance-feed").addEventListener("click",async()=>{intervention.hidden=true;await firstLoad();});demoButton.addEventListener("click",async()=>{demoButton.disabled=true;demoButton.textContent="Hazırlanıyor…";try{const response=await fetch("/api/demo-senaryo",{method:"POST"});const data=await response.json();updateStatus(data.spiral_seviyesi);document.getElementById("flow-current-mood").textContent="Olası anlık ritim: Yoğun · demo senaryosu";document.getElementById("desktop-current-mood").textContent="Olası anlık ritim: Yoğun · demo senaryosu";}finally{demoButton.disabled=false;demoButton.textContent="Demo akışını göster";}});
+setupStories();
+firstLoad();

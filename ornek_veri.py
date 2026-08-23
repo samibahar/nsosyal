@@ -176,6 +176,28 @@ ORNEK_GONDERILER = [
     {"id": 148, "konu": "seyahat", "metin": "Bir otel zinciri sürdürülebilirlik sertifikası aldı."},
     {"id": 149, "konu": "seyahat", "metin": "Bagaj kaybı şikayetleri havayollarını zor durumda bıraktı."},
     {"id": 150, "konu": "seyahat", "metin": "Kamp alanlarına olan talep bu yaz zirve yaptı."},
+
+    # --- ek demo gönderileri: mobil akış/profil deneyimi için ---
+    {"id": 151, "konu": "teknoloji", "metin": "Mahalle atölyesinde gençler açık kaynak bir sensör projesi geliştirdi."},
+    {"id": 152, "konu": "bilim", "metin": "Gönüllü gözlem gecesinde gökyüzü meraklıları aynı teleskopta buluştu."},
+    {"id": 153, "konu": "sanat", "metin": "Eski bir depoda açılan fotoğraf sergisi hafta sonu boyunca ücretsiz gezilebilecek."},
+    {"id": 154, "konu": "seyahat", "metin": "Sabah erken saatte başlayan kıyı yürüyüşü beklenmedik manzaralar sundu."},
+    {"id": 155, "konu": "spor", "metin": "Mahalle turnuvasında farklı yaşlardan oyuncular aynı sahayı paylaştı."},
+    {"id": 156, "konu": "oyun", "metin": "Bağımsız oyun geliştiricileri yeni projelerini küçük bir buluşmada anlattı."},
+    {"id": 157, "konu": "saglik", "metin": "Öğle arasında yapılan kısa yürüyüş, günün temposuna iyi geldi."},
+    {"id": 158, "konu": "egitim", "metin": "Kütüphanedeki ortak çalışma saatleri öğrencilerden yoğun ilgi gördü."},
+    {"id": 159, "konu": "gundem", "metin": "Kent meydanındaki kitap takası, komşuları bir araya getirdi."},
+    {"id": 160, "konu": "ekonomi", "metin": "Yerel üreticilerin hafta sonu pazarı yeni katılımcılarla büyüdü."},
+    {"id": 161, "konu": "teknoloji", "metin": "Bir grup öğrenci, erişilebilirlik için sade bir mobil araç tasarladı."},
+    {"id": 162, "konu": "bilim", "metin": "Deney gününde çocukların sorduğu sorular araştırmacıları da şaşırttı."},
+    {"id": 163, "konu": "sanat", "metin": "Akşam konserinde şehir sesleriyle elektronik müzik yan yana geldi."},
+    {"id": 164, "konu": "seyahat", "metin": "Yeni tren hattı, kısa hafta sonu rotalarını daha ulaşılabilir kıldı."},
+    {"id": 165, "konu": "spor", "metin": "Koşu grubunun yavaş tempolu buluşmasına ilk kez katılanlar da vardı."},
+    {"id": 166, "konu": "oyun", "metin": "Eski bir masa oyunu gecesi, ekranlardan uzak keyifli bir mola oldu."},
+    {"id": 167, "konu": "saglik", "metin": "Gün içinde su içmeyi hatırlatan küçük alışkanlıklar paylaşıldı."},
+    {"id": 168, "konu": "egitim", "metin": "Kampüs kulüpleri dönem başında yeni atölye programlarını duyurdu."},
+    {"id": 169, "konu": "gundem", "metin": "Semt sakinleri parkın yeni oturma alanları için fikirlerini paylaştı."},
+    {"id": 170, "konu": "ekonomi", "metin": "Kooperatifin yeni dağıtım modeli küçük üreticilerin işini kolaylaştırdı."},
 ]
 
 # Örnek kullanıcının ilgi alanı profili (kayıt sırasında seçildiği varsayımıyla).

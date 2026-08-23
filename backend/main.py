@@ -13,12 +13,14 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))  # motor.py, duygu_modeli.py, spiral_model.py kök dizinde
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from motor import gonderileri_puanla, sirala, spiral_olasiligi
 from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
+from topluluk_veri import TOPLULUK_GONDERILERI
+from sosyal_veri import SosyalDepo
 from psikolojik_durum import (
     psikolojik_durum_tahmini, KATEGORILER, kisisel_model_olustur, kisisel_guncelle,
 )
@@ -26,7 +28,9 @@ import haftalik_rapor
 
 app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Kanıt-of-Konsept")
 
-GONDERILER = ORNEK_GONDERILER
+DEPO = SosyalDepo(BASE_DIR / "data" / "nsosyal_demo.sqlite3")
+DEPO.hazirla([*ORNEK_GONDERILER, *TOPLULUK_GONDERILERI])
+GONDERILER = DEPO.gonderileri_yukle()
 gonderileri_puanla(GONDERILER)
 GONDERI_BY_ID = {g["id"]: g for g in GONDERILER}
 
@@ -49,7 +53,7 @@ TAM_GUVEN_ESIGI = 8  # spiral oranı bu kadar farklı gönderi görülmeden tam 
 # sorup CEVABINI modelin tahminiyle karşılaştırıyoruz -- gerçek bir dayanak
 # ancak böyle oluşur. Bkz. CLAUDE.md "Kendi Kendini Doğrulayan Aktif Öğrenme".
 DOGRULAMA_GUNLUGU: list[dict] = []
-DOGRULAMA_ARALIGI = 8  # bu kadar etkileşimde bir onay sorusu göster
+DOGRULAMA_ARALIGI = 20  # daha az invaziv: yaklaşık her 20 anlamlı etkileşimde bir
 SAYAC = {"son_dogrulamadan_beri": 0}
 
 # --- Kişiselleştirme (çevrimiçi/online öğrenme) ---
@@ -73,6 +77,15 @@ class Etkilesim(BaseModel):
 
 class DogrulamaCevabi(BaseModel):
     kullanici_cevabi: str
+
+
+class YeniGonderi(BaseModel):
+    metin: str
+    konu: str = "gundem"
+
+
+class YorumYeni(BaseModel):
+    metin: str
 
 
 def _gonderi_bazinda_yerine_koy(gunluk: list[dict], gonderi_id: int, yeni_kayit: dict):
@@ -169,6 +182,20 @@ def _dogal_cesitlilik_ekle(siralanmis: list[dict], genlik: float = 0.08) -> list
     return [g for g, _ in gurultulu]
 
 
+def _sosyal_ile_zenginlestir(gonderiler: list[dict]) -> list[dict]:
+    """Sıralama motorunun çıktısını kalıcı sosyal durumla birleştirir.
+    Model skoru ve sosyal sayaçlar birbirinden bağımsız kalır."""
+    sonuc = []
+    for gonderi in gonderiler:
+        yazar = DEPO.kullanici(gonderi.get("yazar", "emiryusuf"))
+        sonuc.append({
+            **gonderi,
+            "yazar_bilgi": yazar,
+            **DEPO.post_ozellikleri(gonderi["id"]),
+        })
+    return sonuc
+
+
 @app.get("/api/gonderiler")
 def api_gonderiler(sifirdan: bool = False):
     if sifirdan:
@@ -185,9 +212,100 @@ def api_gonderiler(sifirdan: bool = False):
 
     return {
         "spiral_seviyesi": round(spiral, 3),
-        "gonderiler": sayfa,
+        "gonderiler": _sosyal_ile_zenginlestir(sayfa),
         "tukendi": len(kalanlar) <= SAYFA_BOYU,
     }
+
+
+@app.post("/api/gonderiler")
+def api_gonderi_olustur(yeni: YeniGonderi):
+    """Demo kullanıcısının gönderisini gerçek duygu skoru ile canlı akışa ekler.
+    Kalıcı kullanıcı/veritabanı katmanı olmadığı için kayıt süreç belleğiyle sınırlıdır."""
+    metin = yeni.metin.strip()
+    if not metin:
+        return {"ok": False, "hata": "Gönderi metni boş olamaz."}
+    if len(metin) > 500:
+        return {"ok": False, "hata": "Gönderi en fazla 500 karakter olabilir."}
+
+    konu = yeni.konu.strip().lower() or "gundem"
+    yeni_id = max(GONDERI_BY_ID, default=0) + 1
+    gonderi = {"id": yeni_id, "metin": metin, "konu": konu, "yazar": "emiryusuf"}
+    gonderileri_puanla([gonderi])
+    DEPO.gonderi_olustur(yeni_id, metin, konu)
+    GONDERILER.insert(0, gonderi)
+    GONDERI_BY_ID[yeni_id] = gonderi
+    GOSTERILEN_ID_SETI.discard(yeni_id)
+    return {"ok": True, "gonderi": _sosyal_ile_zenginlestir([gonderi])[0]}
+
+
+@app.get("/api/kesfet")
+def api_kesfet():
+    """Ana akış sayfalamasından bağımsız, görsel keşfet görünümü için tüm demo içeriği."""
+    return {"gonderiler": _sosyal_ile_zenginlestir(list(GONDERILER))}
+
+
+@app.get("/api/kullanicilar/{kullanici_id}")
+def api_kullanici(kullanici_id: str):
+    kullanici = DEPO.kullanici_ozeti(kullanici_id)
+    if not kullanici:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+    postlar = [g for g in GONDERILER if g.get("yazar") == kullanici_id]
+    return {"kullanici": kullanici, "gonderiler": _sosyal_ile_zenginlestir(postlar)}
+
+
+@app.post("/api/kullanicilar/{kullanici_id}/takip")
+def api_takip_degistir(kullanici_id: str):
+    if not DEPO.kullanici(kullanici_id):
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+    takipte = DEPO.takip_degistir("emiryusuf", kullanici_id)
+    return {"ok": True, "takipte": takipte, "kullanici": DEPO.kullanici_ozeti(kullanici_id)}
+
+
+@app.post("/api/gonderiler/{gonderi_id}/roket")
+def api_roket_degistir(gonderi_id: int):
+    if gonderi_id not in GONDERI_BY_ID:
+        raise HTTPException(status_code=404, detail="Gönderi bulunamadı")
+    roketlendi = DEPO.roket_degistir("emiryusuf", gonderi_id)
+    return {"ok": True, "roketlendi": roketlendi, **DEPO.post_ozellikleri(gonderi_id)}
+
+
+@app.get("/api/gonderiler/{gonderi_id}/yorumlar")
+def api_yorumlar(gonderi_id: int):
+    if gonderi_id not in GONDERI_BY_ID:
+        raise HTTPException(status_code=404, detail="Gönderi bulunamadı")
+    return {"yorumlar": DEPO.yorumlar(gonderi_id)}
+
+
+@app.post("/api/gonderiler/{gonderi_id}/yorumlar")
+def api_yorum_ekle(gonderi_id: int, yorum: YorumYeni):
+    metin = yorum.metin.strip()
+    if not metin or len(metin) > 400:
+        raise HTTPException(status_code=422, detail="Yorum 1-400 karakter olmalı")
+    if gonderi_id not in GONDERI_BY_ID:
+        raise HTTPException(status_code=404, detail="Gönderi bulunamadı")
+    yorum_id = DEPO.yorum_ekle("emiryusuf", gonderi_id, metin)
+    return {"ok": True, "yorum_id": yorum_id, "yorumlar": DEPO.yorumlar(gonderi_id), **DEPO.post_ozellikleri(gonderi_id)}
+
+
+@app.get("/api/etkinlikler")
+def api_etkinlikler():
+    return {"etkinlikler": DEPO.etkinlikler("emiryusuf")}
+
+
+@app.get("/api/hikayeler")
+def api_hikayeler():
+    return {"hikayeler": DEPO.hikayeler()}
+
+
+@app.post("/api/demo-senaryo")
+def api_demo_senaryo():
+    """Yarışma demosu için sabit, tekrar üretilebilir yoğun-akış senaryosu."""
+    DAVRANIS_GUNLUGU.clear()
+    negatifler = sorted((g for g in GONDERILER if g["duygu"] < -0.2), key=lambda g: g["id"])[:8]
+    for gonderi in negatifler:
+        DAVRANIS_GUNLUGU.append({"gonderi_id": gonderi["id"], "dwell_saniye": 18.0, "tiklama": True, "roket": False, "yorum": False})
+    spiral = spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER)
+    return {"ok": True, "spiral_seviyesi": round(spiral, 3), "ornek_sayisi": len(negatifler)}
 
 
 @app.post("/api/etkilesim")

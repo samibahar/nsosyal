@@ -1,169 +1,32 @@
-// Haftalık rapor sayfasının "gerçek" bölümü — bu oturumda kaydedilen
-// psikolojik durum etkileşimlerinden canlı hesaplanır (sabit örnek metin değil).
-
-const RUH_RENK = {
-  sakin: { bg: "var(--ruh-sakin-soft)", fg: "var(--ruh-sakin)" },
-  mutluluk: { bg: "var(--ruh-mutluluk-soft)", fg: "var(--ruh-mutluluk)" },
-  umut: { bg: "var(--ruh-umut-soft)", fg: "var(--ruh-umut)" },
-  sinirli: { bg: "var(--ruh-sinirli-soft)", fg: "var(--ruh-sinirli)" },
-  anksiyete: { bg: "var(--ruh-anksiyete-soft)", fg: "var(--ruh-anksiyete)" },
-};
-
-async function canliOzetiYukle() {
-  const yanit = await fetch("/api/psikolojik-ozet");
-  const veri = await yanit.json();
-
-  const bolum = document.getElementById("canli-bolum");
-  if (!veri.toplam_etkilesim) {
-    bolum.style.display = "none";
-    return;
-  }
-  bolum.style.display = "block";
-  document.getElementById("canli-toplam").textContent = veri.toplam_etkilesim;
-
-  const kapsayici = document.getElementById("canli-dagilim");
-  kapsayici.innerHTML = "";
-
-  veri.kategoriler.forEach((kategori) => {
-    const sayi = veri.kategori_dagilimi[kategori] || 0;
-    const yuzde = Math.round((sayi / veri.toplam_etkilesim) * 100);
-    const renk = RUH_RENK[kategori] || RUH_RENK.sakin;
-
-    const satir = document.createElement("div");
-    satir.className = "olcum-satiri";
-    satir.innerHTML = `
-      <div class="olcum-baslik"><span>${kategori}</span><b>${sayi} etkileşim (%${yuzde})</b></div>
-      <div class="olcum-cubuk-arka"><div class="olcum-cubuk-dolgu" style="width:${yuzde}%;background:${renk.fg}"></div></div>
-    `;
-    kapsayici.appendChild(satir);
-  });
-
-  if (veri.en_belirgin_konu_kategori.length) {
-    const not = document.createElement("div");
-    not.className = "aciklama-notu";
-    not.style.marginTop = "14px";
-    const en = veri.en_belirgin_konu_kategori[0];
-    not.textContent = `En belirgin örüntü: "${en.konu}" konulu içerikte ${en.sayi} kez "${en.kategori}" kategorisine giren bir tepki kaydedildi.`;
-    kapsayici.appendChild(not);
-  }
-
-  isiHaritasiCiz(veri);
+// İçgörü page: friendly summary first, inspectable live data second.
+const COLORS={sakin:"#74cdb9",mutluluk:"#b493f3",umut:"#f5bd64",sinirli:"#f4868e",anksiyete:"#80aee9"};
+function setSummary(total, distribution){
+  const title=document.getElementById("insight-status-title"),text=document.getElementById("insight-status-text");
+  const rhythm=document.getElementById("insight-rhythm-value"), rhythmNote=document.getElementById("insight-rhythm-note");
+  const balance=document.getElementById("insight-balance-value"), balanceNote=document.getElementById("insight-balance-note");
+  if(!total){title.textContent="Akış ritmi sakin";text.textContent="Bugün kendine ait bir ritim oluşuyor.";rhythm.textContent="Kendi hızında";rhythmNote.textContent="Henüz gözlem birikiyor";balance.textContent="Başlangıçta";balanceNote.textContent="Veri geldikçe netleşir";return;}
+  const dominant=Object.entries(distribution).sort((a,b)=>b[1]-a[1])[0];
+  title.textContent="Akışın takipte";text.textContent=`Bu oturumda ${total} etkileşimden nazik bir özet oluşturduk.`;
+  rhythm.textContent=`${total} etkileşim`;rhythmNote.textContent="Bu oturumdan gözlemlendi";
+  balance.textContent=dominant&&dominant[1]?"Ritim oluşuyor":"Dengeli";balanceNote.textContent="Kesin bir değerlendirme değildir";
 }
-
-function isiHaritasiCiz(veri) {
-  const kapsayici = document.getElementById("isi-haritasi-kapsayici");
-  const hedef = document.getElementById("isi-haritasi");
-  if (!veri.konular || !veri.konular.length) {
-    kapsayici.style.display = "none";
-    return;
-  }
-  kapsayici.style.display = "block";
-
-  const izgara = veri.konu_kategori_izgara;
-  const kategoriler = veri.kategoriler;
-  let maksimum = 1;
-  veri.konular.forEach((konu) => {
-    kategoriler.forEach((kat) => {
-      maksimum = Math.max(maksimum, izgara[konu][kat] || 0);
-    });
-  });
-
-  let html = '<table style="border-collapse:collapse; width:100%; font-size:12px;">';
-  html += '<tr><th style="text-align:left; padding:4px 8px; color:var(--muted); font-weight:600;"></th>';
-  kategoriler.forEach((kat) => {
-    const renk = RUH_RENK[kat] || RUH_RENK.sakin;
-    html += `<th style="padding:4px 6px; color:${renk.fg}; font-weight:700; white-space:nowrap;">${kat}</th>`;
-  });
-  html += "</tr>";
-
-  veri.konular.forEach((konu) => {
-    html += `<tr><td style="padding:4px 8px; color:var(--text); font-weight:600; white-space:nowrap;">${konu}</td>`;
-    kategoriler.forEach((kat) => {
-      const sayi = izgara[konu][kat] || 0;
-      const renk = RUH_RENK[kat] || RUH_RENK.sakin;
-      const yogunluk = sayi / maksimum; // 0-1
-      const arkaplan = sayi === 0
-        ? "transparent"
-        : `color-mix(in srgb, ${renk.fg} ${Math.round(15 + yogunluk * 65)}%, var(--card-bg))`;
-      const yaziRengi = yogunluk > 0.55 ? "white" : "var(--text)";
-      html += `<td style="text-align:center; padding:8px 6px; background:${arkaplan}; color:${yaziRengi}; border-radius:6px; font-variant-numeric:tabular-nums;">${sayi || "·"}</td>`;
-    });
-    html += "</tr>";
-  });
-  html += "</table>";
-  hedef.innerHTML = html;
+function renderDistribution(data){
+  const section=document.getElementById("canli-bolum");if(!data.toplam_etkilesim){section.style.display="none";setSummary(0,{});return;}
+  section.style.display="block";document.getElementById("canli-toplam").textContent=data.toplam_etkilesim;setSummary(data.toplam_etkilesim,data.kategori_dagilimi);
+  const target=document.getElementById("canli-dagilim");target.innerHTML=data.kategoriler.map(category=>{const count=data.kategori_dagilimi[category]||0;const pct=Math.round(count/data.toplam_etkilesim*100);return `<div class="distribution-row"><span>${category}</span><div><i style="width:${pct}%;background:${COLORS[category]||COLORS.sakin}"></i></div><b>%${pct}</b></div>`;}).join("");
+  renderHeatmap(data);
 }
-
-async function dogrulamaOzetiYukle() {
-  const yanit = await fetch("/api/dogrulama-ozet");
-  const veri = await yanit.json();
-
-  const bolum = document.getElementById("dogrulama-ozet-bolum");
-  if (!veri.toplam_onay) {
-    bolum.style.display = "none";
-    return;
-  }
-  bolum.style.display = "block";
-
-  const icerik = document.getElementById("dogrulama-ozet-icerik");
-  const yuzdeMetin = veri.eslesme_orani === null ? "—" : Math.round(veri.eslesme_orani * 100) + "%";
-
-  icerik.innerHTML = `
-    <div class="ozet-satiri" style="margin-bottom:12px">
-      <div class="ozet-kutu"><div class="sayi">${veri.toplam_onay}</div><div class="etiket">onay sorusu soruldu</div></div>
-      <div class="ozet-kutu"><div class="sayi">${veri.eslesen}</div><div class="etiket">tahminle eşleşti</div></div>
-      <div class="ozet-kutu"><div class="sayi">${yuzdeMetin}</div><div class="etiket">eşleşme oranı</div></div>
-    </div>
-  `;
-
-  if (veri.toplam_onay < 5) {
-    const not = document.createElement("div");
-    not.className = "aciklama-notu";
-    not.textContent = "Henüz çok az onay verisi var -- bu oran istatistiksel olarak anlamlı sayılamaz, daha fazla etkileşimle güvenilirleşir.";
-    icerik.appendChild(not);
-  }
+function renderHeatmap(data){
+  const holder=document.getElementById("isi-haritasi-kapsayici"),target=document.getElementById("isi-haritasi");if(!data.konular?.length){holder.style.display="none";return;}holder.style.display="block";
+  const max=Math.max(1,...data.konular.flatMap(topic=>data.kategoriler.map(category=>data.konu_kategori_izgara[topic][category]||0)));
+  target.innerHTML=`<div class="heatmap">${data.konular.map(topic=>`<div class="heatmap-row"><b>${topic}</b>${data.kategoriler.map(category=>{const value=data.konu_kategori_izgara[topic][category]||0;return `<span title="${category}: ${value}" style="--heat:${value/max};--heat-color:${COLORS[category]||COLORS.sakin}">${value||"·"}</span>`;}).join("")}</div>`).join("")}</div>`;
 }
-
-async function llmRaporuYukle() {
-  const bolum = document.getElementById("llm-rapor-bolum");
-  const terapistBolum = document.getElementById("terapist-rapor-bolum");
-  try {
-    const yanit = await fetch("/api/haftalik-rapor");
-    const veri = await yanit.json();
-    if (!veri.mevcut) {
-      bolum.style.display = "none"; // API anahtarı yok -- sabit örneğe düşülüyor
-      terapistBolum.style.display = "none";
-      return;
-    }
-    document.getElementById("llm-rapor-icerik").textContent = veri.metin;
-    bolum.style.display = "block";
-    terapistBolum.style.display = "block"; // aynı LLM erişimi varsa bu da kullanılabilir
-  } catch (e) {
-    bolum.style.display = "none";
-    terapistBolum.style.display = "none";
-  }
-}
-
-// --- Terapiste götürülebilecek veri özeti: talep üzerine üretilir (otomatik
-// yüklenmez -- her sayfa açılışında ekstra bir LLM çağrısına gerek yok).
-async function terapistRaporuUret() {
-  const buton = document.getElementById("terapist-rapor-buton");
-  const icerik = document.getElementById("terapist-rapor-icerik");
-  buton.disabled = true;
-  icerik.textContent = "Hazırlanıyor…";
-  try {
-    const yanit = await fetch("/api/terapist-raporu");
-    const veri = await yanit.json();
-    icerik.textContent = veri.mevcut ? veri.metin : "Şu an hazırlanamıyor.";
-  } catch (e) {
-    icerik.textContent = "Şu an hazırlanamıyor.";
-  } finally {
-    buton.disabled = false;
-  }
-}
-
-document.getElementById("terapist-rapor-buton").addEventListener("click", terapistRaporuUret);
-
-canliOzetiYukle();
-dogrulamaOzetiYukle();
-llmRaporuYukle();
+async function loadSession(){try{const response=await fetch("/api/psikolojik-ozet");renderDistribution(await response.json());}catch(error){console.warn("Insight session summary unavailable",error);}}
+async function loadValidation(){try{const data=await (await fetch("/api/dogrulama-ozet")).json();const section=document.getElementById("dogrulama-ozet-bolum");if(!data.toplam_onay){section.style.display="none";return;}section.style.display="block";const rate=data.eslesme_orani===null?"—":`%${Math.round(data.eslesme_orani*100)}`;document.getElementById("dogrulama-ozet-icerik").innerHTML=`<div class="validation-grid"><div><b>${data.toplam_onay}</b><span>gönüllü yanıt</span></div><div><b>${data.eslesen}</b><span>uyumlu tahmin</span></div><div><b>${rate}</b><span>eşleşme</span></div></div>${data.toplam_onay<5?'<p class="data-note">Az sayıdaki yanıt, güvenilir bir oran anlamına gelmez.</p>':''}`;}catch(error){console.warn("Validation summary unavailable",error);}}
+async function loadNote(){const section=document.getElementById("llm-rapor-bolum"),therapist=document.getElementById("terapist-rapor-bolum");try{const data=await (await fetch("/api/haftalik-rapor")).json();if(!data.mevcut){section.style.display="none";therapist.style.display="none";return;}section.style.display="block";therapist.style.display="block";document.getElementById("llm-rapor-icerik").textContent=data.metin;}catch{section.style.display="none";therapist.style.display="none";}}
+async function generateDataSummary(){const button=document.getElementById("terapist-rapor-buton"),target=document.getElementById("terapist-rapor-icerik");button.disabled=true;target.textContent="Hazırlanıyor…";try{const data=await (await fetch("/api/terapist-raporu")).json();target.textContent=data.mevcut?data.metin:"Şu an hazırlanamıyor.";}catch{target.textContent="Şu an hazırlanamıyor.";}finally{button.disabled=false;}}
+document.getElementById("terapist-rapor-buton").addEventListener("click",generateDataSummary);
+document.querySelectorAll(".range-switch button").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll(".range-switch button").forEach(item=>item.classList.toggle("active",item===button));}));
+function openLive(){document.getElementById("real-insights").scrollIntoView({behavior:"smooth",block:"start"});}
+document.getElementById("insight-detail-button").addEventListener("click",openLive);document.getElementById("gentle-detail-button").addEventListener("click",openLive);
+loadSession();loadValidation();loadNote();
