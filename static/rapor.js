@@ -1,44 +1,26 @@
-// İçgörü page: friendly summary first, inspectable live data second.
-const COLORS={sakin:"#74cdb9",mutluluk:"#b493f3",umut:"#f5bd64",sinirli:"#f4868e",anksiyete:"#80aee9"};
-function setSummary(total, distribution){
-  const title=document.getElementById("insight-status-title"),text=document.getElementById("insight-status-text");
-  const rhythm=document.getElementById("insight-rhythm-value"), rhythmNote=document.getElementById("insight-rhythm-note");
-  const balance=document.getElementById("insight-balance-value"), balanceNote=document.getElementById("insight-balance-note");
-  if(!total){title.textContent="Akış ritmi sakin";text.textContent="Bugün kendine ait bir ritim oluşuyor.";rhythm.textContent="Kendi hızında";rhythmNote.textContent="Henüz gözlem birikiyor";balance.textContent="Başlangıçta";balanceNote.textContent="Veri geldikçe netleşir";return;}
-  const dominant=Object.entries(distribution).sort((a,b)=>b[1]-a[1])[0];
-  title.textContent="Akışın takipte";text.textContent=`Bu oturumda ${total} etkileşimden nazik bir özet oluşturduk.`;
-  rhythm.textContent=`${total} etkileşim`;rhythmNote.textContent="Bu oturumdan gözlemlendi";
-  balance.textContent=dominant&&dominant[1]?"Ritim oluşuyor":"Dengeli";balanceNote.textContent="Kesin bir değerlendirme değildir";
+// İçgörü: all figures are calculated from this browser's local interaction log.
+const reactionLabels={begendim:["👍","Beğendim"],umutlandim:["✨","Umutlandım"],dusundum:["🤔","Düşündüm"],kizdim:["😠","Kızdım"],gerildim:["😣","Gerildim"]};
+const topicLabels={gundem:"Gündem",teknoloji:"Teknoloji",bilim:"Bilim",spor:"Spor",sanat:"Kültür",saglik:"Yaşam",ekonomi:"Ekonomi",egitim:"Eğitim",oyun:"Oyun",seyahat:"Keşif"};
+let allEvents=[],activeRange="week",trace=null;
+const $=id=>document.getElementById(id);
+function rangeStart(range){const now=Date.now();if(range==="today"){const d=new Date();d.setHours(0,0,0,0);return +d;}return now-(range==="month"?30:7)*86400000;}
+function scopedEvents(){return allEvents.filter(event=>event.createdAt>=rangeStart(activeRange));}
+function countBy(items,key){return items.reduce((result,item)=>{const value=key(item);if(value)result[value]=(result[value]||0)+1;return result;},{});}
+function empty(target,message){target.innerHTML=`<p class="chart-empty">${message}</p>`;}
+function renderLine(events){const target=$("rhythm-chart"),interactions=events.filter(event=>event.type==="interaction");if(!interactions.length){empty(target,"Akışta biraz gezindiğinde, burada zaman içindeki etkileşim ritmin görünür.");$("rhythm-caption").textContent="Henüz veri yok";return;}
+  const start=rangeStart(activeRange),end=Date.now(),buckets=Array.from({length:7},()=>0),span=Math.max(1,end-start);interactions.forEach(event=>buckets[Math.min(6,Math.floor((event.createdAt-start)/span*7))]++);
+  const max=Math.max(1,...buckets),points=buckets.map((count,index)=>`${8+index*46},${104-(count/max)*76}`).join(" ");
+  target.innerHTML=`<svg viewBox="0 0 292 112" preserveAspectRatio="none" aria-hidden="true"><path class="chart-grid" d="M8 104H284M8 66H284M8 28H284"/><polyline class="chart-area" points="8,104 ${points} 284,104"/><polyline class="chart-line" points="${points}"/>${points.split(" ").map(point=>`<circle cx="${point.split(",")[0]}" cy="${point.split(",")[1]}" r="3"/>`).join("")}</svg>`;
+  $("rhythm-caption").textContent=`${interactions.length} etkileşim`;
 }
-function renderDistribution(data){
-  const section=document.getElementById("canli-bolum");if(!data.toplam_etkilesim){section.style.display="none";setSummary(0,{});return;}
-  section.style.display="block";document.getElementById("canli-toplam").textContent=data.toplam_etkilesim;setSummary(data.toplam_etkilesim,data.kategori_dagilimi);
-  const target=document.getElementById("canli-dagilim");target.innerHTML=data.kategoriler.map(category=>{const count=data.kategori_dagilimi[category]||0;const pct=Math.round(count/data.toplam_etkilesim*100);return `<div class="distribution-row"><span>${category}</span><div><i style="width:${pct}%;background:${COLORS[category]||COLORS.sakin}"></i></div><b>%${pct}</b></div>`;}).join("");
-  renderHeatmap(data);
+function renderTopics(events){const target=$("topic-chart"),values=countBy(events.filter(event=>event.type==="interaction"),event=>event.topic);const rows=Object.entries(values).sort((a,b)=>b[1]-a[1]).slice(0,4);if(!rows.length){empty(target,"Konu dağılımı henüz oluşmadı.");return;}const max=Math.max(...rows.map(([,count])=>count));target.innerHTML=rows.map(([topic,count])=>`<div class="topic-row"><span>${topicLabels[topic]||topic}</span><div><i style="width:${count/max*100}%"></i></div><b>${count}</b></div>`).join("");}
+function renderReactions(events){const target=$("reaction-chart"),values=countBy(events.filter(event=>event.type==="post_reaction"||event.type==="news_reaction"),event=>event.reaction);const rows=Object.entries(values);if(!rows.length){empty(target,"Bir tepkini seçtiğinde burada görünür.");return;}target.innerHTML=rows.map(([reaction,count])=>`<div class="reaction-row"><span>${reactionLabels[reaction]?.[0]||"☺"}</span><b>${reactionLabels[reaction]?.[1]||reaction}</b><i>${count}</i></div>`).join("");}
+function renderSummary(events){const interactions=events.filter(event=>event.type==="interaction"),reactions=events.filter(event=>event.type==="post_reaction"||event.type==="news_reaction");$("kpi-interactions").textContent=interactions.length;$("kpi-reactions").textContent=reactions.length;$("kpi-moved").textContent=trace?.movedCount??"—";
+  if(!interactions.length){$("insight-status-title").textContent="Veri bekleniyor";$("insight-status-text").textContent="Etkileşimlerin yalnızca bu cihazda özetlenir.";return;}
+  const topics=Object.entries(countBy(interactions,event=>event.topic)).sort((a,b)=>b[1]-a[1]);const top=topicLabels[topics[0]?.[0]]||"çeşitli konular";$("insight-status-title").textContent="Akış ritmin oluşuyor";$("insight-status-text").textContent=`Bu ${activeRange==="today"?"gün":activeRange==="week"?"hafta":"ay"} en çok ${top} içeriğiyle etkileştin. ${reactions.length?"Gönüllü tepkilerin sıralamayı yerelde günceller.":"İstersen tepki vererek akışı daha açık biçimde şekillendirebilirsin."}`;
 }
-function renderHeatmap(data){
-  const holder=document.getElementById("isi-haritasi-kapsayici"),target=document.getElementById("isi-haritasi");if(!data.konular?.length){holder.style.display="none";return;}holder.style.display="block";
-  const max=Math.max(1,...data.konular.flatMap(topic=>data.kategoriler.map(category=>data.konu_kategori_izgara[topic][category]||0)));
-  target.innerHTML=`<div class="heatmap">${data.konular.map(topic=>`<div class="heatmap-row"><b>${topic}</b>${data.kategoriler.map(category=>{const value=data.konu_kategori_izgara[topic][category]||0;return `<span title="${category}: ${value}" style="--heat:${value/max};--heat-color:${COLORS[category]||COLORS.sakin}">${value||"·"}</span>`;}).join("")}</div>`).join("")}</div>`;
-}
-async function loadSession(){try{const response=await fetch("/api/psikolojik-ozet");renderDistribution(await response.json());}catch(error){console.warn("Insight session summary unavailable",error);}}
-async function loadValidation(){try{const data=await (await fetch("/api/dogrulama-ozet")).json();const section=document.getElementById("dogrulama-ozet-bolum");if(!data.toplam_onay){section.style.display="none";return;}section.style.display="block";const rate=data.eslesme_orani===null?"—":`%${Math.round(data.eslesme_orani*100)}`;document.getElementById("dogrulama-ozet-icerik").innerHTML=`<div class="validation-grid"><div><b>${data.toplam_onay}</b><span>gönüllü yanıt</span></div><div><b>${data.eslesen}</b><span>uyumlu tahmin</span></div><div><b>${rate}</b><span>eşleşme</span></div></div>${data.toplam_onay<5?'<p class="data-note">Az sayıdaki yanıt, güvenilir bir oran anlamına gelmez.</p>':''}`;}catch(error){console.warn("Validation summary unavailable",error);}}
-async function loadNote(){const section=document.getElementById("llm-rapor-bolum"),therapist=document.getElementById("terapist-rapor-bolum");try{const data=await (await fetch("/api/haftalik-rapor")).json();if(!data.mevcut){section.style.display="none";therapist.style.display="none";return;}section.style.display="block";therapist.style.display="block";document.getElementById("llm-rapor-icerik").textContent=data.metin;}catch{section.style.display="none";therapist.style.display="none";}}
-async function generateDataSummary(){const button=document.getElementById("terapist-rapor-buton"),target=document.getElementById("terapist-rapor-icerik");button.disabled=true;target.textContent="Hazırlanıyor…";try{const data=await (await fetch("/api/terapist-raporu")).json();target.textContent=data.mevcut?data.metin:"Şu an hazırlanamıyor.";}catch{target.textContent="Şu an hazırlanamıyor.";}finally{button.disabled=false;}}
-document.getElementById("terapist-rapor-buton").addEventListener("click",generateDataSummary);
-document.querySelectorAll(".range-switch button").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll(".range-switch button").forEach(item=>item.classList.toggle("active",item===button));}));
-function openLive(){document.getElementById("real-insights").scrollIntoView({behavior:"smooth",block:"start"});}
-document.getElementById("insight-detail-button").addEventListener("click",openLive);document.getElementById("gentle-detail-button").addEventListener("click",openLive);
-async function loadLocalDemo(){
-  const agent=window.LocalPersonalization;if(!agent)return false;
-  try{await agent.init();const trace=await agent.getDecisionTrace();if(!trace?.demo)return false;const summary=trace.summary||{};
-    document.getElementById("insight-status-title").textContent="Jüri senaryosu tamamlandı";
-    document.getElementById("insight-status-text").textContent="Hazır örnek sinyaller bu cihazda işlendi; akışın hareketini inceleyebilirsin.";
-    document.getElementById("insight-rhythm-value").textContent=`${trace.movedCount} gönderi değişti`;
-    document.getElementById("insight-rhythm-note").textContent="Aynı adaylar, yeni sıralama";
-    document.getElementById("insight-balance-value").textContent=`%${Math.round((summary.intensity||0)*100)} yoğunluk`;
-    document.getElementById("insight-balance-note").textContent="Örnek senaryo · teşhis değildir";
-    return true;
-  }catch{return false;}
-}
-(async()=>{if(await loadLocalDemo())return;loadSession();loadValidation();loadNote();})();
+function render(){const events=scopedEvents();renderSummary(events);renderLine(events);renderTopics(events);renderReactions(events);}
+async function init(){const agent=window.LocalPersonalization;if(!agent)return;await agent.init();[allEvents,trace]=await Promise.all([agent.getLocalEvents(),agent.getDecisionTrace()]);render();}
+document.querySelectorAll(".range-switch button").forEach(button=>button.addEventListener("click",()=>{activeRange=button.dataset.range;document.querySelectorAll(".range-switch button").forEach(item=>item.classList.toggle("active",item===button));render();}));
+$("insight-detail-button").addEventListener("click",()=>$("real-insights").scrollIntoView({behavior:"smooth",block:"start"}));
+init().catch(error=>console.warn("Local insight data unavailable",error));

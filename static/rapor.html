@@ -5,30 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#dff8d6" />
   <title>İçgörü — NSosyal</title>
-  <link rel="stylesheet" href="/style.css?v=29" />
+  <link rel="stylesheet" href="/style.css?v=33" />
 </head>
 <body class="insight-body">
   <main class="insight-page">
     <header class="insight-topbar"><a class="insight-brand" href="/index.html"><span class="brand-mark">n</span><b>nSosyal</b></a><button class="insight-bell" aria-label="Bildirimler">♧<i></i></button></header>
-    <section class="insight-hero"><p>Merhaba, Emir</p><h1>Bugün akışın<br>nasıl gidiyor?</h1></section>
-    <section class="range-switch" aria-label="Zaman aralığı"><button type="button">Ay</button><button class="active" type="button">Hafta</button><button type="button">Bugün</button></section>
-    <section class="week-strip" aria-label="Bu haftanın günleri"><div><small>Pzt</small><b>18</b></div><div><small>Sal</small><b>19</b></div><div><small>Çar</small><b>20</b></div><div><small>Per</small><b>21</b></div><div><small>Cum</small><b>22</b></div><div class="today"><small>Cmt</small><b>23</b></div><div><small>Paz</small><b>24</b></div></section>
-    <section class="insight-summary" aria-live="polite"><div class="summary-heading"><span>✦</span><div><b id="insight-status-title">Akış ritmi sakin</b><p id="insight-status-text">Bugün kendine ait bir ritim oluşuyor.</p></div></div><button id="insight-detail-button" type="button">Ayrıntılar <span>→</span></button></section>
-    <section class="insight-grid">
-      <article class="insight-tile rhythm-tile"><div class="mini-chart line-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><svg viewBox="0 0 170 75" preserveAspectRatio="none"><path d="M4 62 C20 35 31 59 45 40 S65 18 76 39 S99 55 109 27 S135 15 153 29 S161 16 166 12"/></svg></div><p>Bu oturum</p><h2 id="insight-rhythm-value">Kendi hızında</h2><small id="insight-rhythm-note">Henüz gözlem birikiyor</small></article>
-      <article class="insight-tile balance-tile"><div class="mini-chart bars-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><p>Akış dengesi</p><h2 id="insight-balance-value">Başlangıçta</h2><small id="insight-balance-note">Veri geldikçe netleşir</small></article>
-    </section>
-    <section class="gentle-card"><div class="gentle-orb">✦</div><div><span>KENDİNE KÜÇÜK BİR ALAN</span><h2>Bugün akışınla<br>nazikçe kal.</h2><p>İstersen birazdan haftalık içgörüne göz atabilirsin.</p></div><button type="button" id="gentle-detail-button">Göz at <b>→</b></button></section>
-    <section class="real-insights" id="real-insights"><div class="real-section-title"><span>CANLI OTURUM VERİSİ</span><h2>Gözlemlenen ritim</h2><p>Bu alan yalnızca bu tarayıcı oturumunda kaydedilen etkileşimleri gösterir.</p></div>
-      <div class="rapor-bolum canli" id="canli-bolum" style="display:none"><h3>İçerik ritmi</h3><p><b id="canli-toplam">0</b> etkileşimden oluşan olası örüntü.</p><div id="canli-dagilim" class="distribution-list"></div><div id="isi-haritasi-kapsayici" style="display:none"><h4>Konu × olası örüntü</h4><div id="isi-haritasi"></div></div></div>
-      <div class="rapor-bolum canli" id="dogrulama-ozet-bolum" style="display:none"><h3>Gönüllü doğrulama</h3><p>Yanıtların, modelin kesinlik iddiası yerine kendini sınamasına yardımcı olur.</p><div id="dogrulama-ozet-icerik"></div></div>
-      <div class="rapor-bolum canli" id="llm-rapor-bolum" style="display:none"><h3>Haftanın kişisel notu</h3><div id="llm-rapor-icerik" class="generated-note"></div></div>
-      <div class="rapor-bolum canli" id="terapist-rapor-bolum" style="display:none"><h3>Yorum içermeyen veri özeti</h3><p>İstersen yalnızca gözlenen veriyi düzenli bir özet halinde hazırlayabilirsin.</p><button class="insight-action" id="terapist-rapor-buton" type="button">Özeti hazırla</button><div id="terapist-rapor-icerik" class="generated-note"></div></div>
-    </section>
-    <p class="insight-disclaimer">Bu ekran bir teşhis veya klinik değerlendirme değildir. İçgörüler, gönüllü kullanıcı yanıtlarıyla zaman içinde doğrulanması gereken olası etkileşim örüntülerini gösterir.</p>
+    <section class="insight-hero"><p>Bu cihazdaki akışın</p><h1>Oturum<br>içgörüleri</h1></section>
+    <section class="range-switch" aria-label="Zaman aralığı"><button type="button" data-range="month">Ay</button><button class="active" type="button" data-range="week">Hafta</button><button type="button" data-range="today">Bugün</button></section>
+    <section class="insight-summary" aria-live="polite"><div class="summary-heading"><span>✦</span><div><b id="insight-status-title">Veri bekleniyor</b><p id="insight-status-text">Etkileşimlerin yalnızca bu cihazda özetlenir.</p></div></div><button id="insight-detail-button" type="button">Ayrıntılar <span>→</span></button></section>
+    <section class="data-kpis" aria-label="Oturum özeti"><article><small>Etkileşim</small><b id="kpi-interactions">0</b><span>bu cihazda</span></article><article><small>Gönüllü tepki</small><b id="kpi-reactions">0</b><span>sen belirttin</span></article><article><small>Akış hareketi</small><b id="kpi-moved">—</b><span>son demo</span></article></section>
+    <section id="real-insights" class="insight-chart-card"><div class="chart-heading"><div><span>ETKİLEŞİM RİTMİ</span><h2>Zaman içinde sinyaller</h2></div><small id="rhythm-caption">Henüz veri yok</small></div><div id="rhythm-chart" class="session-line-chart" role="img" aria-label="Oturumdaki etkileşim ritmi grafiği"></div></section>
+    <section class="insight-grid useful-grid"><article class="insight-chart-card"><div class="chart-heading"><div><span>KONU DAĞILIMI</span><h2>Nelerle etkileştin?</h2></div></div><div id="topic-chart" class="topic-chart"></div></article><article class="insight-chart-card"><div class="chart-heading"><div><span>GÖNÜLLÜ TEPKİLER</span><h2>Senin geri bildirimin</h2></div></div><div id="reaction-chart" class="reaction-chart"></div></article></section>
+    <section class="insight-data-note"><b>✦ Verin sende kalır</b><p>Grafikler bu tarayıcının yerel etkileşim kaydından hesaplanır. Bu ekran bir teşhis veya klinik değerlendirme değildir.</p></section>
   </main>
   <nav class="bottom-nav insight-nav" aria-label="Alt menü"><a class="nav-item" href="/index.html"><span>⌂</span><small>Ana Sayfa</small></a><a class="nav-item" href="/kesfet.html"><span>⌕</span><small>Keşfet</small></a><a class="create-button" href="/index.html?compose=1" aria-label="Yeni gönderi">＋</a><a class="nav-item" href="/haberler.html"><span>▤</span><small>Haberler</small></a><a class="nav-item active" href="/rapor.html"><span>◔</span><small>İçgörü</small></a></nav>
-  <script src="/local-agent.js?v=4"></script>
-  <script src="/rapor.js?v=22"></script>
+  <script src="/local-agent.js?v=5"></script>
+  <script src="/rapor.js?v=23"></script>
 </body>
 </html>
