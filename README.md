@@ -87,6 +87,12 @@ Ana akıştaki **Duygu Katmanı · Yerel** modu, yarışma demosu için tarayıc
 
 Bu sistem klinik çıkarım veya duygu teşhisi yapmaz. “Olası anlık ritim” ifadesi yalnızca kullanıcı tarafından doğrulanmamış bir akış örüntüsü özetidir. Yerel mod, sosyal eylemleri (ör. kullanıcının açıkça gönderdiği yorum veya roket) gizlemez; yalnızca ham davranışsal telemetriyi cihazda tutar.
 
+## Jüri demosu
+
+Ana akıştaki `✦ Jüri demosu` düğmesi, bağlantı gerektirmeyen 12 gönderilik küratörlü örnek paketi başlatır. Paket; 10 açıkça etiketlenmiş örnek etkileşim, aynı adayların başlangıç sırası ve gerçek yerel sıralama fonksiyonu ile çalışır. Sonuçlar hard-code edilmez: tarayıcı, örnek sinyalleri IndexedDB içinde işler ve kartları animasyonla yeniden sıralar.
+
+`/juri.html` aynı cihazdaki karar izini gösterir: sinyal listesi, yerel güven, akış yoğunluğu, önce/sonra sıra hareketleri ve puan bileşenleri. Böylece jüri, “içerik kaldırılmadı; aynı adaylar yeniden sıralandı” ilkesini doğrudan inceleyebilir. Bu ekranda gösterilen tüm postlar ve sinyaller örnek/demo verisidir; ham davranış sinyali sunucuya gönderilmez.
+
 ## Haberler ve özel tepki çarkı
 
 `/haberler.html`, aynı gelişmeyi iki ayrı örnek kaynaktan eşleyen deterministik bir yarışma demosudur. Haber adayları sunucudan gelir; kategori ilgisi, sıralama ve beşli tepki çarkı (`Beğendim`, `Umutlandım`, `Düşündüm`, `Kızdım`, `Gerildim`) tarayıcıdaki yerel ajan tarafından işlenir. Aynı özel tepki çarkı normal ana akış gönderilerinde de bulunur; tepki cihazda kalır ve “mevcut ritim” alanında kullanıcı tarafından belirtilmiş geri bildirim olarak gösterilir.

@@ -9,6 +9,7 @@ const postCache = new Map();
 const localAgent = window.LocalPersonalization;
 let localSummary = { eventCount: 0, enoughData: false, intensity: 0, currentMood: null, confidence: 0 };
 let localPostReactions = {};
+let juryDemoActive = false;
 const POST_REACTIONS = [["begendim","👍","Beğendim"],["umutlandim","🌤️","Umutlandım"],["dusundum","🤔","Düşündüm"],["kizdim","😠","Kızdım"],["gerildim","😟","Gerildim"]];
 const POST_REACTION_LABELS = Object.fromEntries(POST_REACTIONS.map(([key,emoji,label])=>[key,`${emoji} ${label}`]));
 
@@ -160,7 +161,7 @@ const sentinel=document.createElement("div");sentinel.className="loading-state";
 const pageObserver=new IntersectionObserver(entries=>{if(entries[0].isIntersecting)loadMore();},{rootMargin:"420px"});
 async function getPage(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();if(!localAgent)updateStatus(data.spiral_seviyesi);exhausted=data.tukendi;return localAgent?await localAgent.rank(data.gonderiler):data.gonderiler;}
 async function firstLoad(){
-  loading=true;exhausted=false;feed.innerHTML="";resetTopics();if(localAgent)localPostReactions=(await localAgent.postReactionState()).reactions;const posts=await getPage(true);
+  juryDemoActive=false;loading=true;exhausted=false;feed.innerHTML="";resetTopics();if(localAgent)localPostReactions=(await localAgent.postReactionState()).reactions;const posts=await getPage(true);
   if(!posts.length){feed.innerHTML='<div class="loading-state">Gösterilecek gönderi yok.</div>';loading=false;return;}
   posts.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.textContent="";pageObserver.observe(sentinel);updateTopics();loading=false;
 }
@@ -182,6 +183,21 @@ function showRankingNotice(moved,reaction){
   const notice=document.getElementById("ranking-notice");
   notice.textContent=`✦ Akış güncellendi · ${moved} gönderi yer değiştirdi${reaction?` · ${labels[reaction]||"tepki"} sinyali yerelde işlendi`:""}`;
   notice.classList.add("show");clearTimeout(showRankingNotice.timer);showRankingNotice.timer=setTimeout(()=>notice.classList.remove("show"),3800);
+}
+async function startJuryDemo(){
+  if(!localAgent)return;
+  const controls=[document.getElementById("jury-demo-button"),document.getElementById("jury-demo-rail")].filter(Boolean);
+  controls.forEach(control=>{control.setAttribute("aria-busy","true");if("disabled" in control)control.disabled=true;});
+  try{
+    const response=await fetch("/api/demo-paketi");if(!response.ok)throw new Error("Demo paketi yüklenemedi.");
+    const pack=await response.json(),trace=await localAgent.runDemoScenario(pack),beforeMap=new Map(trace.before.map(item=>[Number(item.id),item.position]));
+    juryDemoActive=true;loading=true;exhausted=true;pageObserver.unobserve(sentinel);feed.innerHTML="";postCache.clear();resetTopics();localPostReactions={};
+    const initial=[...pack.gonderiler].sort((a,b)=>(beforeMap.get(Number(a.id))||99)-(beforeMap.get(Number(b.id))||99));
+    initial.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.textContent="✦ Hazır örnek senaryo · karar yerelde hesaplanıyor";updateTopics();updateLocalAgent(trace.summary);loading=false;
+    setTimeout(()=>rerankVisibleFeed(),420);
+    setTimeout(()=>showRankingNotice(trace.movedCount),780);
+  }catch(error){console.warn("Jury demo unavailable",error);showRankingNotice(0);document.getElementById("ranking-notice").textContent="Demo şu an başlatılamadı. Lütfen yeniden dene.";}
+  finally{controls.forEach(control=>{control.removeAttribute("aria-busy");if("disabled" in control)control.disabled=false;});}
 }
 document.getElementById("yenile-buton").addEventListener("click",firstLoad);
 async function eraseLocalProfile(){
@@ -228,12 +244,13 @@ document.getElementById("story-close").addEventListener("click",closeStory);docu
 const intervention=document.createElement("aside");intervention.id="balance-intervention";intervention.hidden=true;intervention.innerHTML='<span>✦ AKIŞ DENGESİ</span><h2>Akış biraz yoğunlaştı.</h2><p>Benzer yoğun içeriklerde daha uzun kaldığını fark ettik. İstersen akışına daha çeşitli postlar ekleyelim.</p><div><button id="balance-feed" type="button">Akışı dengele</button><button id="dismiss-intervention" type="button">Boşver</button></div>';document.body.appendChild(intervention);
 const rankingNotice=document.createElement("div");rankingNotice.id="ranking-notice";rankingNotice.className="ranking-notice";rankingNotice.setAttribute("role","status");rankingNotice.setAttribute("aria-live","polite");document.body.appendChild(rankingNotice);
 if(localAgent){const privacyButton=document.createElement("button");privacyButton.id="local-privacy-button";privacyButton.type="button";privacyButton.textContent="✦ Bu cihazda kişiselleştiriliyor";privacyButton.title="Yerel kişiselleştirme ayrıntıları";privacyButton.addEventListener("click",()=>openSheet());document.querySelector("#flow-status>div").appendChild(privacyButton);const localStyle=document.createElement("style");localStyle.textContent='.flow-status .local-privacy-button{display:block;width:auto;height:auto;border:0;background:transparent;color:#5d7350;font-size:10px;font-weight:800;line-height:1.25;padding:4px 0 0;text-decoration:underline;text-underline-offset:3px}.flow-status .local-privacy-button:focus-visible{outline:2px solid #719740;outline-offset:3px;border-radius:3px}';document.head.appendChild(localStyle);}
-const demoButton=document.createElement("button");demoButton.type="button";demoButton.className="demo-scenario";demoButton.textContent="Demo akışını göster";demoButton.setAttribute("aria-label","Duygu katmanı demo akışını göster");demoButton.title="Demo akışını göster";document.querySelector("#flow-status>div").appendChild(demoButton);
-if(localAgent)demoButton.addEventListener("click",async event=>{event.stopImmediatePropagation();demoButton.disabled=true;try{const allPosts=[...postCache.values()],negative=allPosts.filter(post=>Number(post.duygu)<-.15),posts=(negative.length?negative:allPosts).slice(0,10);for(let index=0;index<10;index+=1)await localAgent.recordInteraction({post:posts[index%Math.max(posts.length,1)],dwell:7.5,click:true,rocket:false,comment:false,exit:false});updateLocalAgent(await localAgent.summary());await rerankVisibleFeed();}finally{demoButton.disabled=false;}},true);
+document.getElementById("jury-demo-button").addEventListener("click",startJuryDemo);
+document.getElementById("jury-demo-rail").addEventListener("click",event=>{event.preventDefault();startJuryDemo();});
 const demoStyle=document.createElement("style");demoStyle.textContent='.demo-scenario{display:block;margin-top:8px;border:0;background:transparent;color:#56674a;padding:0;font-size:10px;font-weight:800;text-decoration:underline}.balance-intervention{position:fixed;z-index:60;left:50%;bottom:84px;width:min(560px,calc(100% - 28px));transform:translateX(-50%);border-radius:26px;background:#1a2019;color:white;padding:18px 19px;box-shadow:0 20px 60px rgba(0,0,0,.26)}.balance-intervention[hidden]{display:none}.balance-intervention>span{color:#c9ff62;font-size:9px;font-weight:850;letter-spacing:.1em}.balance-intervention h2{margin:7px 0 5px;font-size:19px}.balance-intervention p{margin:0;color:#c9d1c5;font-size:12px;line-height:1.45}.balance-intervention div{display:flex;gap:8px;margin-top:15px}.balance-intervention button{border:0;border-radius:999px;padding:9px 12px;font-size:11px;font-weight:800}.balance-intervention #balance-feed{background:#c9ff62;color:#121314}.balance-intervention #dismiss-intervention{background:transparent;color:white}.ranking-notice{position:fixed;z-index:70;left:50%;bottom:92px;width:min(560px,calc(100% - 28px));transform:translate(-50%,18px);opacity:0;pointer-events:none;border-radius:16px;background:#1a2019;color:#fff;padding:12px 15px;box-shadow:0 16px 40px rgba(0,0,0,.2);font-size:11px;font-weight:750;line-height:1.35;transition:opacity .2s,transform .2s}.ranking-notice.show{opacity:1;transform:translate(-50%,0)}@media(min-width:681px){.ranking-notice{bottom:24px;left:calc(50% + 110px)}}@media(prefers-reduced-motion:reduce){.ranking-notice{transition:none}}';document.head.appendChild(demoStyle);
-const demoCompactStyle=document.createElement("style");demoCompactStyle.textContent='.flow-status .demo-scenario{position:absolute;right:42px;top:13px;display:grid;place-items:center;width:27px;height:27px;margin:0;border-radius:50%;background:rgba(255,255,255,.75);font-size:0;text-decoration:none}.flow-status .demo-scenario::after{content:"▸";font-size:17px;line-height:1;color:#53624b}.flow-status .demo-scenario:disabled::after{content:"…";font-size:15px}';document.head.appendChild(demoCompactStyle);
 const originalUpdateStatus=updateStatus;updateStatus=function(level){originalUpdateStatus(level);};
-document.getElementById("dismiss-intervention").addEventListener("click",async()=>{intervention.hidden=true;await fetch("/api/mudahale/ertele",{method:"POST"});});document.getElementById("balance-feed").addEventListener("click",async()=>{intervention.hidden=true;await firstLoad();});demoButton.addEventListener("click",async()=>{demoButton.disabled=true;demoButton.textContent="Hazırlanıyor…";try{const response=await fetch("/api/demo-senaryo",{method:"POST"});const data=await response.json();updateStatus(data.spiral_seviyesi);updateDuyguKatmani(data.duygu_katmani);document.getElementById("flow-current-mood").textContent="Olası anlık ritim: Yoğun · demo senaryosu";document.getElementById("desktop-current-mood").textContent="Olası anlık ritim: Yoğun · demo senaryosu";}finally{demoButton.disabled=false;demoButton.textContent="Demo akışını göster";}});
+document.getElementById("dismiss-intervention").addEventListener("click",async()=>{intervention.hidden=true;await fetch("/api/mudahale/ertele",{method:"POST"});});document.getElementById("balance-feed").addEventListener("click",async()=>{intervention.hidden=true;await firstLoad();});
 setupStories();
 if(localAgent){document.getElementById("sifirla-buton").textContent="Yerel verileri sil";document.querySelector(".flow-eyebrow").textContent="DUYGU KATMANI · YEREL";localAgent.init().then(localAgent.summary).then(updateLocalAgent).catch(error=>console.warn("Local agent unavailable",error));}
 firstLoad();
+if(new URLSearchParams(location.search).has("demo"))setTimeout(startJuryDemo,550);
+if(new URLSearchParams(location.search).has("compose"))setTimeout(()=>openPanel("composer"),450);

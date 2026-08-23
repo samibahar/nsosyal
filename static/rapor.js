@@ -29,4 +29,16 @@ document.getElementById("terapist-rapor-buton").addEventListener("click",generat
 document.querySelectorAll(".range-switch button").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll(".range-switch button").forEach(item=>item.classList.toggle("active",item===button));}));
 function openLive(){document.getElementById("real-insights").scrollIntoView({behavior:"smooth",block:"start"});}
 document.getElementById("insight-detail-button").addEventListener("click",openLive);document.getElementById("gentle-detail-button").addEventListener("click",openLive);
-loadSession();loadValidation();loadNote();
+async function loadLocalDemo(){
+  const agent=window.LocalPersonalization;if(!agent)return false;
+  try{await agent.init();const trace=await agent.getDecisionTrace();if(!trace?.demo)return false;const summary=trace.summary||{};
+    document.getElementById("insight-status-title").textContent="Jüri senaryosu tamamlandı";
+    document.getElementById("insight-status-text").textContent="Hazır örnek sinyaller bu cihazda işlendi; akışın hareketini inceleyebilirsin.";
+    document.getElementById("insight-rhythm-value").textContent=`${trace.movedCount} gönderi değişti`;
+    document.getElementById("insight-rhythm-note").textContent="Aynı adaylar, yeni sıralama";
+    document.getElementById("insight-balance-value").textContent=`%${Math.round((summary.intensity||0)*100)} yoğunluk`;
+    document.getElementById("insight-balance-note").textContent="Örnek senaryo · teşhis değildir";
+    return true;
+  }catch{return false;}
+}
+(async()=>{if(await loadLocalDemo())return;loadSession();loadValidation();loadNote();})();

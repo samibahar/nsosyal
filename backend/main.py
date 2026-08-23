@@ -22,6 +22,7 @@ from motor import gonderileri_puanla, sirala, spiral_olasiligi
 from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
 from topluluk_veri import TOPLULUK_GONDERILERI
 from haber_veri import HABERLER
+from demo_paketi import DEMO_POSTS, DEMO_SCENARIO, DEMO_PROFILE_POSTS
 from sosyal_veri import SosyalDepo
 from duygu_katmani import analiz_et
 from psikolojik_durum import (
@@ -284,12 +285,42 @@ def api_haberler():
     }
 
 
+@app.get("/api/demo-paketi")
+def api_demo_paketi():
+    """A network-independent, reproducible jury scenario.
+
+    The endpoint provides public candidates and prepared *sample* inputs only.
+    The browser calculates and stores the decision trace locally.
+    """
+    posts = []
+    for post in DEMO_POSTS:
+        author = DEPO.kullanici(post["yazar"])
+        posts.append({
+            **post,
+            "yazar_bilgi": author,
+            "roket_sayisi": 0,
+            "yorum_sayisi": 0,
+            "kullanici_roketledi": False,
+            "aciklama": "Jüri demosu için hazırlanmış örnek aday içerik.",
+        })
+    return {
+        "demo_verisi": True,
+        "surum": "jury-replay-v1",
+        "not": "Gönderiler ve etkileşimler yarışma demosu için hazırlanmış örnek veridir.",
+        "gonderiler": posts,
+        "senaryo": DEMO_SCENARIO,
+    }
+
+
 @app.get("/api/kullanicilar/{kullanici_id}")
 def api_kullanici(kullanici_id: str):
     kullanici = DEPO.kullanici_ozeti(kullanici_id)
     if not kullanici:
         raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
     postlar = [g for g in GONDERILER if g.get("yazar") == kullanici_id]
+    if kullanici_id == "emiryusuf" and not postlar:
+        postlar = DEMO_PROFILE_POSTS
+        kullanici = {**kullanici, "post_count": len(postlar)}
     return {"kullanici": kullanici, "gonderiler": _sosyal_ile_zenginlestir(postlar)}
 
 

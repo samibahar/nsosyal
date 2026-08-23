@@ -2,7 +2,7 @@
 (function () {
   const DB_NAME = "nsosyal-local-agent", DB_VERSION = 1, EVENT_LIMIT = 240;
   let database;
-  const defaults = () => ({ version: 2, topicWeights: {}, postReactions: {}, newsCategoryWeights: {}, newsReactions: {}, lastCheckinAt: 0, checkins: 0 });
+  const defaults = () => ({ version: 3, topicWeights: {}, postReactions: {}, newsCategoryWeights: {}, newsReactions: {}, lastCheckinAt: 0, checkins: 0, demoTrace: null });
   function openDatabase() {
     if (database) return Promise.resolve(database);
     return new Promise((resolve, reject) => {
@@ -96,6 +96,29 @@
       return { ...post, local_skor: localScore, local_ilgi: localInterest, local_dengeleme: balancing, local_tepki_etkisi: reactionEffect };
     }).sort((a, b) => b.local_skor - a.local_skor);
   }
+  async function runDemoScenario(pack) {
+    const posts = pack?.gonderiler || pack?.posts || [], scenario = pack?.senaryo || pack?.scenario || [];
+    if (!posts.length || !scenario.length) throw new Error("Demo paketi eksik.");
+    await erase();
+    const before = await rank(posts), byId = new Map(posts.map(post => [Number(post.id), post]));
+    for (const signal of scenario) {
+      const post = byId.get(Number(signal.post_id));
+      if (!post) continue;
+      await recordInteraction({ post, dwell: Number(signal.dwell || 0), click: !!signal.click, rocket: false, comment: false, exit: false });
+      if (signal.reaction) await recordPostReaction(post, signal.reaction);
+    }
+    const after = await rank(posts), report = await summary(), beforeIndex = new Map(before.map((post, index) => [Number(post.id), index + 1]));
+    const compact = post => ({ id: post.id, metin: post.metin, konu: post.konu, duygu: safeTone(post.duygu), yazar: post.yazar, yazar_bilgi: post.yazar_bilgi });
+    const trace = {
+      version: pack.surum || pack.version || "jury-replay-v1", createdAt: Date.now(), demo: true,
+      candidates: posts.map(compact), signals: scenario.map(signal => ({ ...signal })), summary: report,
+      before: before.map((post, index) => ({ id: post.id, position: index + 1, score: post.local_skor })),
+      after: after.map((post, index) => ({ id: post.id, position: index + 1, score: post.local_skor, interest: post.local_ilgi, balancing: post.local_dengeleme, reactionEffect: post.local_tepki_etkisi })),
+      movedCount: after.filter((post, index) => beforeIndex.get(Number(post.id)) !== index + 1).length,
+    };
+    const state = await getState(); state.demoTrace = trace; await setState(state); return trace;
+  }
+  async function getDecisionTrace() { return (await getState()).demoTrace || null; }
   async function erase() { const db = await openDatabase(); await new Promise((resolve, reject) => { const tx = db.transaction(["events", "state"], "readwrite"); tx.objectStore("events").clear(); tx.objectStore("state").clear(); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); return summary(); }
-  window.LocalPersonalization = { init: openDatabase, recordInteraction, recordCheckin, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, rankNews, erase };
+  window.LocalPersonalization = { init: openDatabase, recordInteraction, recordCheckin, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, rankNews, runDemoScenario, getDecisionTrace, erase };
 })();
