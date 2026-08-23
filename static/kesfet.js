@@ -3,6 +3,7 @@ let posts=[];let activeTopic="all";let query="";let exploreReactions={};
 const grid=document.getElementById("explore-grid");
 const safe=value=>{const node=document.createElement("div");node.textContent=value;return node.innerHTML;};
 const exploreReactionOptions=[["begendim","👍","Beğendim"],["umutlandim","✨","Umutlandım"],["dusundum","🤔","Düşündüm"],["kizdim","😠","Kızdım"],["gerildim","😣","Gerildim"]];
+const exploreReactionLabels=Object.fromEntries(exploreReactionOptions.map(([key,emoji,label])=>[key,`${emoji} ${label}`]));
 const exploreReactionTray=document.createElement("div");exploreReactionTray.className="explore-reaction-tray";exploreReactionTray.setAttribute("role","group");exploreReactionTray.setAttribute("aria-label","Bu gönderi sana nasıl hissettirdi?");document.body.appendChild(exploreReactionTray);
 let activeExploreReaction=null;
 function closeExploreReaction(){if(!activeExploreReaction)return;activeExploreReaction.trigger.setAttribute("aria-expanded","false");activeExploreReaction=null;exploreReactionTray.classList.remove("open");exploreReactionTray.replaceChildren();}
