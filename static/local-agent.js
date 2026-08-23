@@ -78,8 +78,23 @@
     }).sort((a, b) => b.local_news_score - a.local_news_score);
   }
   async function rank(posts) {
-    const state = await getState(), report = calculate(await getEvents(), state), maxWeight = Math.max(.25, ...Object.values(state.topicWeights || {}).map(Number)), seenTopics = {};
-    return posts.map((post, index) => { const localInterest = Number(state.topicWeights[post.konu] || 0) / maxWeight, tone = safeTone(post.duygu), balancing = report.enoughData && report.intensity > .28 && tone < -.15 ? Math.abs(tone) * report.intensity * .38 : 0, diversity = seenTopics[post.konu] ? -.045 * seenTopics[post.konu] : .07; seenTopics[post.konu] = (seenTopics[post.konu] || 0) + 1; const base = Number(post.ilgi_skoru || post.final_skor || .5), localScore = base * .48 + localInterest * .34 + diversity - balancing - index * .0005; return { ...post, local_skor: localScore, local_ilgi: localInterest, local_dengeleme: balancing }; }).sort((a, b) => b.local_skor - a.local_skor);
+    const state = await getState(), events = await getEvents(), report = calculate(events, state), maxWeight = Math.max(.25, ...Object.values(state.topicWeights || {}).map(Number)), seenTopics = {};
+    // A voluntary reaction is a short-lived, explainable input. It never removes content;
+    // it only adjusts order within the user's current feed on this device.
+    const latestReaction = [...events].reverse().find(event => event.type === "post_reaction" && Date.now() - event.createdAt < 60 * 60 * 1000);
+    const positiveReaction = ["begendim", "umutlandim", "dusundum"].includes(latestReaction?.reaction);
+    const intenseReaction = ["kizdim", "gerildim"].includes(latestReaction?.reaction);
+    return posts.map((post, index) => {
+      const localInterest = Number(state.topicWeights[post.konu] || 0) / maxWeight, tone = safeTone(post.duygu);
+      const balancing = report.enoughData && report.intensity > .28 && tone < -.15 ? Math.abs(tone) * report.intensity * .62 : 0;
+      const reactionEffect = latestReaction?.topic === post.konu
+        ? (positiveReaction ? .20 : intenseReaction && tone < -.15 ? -.28 : 0)
+        : 0;
+      const diversity = seenTopics[post.konu] ? -.045 * seenTopics[post.konu] : .07;
+      seenTopics[post.konu] = (seenTopics[post.konu] || 0) + 1;
+      const base = Number(post.ilgi_skoru || post.final_skor || .5), localScore = base * .48 + localInterest * .34 + diversity - balancing + reactionEffect - index * .0005;
+      return { ...post, local_skor: localScore, local_ilgi: localInterest, local_dengeleme: balancing, local_tepki_etkisi: reactionEffect };
+    }).sort((a, b) => b.local_skor - a.local_skor);
   }
   async function erase() { const db = await openDatabase(); await new Promise((resolve, reject) => { const tx = db.transaction(["events", "state"], "readwrite"); tx.objectStore("events").clear(); tx.objectStore("state").clear(); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); return summary(); }
   window.LocalPersonalization = { init: openDatabase, recordInteraction, recordCheckin, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, rankNews, erase };

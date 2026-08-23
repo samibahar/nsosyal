@@ -76,10 +76,12 @@ bağlayabilirsiniz. Claude Code bu adımlarda da yardımcı olabilir.
 
 ## Yerel kişiselleştirme demosu
 
-Ana akıştaki **Duygu Katmanı · Yerel** modu, yarışma demosu için tarayıcıda çalışan küçük ve açıklanabilir bir çevrim içi sıralayıcıdır. Sunucu yalnızca herkese açık aday postları gönderir. Durma süresi, tıklama, roket ve yorum sinyalleri `/api/etkilesim` uç noktasına gönderilmez; aynı origin'deki tarayıcı IndexedDB alanında tutulur ve bir sonraki akışı cihaz üzerinde sıralamak için kullanılır.
+Ana akıştaki **Duygu Katmanı · Yerel** modu, yarışma demosu için tarayıcıda çalışan küçük ve açıklanabilir bir çevrim içi sıralayıcıdır. Sunucu yalnızca herkese açık aday postları gönderir. Durma süresi, tıklama, yorum ve gönüllü tepki sinyalleri `/api/etkilesim` uç noktasına gönderilmez; aynı origin'deki tarayıcı IndexedDB alanında tutulur ve akışı cihaz üzerinde sıralamak için kullanılır.
 
 - İlgi ağırlıkları, etkileşimlerden artımlı olarak güncellenir.
 - Tekrarlayan yoğun içerikte uzun kalma, postları silmeden çeşitlilik ağırlığını artırır.
+- Bir tepki seçildiğinde görünür kartlar yeniden puanlanır ve yer değişimi animasyonla gösterilir. `✦ Akış güncellendi` bildirimi hareket eden kart sayısını açıklar; “Neden bu?” sayfasında ilgi, dengeleme, açık tepki etkisi ve nihai puan görülebilir.
+- `Demo akışını göster`, aynı yerel verilerle tekrarlanabilir bir yoğun-akış senaryosu çalıştırır; jüri için kartların canlı olarak yeniden sıralanmasını gösterir.
 - `✦ Bu cihazda kişiselleştiriliyor` bağlantısı kullanılan sinyal sayısını, güveni ve sıralama bileşenlerini gösterir.
 - `Yerel verileri sil` hem olay günlüğünü hem de öğrenilmiş profili bu tarayıcıdan kaldırır.
 
