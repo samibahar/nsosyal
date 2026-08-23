@@ -74,6 +74,17 @@ git commit -m "İlk commit: proje bağlamı + kanıt-of-konsept spike"
 Sonra GitHub'da boş bir repo oluşturup `git remote add origin <repo-url>` ile
 bağlayabilirsiniz. Claude Code bu adımlarda da yardımcı olabilir.
 
+## Yerel kişiselleştirme demosu
+
+Ana akıştaki **Duygu Katmanı · Yerel** modu, yarışma demosu için tarayıcıda çalışan küçük ve açıklanabilir bir çevrim içi sıralayıcıdır. Sunucu yalnızca herkese açık aday postları gönderir. Durma süresi, tıklama, roket ve yorum sinyalleri `/api/etkilesim` uç noktasına gönderilmez; aynı origin'deki tarayıcı IndexedDB alanında tutulur ve bir sonraki akışı cihaz üzerinde sıralamak için kullanılır.
+
+- İlgi ağırlıkları, etkileşimlerden artımlı olarak güncellenir.
+- Tekrarlayan yoğun içerikte uzun kalma, postları silmeden çeşitlilik ağırlığını artırır.
+- `✦ Bu cihazda kişiselleştiriliyor` bağlantısı kullanılan sinyal sayısını, güveni ve sıralama bileşenlerini gösterir.
+- `Yerel verileri sil` hem olay günlüğünü hem de öğrenilmiş profili bu tarayıcıdan kaldırır.
+
+Bu sistem klinik çıkarım veya duygu teşhisi yapmaz. “Olası anlık ritim” ifadesi yalnızca kullanıcı tarafından doğrulanmamış bir akış örüntüsü özetidir. Yerel mod, sosyal eylemleri (ör. kullanıcının açıkça gönderdiği yorum veya roket) gizlemez; yalnızca ham davranışsal telemetriyi cihazda tutar.
+
 ## Cowork ile iş bölümü (önerilen kullanım şekli)
 
 - **Cowork (burada):** Rapor metni, PDF üretimi, araştırma, plan güncellemeleri,

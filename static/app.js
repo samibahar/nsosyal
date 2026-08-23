@@ -5,6 +5,9 @@ const visibleSince = new Map();
 let currentSpiral = 0;
 let loading = false;
 let exhausted = false;
+const postCache = new Map();
+const localAgent = window.LocalPersonalization;
+let localSummary = { eventCount: 0, enoughData: false, intensity: 0, currentMood: null, confidence: 0 };
 
 const TOPICS = {
   spor:{name:"Spor",author:"Ekin Spor",handle:"@ekinsporu",glyph:"⚽",bg:"linear-gradient(145deg,#8bb861,#3d7250)",shape:"#2f6948",pill:"#e9f6d7",ink:"#5d8d3a"},
@@ -52,11 +55,22 @@ function updateTopics(){
   const list=document.getElementById("konu-sayaclari"); const rows=Object.entries(topicCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   list.innerHTML=rows.length?rows.map(([key,count])=>`<div class="topic-row"><b>${escapeText(topicFor(key).name)}</b><span>${count} gönderi</span></div>`).join(""):'<span class="topic-loading">Akış yükleniyor…</span>';
 }
+function updateLocalAgent(summary){
+  localSummary=summary;
+  const title=document.getElementById("flow-status-title"),text=document.getElementById("flow-status-text"),desktopTitle=document.getElementById("desktop-status-title"),desktopText=document.getElementById("desktop-status-text");
+  if(!summary.enoughData){title.textContent="Bu cihazda öğreniyor";text.textContent=`${summary.eventCount}/10 anlamlı etkileşim · ham davranış verisi cihazında kalır`;desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;updateMood(null);return;}
+  updateStatus(summary.intensity);
+  const mood=`Olası anlık ritim: ${summary.currentMood} · kullanıcı tarafından doğrulanmadı`;
+  document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;
+}
 function incrementTopic(topic){topicCounts[topic]=(topicCounts[topic]||0)+1;}
 function resetTopics(){Object.keys(topicCounts).forEach(key=>delete topicCounts[key]);}
 
 async function sendInteraction(id,dwell,click=false,rocket=false,comment=false,exit=false){
   if(dwell<=0)return;
+  if(localAgent){
+    try{const data=await localAgent.recordInteraction({post:postCache.get(id),dwell,click,rocket,comment,exit});updateLocalAgent(data);if(data.shouldCheckin)showCheckin();}catch(error){console.warn("Local interaction could not be recorded",error);}return;
+  }
   try{
     const res=await fetch("/api/etkilesim",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({gonderi_id:id,dwell_saniye:dwell,tiklama:click,roket:rocket,yorum:comment,cikis:exit})});
     const data=await res.json(); updateStatus(data.spiral_seviyesi); updateMood(data.psikolojik_durum); updateDuyguKatmani(data.duygu_katmani); if(data.onay_sorulsun_mu)showCheckin();
@@ -70,7 +84,22 @@ const dwellObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
 }),{threshold:.6});
 
 function scoreBox(label,value){return `<div class="score-box"><small>${label}</small><b>${value}</b></div>`;}
+function openLocalSheet(post){
+  const sheet=document.getElementById("explanation-sheet"),summary=document.getElementById("sheet-summary"),scores=document.getElementById("sheet-score-grid"),technical=document.getElementById("technical-details-content");
+  if(post){
+    summary.textContent="Bu post, cihazındaki ilgi profili ve akış çeşitliliği sinyalleriyle yerelde sıralandı.";
+    scores.innerHTML=scoreBox("İlgi eşleşmesi",`${Math.round((post.local_ilgi||0)*100)}%`)+scoreBox("Akış ayarı",post.local_dengeleme?`−${Math.round(post.local_dengeleme*100)} puan`:"Yok")+scoreBox("Yerel sonuç",`${Math.round((post.local_skor||0)*100)}%`);
+    technical.innerHTML=`<p><b>Yerel çevrim içi sıralama</b><br>İlgi ağırlığı: <b>${(post.local_ilgi||0).toFixed(2)}</b><br>Akış dengeleme: <b>${(post.local_dengeleme||0).toFixed(2)}</b><br>Yerel sıralama skoru: <b>${(post.local_skor||0).toFixed(2)}</b><br><br>Ham tıklama ve durma süresi bu hesap için sunucuya gönderilmez.</p>`;
+  }else{
+    summary.textContent="Kişiselleştirme profili ve ham etkileşim geçmişi bu tarayıcının IndexedDB alanında tutulur. Sunucu yalnızca herkese açık aday postları sağlar.";
+    scores.innerHTML=scoreBox("Yerel sinyal",`${localSummary.eventCount} etkileşim`)+scoreBox("Güven",`${Math.round((localSummary.confidence||0)*100)}%`)+scoreBox("Kontrol","Sende");
+    technical.innerHTML=`<p><b>Yerel çevrim içi öğrenme</b><br>Tercih profili: <b>${localSummary.preferredTopic||"henüz oluşmadı"}</b><br>Akış yoğunluğu: <b>${Math.round((localSummary.intensity||0)*100)}%</b><br><br><button type="button" id="erase-local-profile" class="text-button">Yerel verileri sil</button></p>`;
+  }
+  sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");
+  setTimeout(()=>{const erase=document.getElementById("erase-local-profile");if(erase)erase.addEventListener("click",eraseLocalProfile);},0);
+}
 function openSheet(post=null){
+  if(localAgent){openLocalSheet(post);return;}
   const sheet=document.getElementById("explanation-sheet"); const summary=document.getElementById("sheet-summary"); const scores=document.getElementById("sheet-score-grid"); const technical=document.getElementById("technical-details-content");
   if(post){
     summary.textContent=post.aciklama;
@@ -88,6 +117,7 @@ document.getElementById("sheet-close").addEventListener("click",closeSheet);
 document.getElementById("explanation-sheet").addEventListener("click",event=>{if(event.target.id==="explanation-sheet")closeSheet();});
 
 function createCard(post){
+  postCache.set(post.id,post);
   const topic=topicFor(post.konu);incrementTopic(post.konu);
   const author=post.yazar_bilgi?{id:post.yazar_bilgi.id,name:post.yazar_bilgi.name,handle:post.yazar_bilgi.handle,initials:post.yazar_bilgi.initials,color:post.yazar_bilgi.color}:authorForPost(post);
   const card=document.createElement("article");card.className="post-card"+(post.refah_cezasi>0?" yumusatildi":"");card.dataset.id=post.id;
@@ -108,7 +138,7 @@ function createCard(post){
 
 const sentinel=document.createElement("div");sentinel.className="loading-state";sentinel.id="feed-sentinel";
 const pageObserver=new IntersectionObserver(entries=>{if(entries[0].isIntersecting)loadMore();},{rootMargin:"420px"});
-async function getPage(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();updateStatus(data.spiral_seviyesi);exhausted=data.tukendi;return data.gonderiler;}
+async function getPage(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();if(!localAgent)updateStatus(data.spiral_seviyesi);exhausted=data.tukendi;return localAgent?await localAgent.rank(data.gonderiler):data.gonderiler;}
 async function firstLoad(){
   loading=true;exhausted=false;feed.innerHTML="";resetTopics();const posts=await getPage(true);
   if(!posts.length){feed.innerHTML='<div class="loading-state">Gösterilecek gönderi yok.</div>';loading=false;return;}
@@ -116,11 +146,15 @@ async function firstLoad(){
 }
 async function loadMore(){if(loading||exhausted)return;loading=true;sentinel.textContent="Yeni gönderiler hazırlanıyor…";const posts=await getPage(false);posts.forEach(post=>feed.insertBefore(createCard(post),sentinel));sentinel.textContent=exhausted?"Akışın sonuna geldin.":"";if(exhausted)pageObserver.unobserve(sentinel);updateTopics();loading=false;}
 document.getElementById("yenile-buton").addEventListener("click",firstLoad);
-document.getElementById("sifirla-buton").addEventListener("click",async()=>{await fetch("/api/sifirla",{method:"POST"});closeSheet();firstLoad();});
+async function eraseLocalProfile(){
+  if(localAgent){const data=await localAgent.erase();updateLocalAgent(data);closeSheet();await firstLoad();return;}
+  await fetch("/api/sifirla",{method:"POST"});closeSheet();firstLoad();
+}
+document.getElementById("sifirla-buton").addEventListener("click",eraseLocalProfile);
 function showCheckin(){const until=Number(sessionStorage.getItem("nsosyal-checkin-snooze-until")||0);if(Date.now()<until)return;document.getElementById("dogrulama-karti").classList.remove("gizli");}
 function hideCheckin(){document.getElementById("dogrulama-karti").classList.add("gizli");}
 document.getElementById("dogrulama-gec-buton").addEventListener("click",()=>{sessionStorage.setItem("nsosyal-checkin-snooze-until",String(Date.now()+20*60*1000));hideCheckin();});
-document.querySelectorAll(".dogrulama-secenek").forEach(button=>button.addEventListener("click",async()=>{hideCheckin();await fetch("/api/dogrulama",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kullanici_cevabi:button.dataset.kategori})});}));
+document.querySelectorAll(".dogrulama-secenek").forEach(button=>button.addEventListener("click",async()=>{hideCheckin();if(localAgent){updateLocalAgent(await localAgent.recordCheckin(button.dataset.kategori));return;}await fetch("/api/dogrulama",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kullanici_cevabi:button.dataset.kategori})});}));
 
 // Navigation sheets and composer keep the social app controls usable without
 // changing the ranking/interaction API used by the feed.
@@ -154,10 +188,13 @@ function closeStory(){const viewer=document.getElementById("story-viewer");viewe
 async function setupStories(){try{stories=(await (await fetch("/api/hikayeler")).json()).hikayeler||[];document.querySelectorAll(".story[data-user]").forEach(button=>button.addEventListener("click",event=>{event.preventDefault();event.stopImmediatePropagation();const index=stories.findIndex(story=>story.user_id===button.dataset.user);if(index>=0)openStory(index);},true));}catch{}}
 document.getElementById("story-close").addEventListener("click",closeStory);document.getElementById("story-previous").addEventListener("click",()=>openStory(Math.max(0,activeStoryIndex-1)));document.getElementById("story-next").addEventListener("click",()=>activeStoryIndex>=stories.length-1?closeStory():openStory(activeStoryIndex+1));document.getElementById("story-viewer").addEventListener("click",event=>{if(event.target.id==="story-viewer")closeStory();});
 const intervention=document.createElement("aside");intervention.id="balance-intervention";intervention.hidden=true;intervention.innerHTML='<span>✦ AKIŞ DENGESİ</span><h2>Akış biraz yoğunlaştı.</h2><p>Benzer yoğun içeriklerde daha uzun kaldığını fark ettik. İstersen akışına daha çeşitli postlar ekleyelim.</p><div><button id="balance-feed" type="button">Akışı dengele</button><button id="dismiss-intervention" type="button">Boşver</button></div>';document.body.appendChild(intervention);
+if(localAgent){const privacyButton=document.createElement("button");privacyButton.id="local-privacy-button";privacyButton.type="button";privacyButton.textContent="✦ Bu cihazda kişiselleştiriliyor";privacyButton.title="Yerel kişiselleştirme ayrıntıları";privacyButton.addEventListener("click",()=>openSheet());document.querySelector("#flow-status>div").appendChild(privacyButton);const localStyle=document.createElement("style");localStyle.textContent='.flow-status .local-privacy-button{display:block;width:auto;height:auto;border:0;background:transparent;color:#5d7350;font-size:10px;font-weight:800;line-height:1.25;padding:4px 0 0;text-decoration:underline;text-underline-offset:3px}.flow-status .local-privacy-button:focus-visible{outline:2px solid #719740;outline-offset:3px;border-radius:3px}';document.head.appendChild(localStyle);}
 const demoButton=document.createElement("button");demoButton.type="button";demoButton.className="demo-scenario";demoButton.textContent="Demo akışını göster";demoButton.setAttribute("aria-label","Duygu katmanı demo akışını göster");demoButton.title="Demo akışını göster";document.querySelector("#flow-status>div").appendChild(demoButton);
+if(localAgent)demoButton.addEventListener("click",async event=>{event.stopImmediatePropagation();demoButton.disabled=true;try{const allPosts=[...postCache.values()],negative=allPosts.filter(post=>Number(post.duygu)<-.15),posts=(negative.length?negative:allPosts).slice(0,10);for(let index=0;index<10;index+=1)await localAgent.recordInteraction({post:posts[index%Math.max(posts.length,1)],dwell:7.5,click:true,rocket:false,comment:false,exit:false});updateLocalAgent(await localAgent.summary());await firstLoad();}finally{demoButton.disabled=false;}},true);
 const demoStyle=document.createElement("style");demoStyle.textContent='.demo-scenario{display:block;margin-top:8px;border:0;background:transparent;color:#56674a;padding:0;font-size:10px;font-weight:800;text-decoration:underline}.balance-intervention{position:fixed;z-index:60;left:50%;bottom:84px;width:min(560px,calc(100% - 28px));transform:translateX(-50%);border-radius:26px;background:#1a2019;color:white;padding:18px 19px;box-shadow:0 20px 60px rgba(0,0,0,.26)}.balance-intervention[hidden]{display:none}.balance-intervention>span{color:#c9ff62;font-size:9px;font-weight:850;letter-spacing:.1em}.balance-intervention h2{margin:7px 0 5px;font-size:19px}.balance-intervention p{margin:0;color:#c9d1c5;font-size:12px;line-height:1.45}.balance-intervention div{display:flex;gap:8px;margin-top:15px}.balance-intervention button{border:0;border-radius:999px;padding:9px 12px;font-size:11px;font-weight:800}.balance-intervention #balance-feed{background:#c9ff62;color:#121314}.balance-intervention #dismiss-intervention{background:transparent;color:white}';document.head.appendChild(demoStyle);
 const demoCompactStyle=document.createElement("style");demoCompactStyle.textContent='.flow-status .demo-scenario{position:absolute;right:42px;top:13px;display:grid;place-items:center;width:27px;height:27px;margin:0;border-radius:50%;background:rgba(255,255,255,.75);font-size:0;text-decoration:none}.flow-status .demo-scenario::after{content:"▸";font-size:17px;line-height:1;color:#53624b}.flow-status .demo-scenario:disabled::after{content:"…";font-size:15px}';document.head.appendChild(demoCompactStyle);
 const originalUpdateStatus=updateStatus;updateStatus=function(level){originalUpdateStatus(level);};
 document.getElementById("dismiss-intervention").addEventListener("click",async()=>{intervention.hidden=true;await fetch("/api/mudahale/ertele",{method:"POST"});});document.getElementById("balance-feed").addEventListener("click",async()=>{intervention.hidden=true;await firstLoad();});demoButton.addEventListener("click",async()=>{demoButton.disabled=true;demoButton.textContent="Hazırlanıyor…";try{const response=await fetch("/api/demo-senaryo",{method:"POST"});const data=await response.json();updateStatus(data.spiral_seviyesi);updateDuyguKatmani(data.duygu_katmani);document.getElementById("flow-current-mood").textContent="Olası anlık ritim: Yoğun · demo senaryosu";document.getElementById("desktop-current-mood").textContent="Olası anlık ritim: Yoğun · demo senaryosu";}finally{demoButton.disabled=false;demoButton.textContent="Demo akışını göster";}});
 setupStories();
+if(localAgent){document.getElementById("sifirla-buton").textContent="Yerel verileri sil";document.querySelector(".flow-eyebrow").textContent="DUYGU KATMANI · YEREL";localAgent.init().then(localAgent.summary).then(updateLocalAgent).catch(error=>console.warn("Local agent unavailable",error));}
 firstLoad();
