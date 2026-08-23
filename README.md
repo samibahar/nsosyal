@@ -85,6 +85,12 @@ Ana akıştaki **Duygu Katmanı · Yerel** modu, yarışma demosu için tarayıc
 
 Bu sistem klinik çıkarım veya duygu teşhisi yapmaz. “Olası anlık ritim” ifadesi yalnızca kullanıcı tarafından doğrulanmamış bir akış örüntüsü özetidir. Yerel mod, sosyal eylemleri (ör. kullanıcının açıkça gönderdiği yorum veya roket) gizlemez; yalnızca ham davranışsal telemetriyi cihazda tutar.
 
+## Haberler ve özel tepki çarkı
+
+`/haberler.html`, aynı gelişmeyi iki ayrı örnek kaynaktan eşleyen deterministik bir yarışma demosudur. Haber adayları sunucudan gelir; kategori ilgisi, sıralama ve beşli tepki çarkı (`Beğendim`, `Umutlandım`, `Düşündüm`, `Kızdım`, `Gerildim`) tarayıcıdaki yerel ajan tarafından işlenir. Aynı özel tepki çarkı normal ana akış gönderilerinde de bulunur; tepki cihazda kalır ve “mevcut ritim” alanında kullanıcı tarafından belirtilmiş geri bildirim olarak gösterilir.
+
+Kullanıcı `Kızdım` veya `Gerildim` tepkisini açıkça seçerse arayüz aynı olayın çözüm, bağlam veya ilerleme bilgisini öne çıkaran diğer kaynağını teklif eder. Temel olgular korunur, alternatif açıkça etiketlenir ve ilk haber saklanmaz. Bu tepki bir duygu tahmini veya teşhis değildir; kullanıcının gönüllü bildirimidir. Haber ve kaynak adları canlı haber değil, bağlantı gerektirmeyen demo/örnek veridir.
+
 ## Cowork ile iş bölümü (önerilen kullanım şekli)
 
 - **Cowork (burada):** Rapor metni, PDF üretimi, araştırma, plan güncellemeleri,

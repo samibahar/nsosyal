@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from motor import gonderileri_puanla, sirala, spiral_olasiligi
 from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
 from topluluk_veri import TOPLULUK_GONDERILERI
+from haber_veri import HABERLER
 from sosyal_veri import SosyalDepo
 from duygu_katmani import analiz_et
 from psikolojik_durum import (
@@ -266,6 +267,21 @@ def api_gonderi_olustur(yeni: YeniGonderi):
 def api_kesfet():
     """Ana akış sayfalamasından bağımsız, görsel keşfet görünümü için tüm demo içeriği."""
     return {"gonderiler": _sosyal_ile_zenginlestir(list(GONDERILER))}
+
+
+@app.get("/api/haberler")
+def api_haberler():
+    """Yerel sıralayıcı için kamuya açık, deterministik haber aday havuzu.
+
+    Duygusal tepki veya okuma davranışı bu uç noktaya gönderilmez. İstemci,
+    birincil kartları cihaz içinde sıralar ve gerekirse aynı olayın açıkça
+    etiketlenmiş alternatif kaynak görünümünü sunar.
+    """
+    return {
+        "haberler": HABERLER,
+        "demo_verisi": True,
+        "not": "İçerikler prototip için hazırlanmış örnek haberlerdir.",
+    }
 
 
 @app.get("/api/kullanicilar/{kullanici_id}")

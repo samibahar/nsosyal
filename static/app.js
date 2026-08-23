@@ -8,6 +8,9 @@ let exhausted = false;
 const postCache = new Map();
 const localAgent = window.LocalPersonalization;
 let localSummary = { eventCount: 0, enoughData: false, intensity: 0, currentMood: null, confidence: 0 };
+let localPostReactions = {};
+const POST_REACTIONS = [["begendim","👍","Beğendim"],["umutlandim","🌤️","Umutlandım"],["dusundum","🤔","Düşündüm"],["kizdim","😠","Kızdım"],["gerildim","😟","Gerildim"]];
+const POST_REACTION_LABELS = Object.fromEntries(POST_REACTIONS.map(([key,emoji,label])=>[key,`${emoji} ${label}`]));
 
 const TOPICS = {
   spor:{name:"Spor",author:"Ekin Spor",handle:"@ekinsporu",glyph:"⚽",bg:"linear-gradient(145deg,#8bb861,#3d7250)",shape:"#2f6948",pill:"#e9f6d7",ink:"#5d8d3a"},
@@ -58,9 +61,9 @@ function updateTopics(){
 function updateLocalAgent(summary){
   localSummary=summary;
   const title=document.getElementById("flow-status-title"),text=document.getElementById("flow-status-text"),desktopTitle=document.getElementById("desktop-status-title"),desktopText=document.getElementById("desktop-status-text");
-  if(!summary.enoughData){title.textContent="Bu cihazda öğreniyor";text.textContent=`${summary.eventCount}/10 anlamlı etkileşim · ham davranış verisi cihazında kalır`;desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;updateMood(null);return;}
+  if(!summary.enoughData){title.textContent="Bu cihazda öğreniyor";text.textContent=`${summary.eventCount}/10 anlamlı etkileşim · ham davranış verisi cihazında kalır`;desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;if(summary.lastExplicitReaction){const mood=`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`;document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;}else updateMood(null);return;}
   updateStatus(summary.intensity);
-  const mood=`Olası anlık ritim: ${summary.currentMood} · kullanıcı tarafından doğrulanmadı`;
+  const mood=summary.lastExplicitReaction?`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`:`Olası anlık ritim: ${summary.currentMood} · kullanıcı tarafından doğrulanmadı`;
   document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;
 }
 function incrementTopic(topic){topicCounts[topic]=(topicCounts[topic]||0)+1;}
@@ -115,13 +118,15 @@ document.getElementById("status-detail-button").addEventListener("click",()=>ope
 document.getElementById("desktop-detail-button").addEventListener("click",()=>openSheet());
 document.getElementById("sheet-close").addEventListener("click",closeSheet);
 document.getElementById("explanation-sheet").addEventListener("click",event=>{if(event.target.id==="explanation-sheet")closeSheet();});
+document.addEventListener("click",event=>{if(!event.target.closest(".post-reaction-wrap"))document.querySelectorAll(".post-reaction-wheel.open").forEach(wheel=>{wheel.classList.remove("open");wheel.closest(".post-reaction-wrap")?.querySelector(".post-reaction-trigger")?.setAttribute("aria-expanded","false");});});
 
 function createCard(post){
   postCache.set(post.id,post);
   const topic=topicFor(post.konu);incrementTopic(post.konu);
   const author=post.yazar_bilgi?{id:post.yazar_bilgi.id,name:post.yazar_bilgi.name,handle:post.yazar_bilgi.handle,initials:post.yazar_bilgi.initials,color:post.yazar_bilgi.color}:authorForPost(post);
   const card=document.createElement("article");card.className="post-card"+(post.refah_cezasi>0?" yumusatildi":"");card.dataset.id=post.id;
-  card.innerHTML=`<div class="post-body"><div class="post-meta"><span class="avatar" style="background:${topic.bg}">${topic.glyph}</span><div><div class="author">${escapeText(topic.author)}</div><div class="handle">${escapeText(topic.handle)} · şimdi</div></div><button class="post-menu" aria-label="Gönderi seçenekleri">•••</button></div><p class="post-text"></p></div><div class="post-visual" style="--visual-bg:${topic.bg};--visual-shape:${topic.shape}"><span class="visual-glyph">${topic.glyph}</span><span class="visual-caption">${escapeText(topic.name)} · Senin için seçildi</span></div><div class="post-actions"><div class="action-group"><button class="action-button rocket" type="button" aria-label="Roket">↗ <span>Roket</span></button><button class="action-button comment" type="button" aria-label="Yorum">◌ <span>Yorum</span></button></div>${post.refah_cezasi>0?'<span class="softened-pill">✦ dengelendi</span>':'<button class="why-button" type="button">✦ Neden bu?</button>'}</div>`;
+  const selectedReaction=localPostReactions[post.id];
+  card.innerHTML=`<div class="post-body"><div class="post-meta"><span class="avatar" style="background:${topic.bg}">${topic.glyph}</span><div><div class="author">${escapeText(topic.author)}</div><div class="handle">${escapeText(topic.handle)} · şimdi</div></div><button class="post-menu" aria-label="Gönderi seçenekleri">•••</button></div><p class="post-text"></p></div><div class="post-visual" style="--visual-bg:${topic.bg};--visual-shape:${topic.shape}"><span class="visual-glyph">${topic.glyph}</span><span class="visual-caption">${escapeText(topic.name)} · Senin için seçildi</span></div><div class="post-actions"><div class="action-group"><button class="action-button rocket" type="button" aria-label="Roket">↗ <span>Roket</span></button><div class="post-reaction-wrap"><button class="action-button post-reaction-trigger" type="button" aria-label="Duygu tepkisi ver" aria-expanded="false"><span>${selectedReaction?POST_REACTION_LABELS[selectedReaction]:"☺ Tepki"}</span></button><div class="post-reaction-wheel" role="group" aria-label="Bu gönderi sana nasıl hissettirdi?">${POST_REACTIONS.map(([key,emoji,label])=>`<button type="button" data-post-reaction="${key}" aria-label="${label}" title="${label}" class="${selectedReaction===key?"selected":""}"><span>${emoji}</span><small>${label}</small></button>`).join("")}</div></div><button class="action-button comment" type="button" aria-label="Yorum">◌ <span>Yorum</span></button></div>${post.refah_cezasi>0?'<span class="softened-pill">✦ dengelendi</span>':'<button class="why-button" type="button">✦ Neden bu?</button>'}</div>`;
   card.querySelector(".post-text").textContent=post.metin;
   card.querySelector(".post-visual").insertAdjacentHTML("afterbegin",`<img class="post-photo" src="${postImage(post)}" alt="${escapeText(topic.name)} iÃ§eriÄŸi iÃ§in temsili gÃ¶rsel" loading="lazy">`);
   const avatar=card.querySelector(".post-meta .avatar");avatar.textContent=author.initials;avatar.style.background=author.color;avatar.classList.add("profile-trigger");avatar.title=`${author.name} profilini aç`;
@@ -133,6 +138,7 @@ function createCard(post){
   let sending=false;async function react(type,button){if(sending)return;sending=true;try{await sendInteraction(post.id,dwellFor(post.id),false,type==="rocket",type==="comment");if(type==="rocket"){const response=await fetch(`/api/gonderiler/${post.id}/roket`,{method:"POST"});const data=await response.json();button.classList.toggle("active",data.roketlendi);button.querySelector("span").textContent=`Roket ${data.roket_sayisi}`;}}finally{sending=false;}}
   card.querySelector(".rocket").addEventListener("click",event=>{event.stopPropagation();react("rocket",event.currentTarget);});
   card.querySelector(".comment").addEventListener("click",event=>{event.stopPropagation();sendInteraction(post.id,dwellFor(post.id),false,false,true);openComments(post);});
+  const reactionTrigger=card.querySelector(".post-reaction-trigger"),reactionWheel=card.querySelector(".post-reaction-wheel");reactionTrigger.addEventListener("click",event=>{event.stopPropagation();const open=reactionWheel.classList.toggle("open");reactionTrigger.setAttribute("aria-expanded",String(open));});reactionWheel.querySelectorAll("[data-post-reaction]").forEach(button=>button.addEventListener("click",async event=>{event.stopPropagation();localPostReactions[post.id]=button.dataset.postReaction;reactionTrigger.querySelector("span").textContent=POST_REACTION_LABELS[button.dataset.postReaction];reactionWheel.classList.remove("open");reactionTrigger.setAttribute("aria-expanded","false");reactionWheel.querySelectorAll("button").forEach(item=>item.classList.toggle("selected",item===button));if(localAgent)updateLocalAgent(await localAgent.recordPostReaction(post,button.dataset.postReaction));}));
   card.addEventListener("click",event=>{if(event.target.closest(".post-author-link,.profile-trigger"))return;sendInteraction(post.id,dwellFor(post.id),true);});dwellObserver.observe(card);return card;
 }
 
@@ -140,7 +146,7 @@ const sentinel=document.createElement("div");sentinel.className="loading-state";
 const pageObserver=new IntersectionObserver(entries=>{if(entries[0].isIntersecting)loadMore();},{rootMargin:"420px"});
 async function getPage(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();if(!localAgent)updateStatus(data.spiral_seviyesi);exhausted=data.tukendi;return localAgent?await localAgent.rank(data.gonderiler):data.gonderiler;}
 async function firstLoad(){
-  loading=true;exhausted=false;feed.innerHTML="";resetTopics();const posts=await getPage(true);
+  loading=true;exhausted=false;feed.innerHTML="";resetTopics();if(localAgent)localPostReactions=(await localAgent.postReactionState()).reactions;const posts=await getPage(true);
   if(!posts.length){feed.innerHTML='<div class="loading-state">Gösterilecek gönderi yok.</div>';loading=false;return;}
   posts.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.textContent="";pageObserver.observe(sentinel);updateTopics();loading=false;
 }

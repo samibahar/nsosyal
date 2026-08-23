@@ -2,7 +2,7 @@
 (function () {
   const DB_NAME = "nsosyal-local-agent", DB_VERSION = 1, EVENT_LIMIT = 240;
   let database;
-  const defaults = () => ({ version: 1, topicWeights: {}, lastCheckinAt: 0, checkins: 0 });
+  const defaults = () => ({ version: 2, topicWeights: {}, postReactions: {}, newsCategoryWeights: {}, newsReactions: {}, lastCheckinAt: 0, checkins: 0 });
   function openDatabase() {
     if (database) return Promise.resolve(database);
     return new Promise((resolve, reject) => {
@@ -22,7 +22,8 @@
     const meaningful = events.filter(event => event.type === "interaction"), recent = meaningful.slice(-12), negative = recent.filter(event => event.tone < -0.15), sustained = negative.filter(event => event.dwell >= 3.5), unique = new Set(recent.map(event => event.topic)).size;
     const intensity = clamp((recent.length ? sustained.length / recent.length : 0) * .72 + (recent.length > 3 ? 1 - unique / recent.length : 0) * .28), confidence = clamp(meaningful.length / 16), enoughData = meaningful.length >= 10;
     const preferred = Object.entries(state.topicWeights || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
-    return { mode: "local", eventCount: meaningful.length, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", repeatedNegative: sustained.length, preferredTopic: preferred, shouldCheckin: meaningful.length >= 12 && meaningful.length % 10 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
+    const latestExplicit = [...events].reverse().find(event => (event.type === "post_reaction" || event.type === "news_reaction") && Date.now() - event.createdAt < 30 * 60 * 1000);
+    return { mode: "local", eventCount: meaningful.length, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, shouldCheckin: meaningful.length >= 12 && meaningful.length % 10 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
   }
   async function trimEvents() { const events = await getEvents(); if (events.length <= EVENT_LIMIT) return; const db = await openDatabase(), tx = db.transaction("events", "readwrite"); events.slice(0, events.length - EVENT_LIMIT).forEach(event => tx.objectStore("events").delete(event.id)); }
   async function summary() { return calculate(await getEvents(), await getState()); }
@@ -34,10 +35,52 @@
     await trimEvents(); return summary();
   }
   async function recordCheckin(value) { const state = await getState(); state.lastCheckinAt = Date.now(); state.checkins += 1; await Promise.all([addEvent({ type: "checkin", createdAt: Date.now(), value }), setState(state)]); return summary(); }
+  async function recordPostReaction(post, reaction) {
+    const allowed = ["begendim", "umutlandim", "dusundum", "kizdim", "gerildim"];
+    if (!post || !allowed.includes(reaction)) return summary();
+    const state = await getState(), topic = post.konu || "diger", previous = Number(state.topicWeights[topic] || 0), positiveSignal = reaction === "begendim" || reaction === "umutlandim" || reaction === "dusundum";
+    state.postReactions = { ...(state.postReactions || {}), [post.id]: reaction };
+    state.topicWeights[topic] = clamp(previous * .9 + (positiveSignal ? .12 : .03), 0, 1);
+    await Promise.all([addEvent({ type: "post_reaction", createdAt: Date.now(), postId: post.id, topic, tone: safeTone(post.duygu), reaction }), setState(state)]);
+    await trimEvents(); return { ...(await summary()), postReactions: state.postReactions };
+  }
+  async function postReactionState() { return { reactions: (await getState()).postReactions || {} }; }
+  async function recordNewsReaction(article, reaction) {
+    const allowed = ["begendim", "umutlandim", "dusundum", "kizdim", "gerildim"];
+    if (!article || !allowed.includes(reaction)) return newsState();
+    const state = await getState(), category = article.kategori || "Diğer";
+    state.newsReactions = { ...(state.newsReactions || {}), [article.id]: reaction };
+    const positiveSignal = reaction === "begendim" || reaction === "umutlandim" || reaction === "dusundum";
+    const previous = Number((state.newsCategoryWeights || {})[category] || 0);
+    state.newsCategoryWeights = { ...(state.newsCategoryWeights || {}), [category]: clamp(previous * .86 + (positiveSignal ? .18 : .06), 0, 1) };
+    await Promise.all([addEvent({ type: "news_reaction", createdAt: Date.now(), articleId: article.id, storyId: article.olay_id, category, tone: safeTone(article.duygu), reaction }), setState(state)]);
+    await trimEvents();
+    return { ...(await newsState()), shouldOfferAlternative: reaction === "kizdim" || reaction === "gerildim", reaction };
+  }
+  async function newsState() {
+    const state = await getState(), events = (await getEvents()).filter(event => event.type === "news_reaction"), last = events.at(-1);
+    return { reactions: state.newsReactions || {}, eventCount: events.length, lastReaction: last?.reaction || null, preferredCategory: Object.entries(state.newsCategoryWeights || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null };
+  }
+  async function clearNewsData() {
+    const state = await getState(); state.newsReactions = {}; state.newsCategoryWeights = {};
+    const events = await getEvents(), db = await openDatabase();
+    await new Promise((resolve, reject) => { const tx = db.transaction(["events", "state"], "readwrite"), store = tx.objectStore("events"); events.filter(event => event.type === "news_reaction").forEach(event => store.delete(event.id)); tx.objectStore("state").put(state, "profile"); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); });
+    return newsState();
+  }
+  async function rankNews(articles) {
+    const state = await getState(), weights = state.newsCategoryWeights || {}, maxWeight = Math.max(.2, ...Object.values(weights).map(Number)), seen = {};
+    return articles.map((article, index) => {
+      const interest = Number(weights[article.kategori] || 0) / maxWeight;
+      const diversity = seen[article.kategori] ? -.055 * seen[article.kategori] : .08;
+      seen[article.kategori] = (seen[article.kategori] || 0) + 1;
+      const score = .54 + interest * .31 + diversity - Math.max(0, -safeTone(article.duygu)) * .06 - index * .001;
+      return { ...article, local_news_score: score, local_news_interest: interest, local_news_diversity: diversity };
+    }).sort((a, b) => b.local_news_score - a.local_news_score);
+  }
   async function rank(posts) {
     const state = await getState(), report = calculate(await getEvents(), state), maxWeight = Math.max(.25, ...Object.values(state.topicWeights || {}).map(Number)), seenTopics = {};
     return posts.map((post, index) => { const localInterest = Number(state.topicWeights[post.konu] || 0) / maxWeight, tone = safeTone(post.duygu), balancing = report.enoughData && report.intensity > .28 && tone < -.15 ? Math.abs(tone) * report.intensity * .38 : 0, diversity = seenTopics[post.konu] ? -.045 * seenTopics[post.konu] : .07; seenTopics[post.konu] = (seenTopics[post.konu] || 0) + 1; const base = Number(post.ilgi_skoru || post.final_skor || .5), localScore = base * .48 + localInterest * .34 + diversity - balancing - index * .0005; return { ...post, local_skor: localScore, local_ilgi: localInterest, local_dengeleme: balancing }; }).sort((a, b) => b.local_skor - a.local_skor);
   }
   async function erase() { const db = await openDatabase(); await new Promise((resolve, reject) => { const tx = db.transaction(["events", "state"], "readwrite"); tx.objectStore("events").clear(); tx.objectStore("state").clear(); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); return summary(); }
-  window.LocalPersonalization = { init: openDatabase, recordInteraction, recordCheckin, summary, rank, erase };
+  window.LocalPersonalization = { init: openDatabase, recordInteraction, recordCheckin, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, rankNews, erase };
 })();

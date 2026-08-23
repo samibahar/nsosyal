@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#F4F5F1" />
+  <title>Haberler — NSosyal</title>
+  <link rel="stylesheet" href="/style.css?v=27" />
+</head>
+<body class="news-body">
+  <div class="news-shell">
+    <aside class="desktop-rail news-rail" aria-label="Ana menü">
+      <a class="brand" href="/" aria-label="NSosyal ana sayfa"><span class="brand-mark">n</span><span>nSosyal</span></a>
+      <nav class="rail-nav">
+        <a class="rail-link" href="/index.html">⌂ <span>Ana Sayfa</span></a>
+        <a class="rail-link active" href="/haberler.html">▤ <span>Haberler</span></a>
+        <a class="rail-link" href="/kesfet.html">⌕ <span>Keşfet</span></a>
+        <a class="rail-link" href="/rapor.html">✦ <span>İçgörüler</span></a>
+      </nav>
+      <a class="profile-mini" href="/profil.html?u=emiryusuf"><span class="avatar avatar-user">EU</span><span><b>Emir Yusuf</b><small>@emiryusuf</small></span></a>
+    </aside>
+
+    <main class="news-page">
+      <header class="news-topbar">
+        <a class="mobile-brand" href="/" aria-label="NSosyal ana sayfa"><span class="brand-mark">n</span><b>nSosyal</b></a>
+        <div><span class="eyebrow">GÜNDEM · YEREL SIRALAMA</span><h1>Haberler</h1></div>
+        <button id="news-info-button" class="round-button" type="button" aria-label="Haber sıralaması hakkında">✦</button>
+      </header>
+
+      <section class="news-intro" aria-live="polite">
+        <div><b id="news-rhythm-title">Haber ritmin dengeli</b><p id="news-rhythm-text">Tepkilerin yalnızca bu cihazda kalır.</p></div>
+        <span id="news-private-badge">Yerel</span>
+      </section>
+
+      <nav id="news-categories" class="news-categories" aria-label="Haber kategorileri">
+        <button class="active" data-category="Tümü" type="button">Tümü</button>
+      </nav>
+
+      <section class="news-heading"><div><span>BUGÜN</span><h2>Sana göre sıralandı</h2></div><button id="news-reset" type="button">Tepkileri sil</button></section>
+      <section id="news-feed" class="news-feed" aria-live="polite"><div class="loading-state">Haberler hazırlanıyor…</div></section>
+      <p class="news-demo-note">Bu sayfadaki haberler ve kaynak adları prototip için hazırlanmış örnek veridir. Aynı olayın iki görünümünde temel olgular korunur.</p>
+    </main>
+
+    <aside class="news-aside">
+      <section class="aside-card balance-card"><span class="eyebrow">✦ NASIL ÇALIŞIYOR?</span><h2>Tepki, tahminin yerini alır</h2><p>“Kızdım” veya “Gerildim” dersen aynı gelişmenin daha yapıcı çerçevelenmiş başka bir kaynağını sunarız. Bu bir duygu teşhisi değildir.</p></section>
+      <section class="aside-card"><span class="eyebrow">KAYNAK BÜTÜNLÜĞÜ</span><h2>Aynı olay, farklı bakış</h2><p>Alternatif kaynak olayın olgularını değiştirmez; çözüm, bağlam veya ilerleme bilgisini öne çıkarır.</p></section>
+    </aside>
+  </div>
+
+  <nav class="bottom-nav news-nav" aria-label="Alt menü">
+    <a class="nav-item" href="/index.html"><span>⌂</span><small>Ana Sayfa</small></a>
+    <a class="nav-item" href="/kesfet.html"><span>⌕</span><small>Keşfet</small></a>
+    <a class="nav-item active" href="/haberler.html"><span>▤</span><small>Haberler</small></a>
+    <a class="nav-item" href="/index.html#activity"><span>♡</span><small>Etkinlik</small></a>
+    <a class="nav-item" href="/rapor.html"><span>◔</span><small>İçgörü</small></a>
+  </nav>
+
+  <div id="news-sheet" class="sheet-backdrop" aria-hidden="true">
+    <section class="explanation-sheet" role="dialog" aria-modal="true" aria-labelledby="news-sheet-title">
+      <div class="sheet-handle"></div><button id="news-sheet-close" class="sheet-close" type="button" aria-label="Kapat">×</button>
+      <span class="eyebrow">✦ ŞEFFAF HABER AKIŞI</span><h2 id="news-sheet-title">Neden bunu görüyorsun?</h2>
+      <p id="news-sheet-summary">Haber adayları herkese açık örnek havuzdan gelir; sıralama ve tepkiler cihazında kalır.</p>
+      <div id="news-sheet-scores" class="sheet-score-grid"></div>
+      <details class="technical-details"><summary>Teknik ayrıntıları göster</summary><div id="news-sheet-technical"></div></details>
+      <p class="sheet-disclaimer">Alternatif kaynak göstermek, haberi saklamak veya olumluya çevirmek değildir. Kullanıcı her iki kaynağı da görebilir.</p>
+    </section>
+  </div>
+
+  <script src="/local-agent.js?v=2"></script>
+  <script src="/haberler.js?v=1"></script>
+</body>
+</html>
