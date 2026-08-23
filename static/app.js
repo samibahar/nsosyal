@@ -119,7 +119,21 @@ document.getElementById("status-detail-button").addEventListener("click",()=>ope
 document.getElementById("desktop-detail-button").addEventListener("click",()=>openSheet());
 document.getElementById("sheet-close").addEventListener("click",closeSheet);
 document.getElementById("explanation-sheet").addEventListener("click",event=>{if(event.target.id==="explanation-sheet")closeSheet();});
-document.addEventListener("click",event=>{if(!event.target.closest(".post-reaction-wrap"))document.querySelectorAll(".post-reaction-wheel.open").forEach(wheel=>{wheel.classList.remove("open");wheel.closest(".post-reaction-wrap")?.querySelector(".post-reaction-trigger")?.setAttribute("aria-expanded","false");});});
+let activeReactionTray=null;
+const reactionTray=document.createElement("div");reactionTray.className="post-reaction-tray";reactionTray.setAttribute("role","group");reactionTray.setAttribute("aria-label","Bu gönderi sana nasıl hissettirdi?");document.body.appendChild(reactionTray);
+function closeReactionTray(){if(!activeReactionTray)return;activeReactionTray.trigger.setAttribute("aria-expanded","false");activeReactionTray=null;reactionTray.classList.remove("open");reactionTray.replaceChildren();}
+function openReactionTray(post,trigger){
+  if(activeReactionTray?.post.id===post.id){closeReactionTray();return;}
+  closeReactionTray();activeReactionTray={post,trigger};
+  reactionTray.innerHTML=POST_REACTIONS.map(([key,emoji,label])=>`<button type="button" data-post-reaction="${key}" aria-label="${label}" title="${label}" class="${localPostReactions[post.id]===key?"selected":""}"><span>${emoji}</span><small>${label}</small></button>`).join("");
+  trigger.setAttribute("aria-expanded","true");reactionTray.classList.add("open");
+  reactionTray.querySelectorAll("[data-post-reaction]").forEach(button=>button.addEventListener("click",async event=>{
+    event.preventDefault();event.stopPropagation();const current=activeReactionTray;if(!current)return;
+    const reaction=button.dataset.postReaction;localPostReactions[current.post.id]=reaction;current.trigger.querySelector("span").textContent=POST_REACTION_LABELS[reaction];
+    closeReactionTray();if(localAgent){updateLocalAgent(await localAgent.recordPostReaction(current.post,reaction));await rerankVisibleFeed(reaction);}
+  }));
+}
+document.addEventListener("pointerdown",event=>{if(!event.target.closest(".post-reaction-wrap,.post-reaction-tray"))closeReactionTray();});
 
 function createCard(post){
   postCache.set(post.id,post);
@@ -127,7 +141,7 @@ function createCard(post){
   const author=post.yazar_bilgi?{id:post.yazar_bilgi.id,name:post.yazar_bilgi.name,handle:post.yazar_bilgi.handle,initials:post.yazar_bilgi.initials,color:post.yazar_bilgi.color}:authorForPost(post);
   const card=document.createElement("article");card.className="post-card"+(post.refah_cezasi>0?" yumusatildi":"");card.dataset.id=post.id;
   const selectedReaction=localPostReactions[post.id];
-  card.innerHTML=`<div class="post-body"><div class="post-meta"><span class="avatar" style="background:${topic.bg}">${topic.glyph}</span><div><div class="author">${escapeText(topic.author)}</div><div class="handle">${escapeText(topic.handle)} · şimdi</div></div><button class="post-menu" aria-label="Gönderi seçenekleri">•••</button></div><p class="post-text"></p></div><div class="post-visual" style="--visual-bg:${topic.bg};--visual-shape:${topic.shape}"><span class="visual-glyph">${topic.glyph}</span><span class="visual-caption">${escapeText(topic.name)} · Senin için seçildi</span></div><div class="post-actions"><div class="action-group"><div class="post-reaction-wrap"><button class="action-button post-reaction-trigger" type="button" aria-label="Duygu tepkisi ver" aria-expanded="false"><span>${selectedReaction?POST_REACTION_LABELS[selectedReaction]:"☺ Tepki"}</span></button><div class="post-reaction-wheel" role="group" aria-label="Bu gönderi sana nasıl hissettirdi?">${POST_REACTIONS.map(([key,emoji,label])=>`<button type="button" data-post-reaction="${key}" aria-label="${label}" title="${label}" class="${selectedReaction===key?"selected":""}"><span>${emoji}</span><small>${label}</small></button>`).join("")}</div></div><button class="action-button comment" type="button" aria-label="Yorum">◌ <span>Yorum</span></button></div>${post.refah_cezasi>0?'<span class="softened-pill">✦ dengelendi</span>':'<button class="why-button" type="button">✦ Neden bu?</button>'}</div>`;
+  card.innerHTML=`<div class="post-body"><div class="post-meta"><span class="avatar" style="background:${topic.bg}">${topic.glyph}</span><div><div class="author">${escapeText(topic.author)}</div><div class="handle">${escapeText(topic.handle)} · şimdi</div></div><button class="post-menu" aria-label="Gönderi seçenekleri">•••</button></div><p class="post-text"></p></div><div class="post-visual" style="--visual-bg:${topic.bg};--visual-shape:${topic.shape}"><span class="visual-glyph">${topic.glyph}</span><span class="visual-caption">${escapeText(topic.name)} · Senin için seçildi</span></div><div class="post-actions"><div class="action-group"><div class="post-reaction-wrap"><button class="action-button post-reaction-trigger" type="button" aria-label="Duygu tepkisi ver" aria-expanded="false"><span>${selectedReaction?POST_REACTION_LABELS[selectedReaction]:"☺ Tepki"}</span></button></div><button class="action-button comment" type="button" aria-label="Yorum">◌ <span>Yorum</span></button></div>${post.refah_cezasi>0?'<span class="softened-pill">✦ dengelendi</span>':'<button class="why-button" type="button">✦ Neden bu?</button>'}</div>`;
   card.querySelector(".post-text").textContent=post.metin;
   card.querySelector(".post-visual").insertAdjacentHTML("afterbegin",`<img class="post-photo" src="${postImage(post)}" alt="${escapeText(topic.name)} iÃ§eriÄŸi iÃ§in temsili gÃ¶rsel" loading="lazy">`);
   const avatar=card.querySelector(".post-meta .avatar");avatar.textContent=author.initials;avatar.style.background=author.color;avatar.classList.add("profile-trigger");avatar.title=`${author.name} profilini aç`;
@@ -136,24 +150,10 @@ function createCard(post){
   avatar.addEventListener("click",event=>{event.stopPropagation();location.href=`/profil.html?u=${encodeURIComponent(author.id)}`;});
   const why=card.querySelector(".why-button");if(why)why.addEventListener("click",event=>{event.stopPropagation();openSheet(postCache.get(post.id)||post);});
   card.querySelector(".comment").addEventListener("click",event=>{event.stopPropagation();sendInteraction(post.id,dwellFor(post.id),false,false,true);openComments(post);});
-  const reactionTrigger=card.querySelector(".post-reaction-trigger"),reactionWheel=card.querySelector(".post-reaction-wheel");
+  const reactionTrigger=card.querySelector(".post-reaction-trigger");
   reactionTrigger.addEventListener("click",event=>{
-    event.preventDefault();event.stopPropagation();
-    const willOpen=!reactionWheel.classList.contains("open");
-    document.querySelectorAll(".post-reaction-wheel.open").forEach(wheel=>{wheel.classList.remove("open");wheel.closest(".post-reaction-wrap")?.querySelector(".post-reaction-trigger")?.setAttribute("aria-expanded","false");});
-    reactionWheel.classList.toggle("open",willOpen);reactionTrigger.setAttribute("aria-expanded",String(willOpen));
+    event.preventDefault();event.stopPropagation();openReactionTray(post,reactionTrigger);
   });
-  reactionWheel.querySelectorAll("[data-post-reaction]").forEach(button=>button.addEventListener("click",async event=>{
-    event.preventDefault();event.stopPropagation();
-    const reaction=button.dataset.postReaction;
-    localPostReactions[post.id]=reaction;reactionTrigger.querySelector("span").textContent=POST_REACTION_LABELS[reaction];
-    reactionWheel.classList.remove("open");reactionTrigger.setAttribute("aria-expanded","false");
-    reactionWheel.querySelectorAll("button").forEach(item=>item.classList.toggle("selected",item===button));
-    if(localAgent){
-      updateLocalAgent(await localAgent.recordPostReaction(post,reaction));
-      await rerankVisibleFeed(reaction);
-    }
-  }));
   card.addEventListener("click",event=>{if(event.target.closest(".post-author-link,.profile-trigger"))return;sendInteraction(post.id,dwellFor(post.id),true);});dwellObserver.observe(card);return card;
 }
 
