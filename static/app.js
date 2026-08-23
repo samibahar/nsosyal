@@ -41,6 +41,13 @@ function updateMood(psikolojikDurum){
   document.getElementById("flow-current-mood").textContent=metin;
   document.getElementById("desktop-current-mood").textContent=metin;
 }
+function updateDuyguKatmani(katman){
+  if(!katman)return;
+  const title=document.getElementById("flow-status-title"), text=document.getElementById("flow-status-text"), desktopTitle=document.getElementById("desktop-status-title"), desktopText=document.getElementById("desktop-status-text");
+  if(!katman.veri_yeterli){title.textContent="Akışını tanıyoruz";text.textContent=`${katman.anlamli_etkilesim}/10 anlamlı etkileşim · henüz yorum yapmak için erken`;desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;return;}
+  if(katman.surdurulmus_oruntu){title.textContent="Akış biraz yoğunlaştı";text.textContent="Sürdürülebilir bir örüntü gördük; akışı nazikçe dengeleyebilirsin.";desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;}
+  if(katman.mudahale_uygun&&typeof intervention!=="undefined")intervention.hidden=false;
+}
 function updateTopics(){
   const list=document.getElementById("konu-sayaclari"); const rows=Object.entries(topicCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   list.innerHTML=rows.length?rows.map(([key,count])=>`<div class="topic-row"><b>${escapeText(topicFor(key).name)}</b><span>${count} gönderi</span></div>`).join(""):'<span class="topic-loading">Akış yükleniyor…</span>';
@@ -52,7 +59,7 @@ async function sendInteraction(id,dwell,click=false,rocket=false,comment=false,e
   if(dwell<=0)return;
   try{
     const res=await fetch("/api/etkilesim",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({gonderi_id:id,dwell_saniye:dwell,tiklama:click,roket:rocket,yorum:comment,cikis:exit})});
-    const data=await res.json(); updateStatus(data.spiral_seviyesi); updateMood(data.psikolojik_durum); if(data.onay_sorulsun_mu)showCheckin();
+    const data=await res.json(); updateStatus(data.spiral_seviyesi); updateMood(data.psikolojik_durum); updateDuyguKatmani(data.duygu_katmani); if(data.onay_sorulsun_mu)showCheckin();
   }catch(error){console.warn("Interaction could not be recorded",error);}
 }
 function dwellFor(id){return visibleSince.has(id)?Math.max(.3,(performance.now()-visibleSince.get(id))/1000):1.5;}
@@ -150,7 +157,7 @@ const intervention=document.createElement("aside");intervention.id="balance-inte
 const demoButton=document.createElement("button");demoButton.type="button";demoButton.className="demo-scenario";demoButton.textContent="Demo akışını göster";demoButton.setAttribute("aria-label","Duygu katmanı demo akışını göster");demoButton.title="Demo akışını göster";document.querySelector("#flow-status>div").appendChild(demoButton);
 const demoStyle=document.createElement("style");demoStyle.textContent='.demo-scenario{display:block;margin-top:8px;border:0;background:transparent;color:#56674a;padding:0;font-size:10px;font-weight:800;text-decoration:underline}.balance-intervention{position:fixed;z-index:60;left:50%;bottom:84px;width:min(560px,calc(100% - 28px));transform:translateX(-50%);border-radius:26px;background:#1a2019;color:white;padding:18px 19px;box-shadow:0 20px 60px rgba(0,0,0,.26)}.balance-intervention[hidden]{display:none}.balance-intervention>span{color:#c9ff62;font-size:9px;font-weight:850;letter-spacing:.1em}.balance-intervention h2{margin:7px 0 5px;font-size:19px}.balance-intervention p{margin:0;color:#c9d1c5;font-size:12px;line-height:1.45}.balance-intervention div{display:flex;gap:8px;margin-top:15px}.balance-intervention button{border:0;border-radius:999px;padding:9px 12px;font-size:11px;font-weight:800}.balance-intervention #balance-feed{background:#c9ff62;color:#121314}.balance-intervention #dismiss-intervention{background:transparent;color:white}';document.head.appendChild(demoStyle);
 const demoCompactStyle=document.createElement("style");demoCompactStyle.textContent='.flow-status .demo-scenario{position:absolute;right:42px;top:13px;display:grid;place-items:center;width:27px;height:27px;margin:0;border-radius:50%;background:rgba(255,255,255,.75);font-size:0;text-decoration:none}.flow-status .demo-scenario::after{content:"▸";font-size:17px;line-height:1;color:#53624b}.flow-status .demo-scenario:disabled::after{content:"…";font-size:15px}';document.head.appendChild(demoCompactStyle);
-const originalUpdateStatus=updateStatus;updateStatus=function(level){originalUpdateStatus(level);if(level>.6)intervention.hidden=false;};
-document.getElementById("dismiss-intervention").addEventListener("click",()=>intervention.hidden=true);document.getElementById("balance-feed").addEventListener("click",async()=>{intervention.hidden=true;await firstLoad();});demoButton.addEventListener("click",async()=>{demoButton.disabled=true;demoButton.textContent="Hazırlanıyor…";try{const response=await fetch("/api/demo-senaryo",{method:"POST"});const data=await response.json();updateStatus(data.spiral_seviyesi);document.getElementById("flow-current-mood").textContent="Olası anlık ritim: Yoğun · demo senaryosu";document.getElementById("desktop-current-mood").textContent="Olası anlık ritim: Yoğun · demo senaryosu";}finally{demoButton.disabled=false;demoButton.textContent="Demo akışını göster";}});
+const originalUpdateStatus=updateStatus;updateStatus=function(level){originalUpdateStatus(level);};
+document.getElementById("dismiss-intervention").addEventListener("click",async()=>{intervention.hidden=true;await fetch("/api/mudahale/ertele",{method:"POST"});});document.getElementById("balance-feed").addEventListener("click",async()=>{intervention.hidden=true;await firstLoad();});demoButton.addEventListener("click",async()=>{demoButton.disabled=true;demoButton.textContent="Hazırlanıyor…";try{const response=await fetch("/api/demo-senaryo",{method:"POST"});const data=await response.json();updateStatus(data.spiral_seviyesi);updateDuyguKatmani(data.duygu_katmani);document.getElementById("flow-current-mood").textContent="Olası anlık ritim: Yoğun · demo senaryosu";document.getElementById("desktop-current-mood").textContent="Olası anlık ritim: Yoğun · demo senaryosu";}finally{demoButton.disabled=false;demoButton.textContent="Demo akışını göster";}});
 setupStories();
 firstLoad();

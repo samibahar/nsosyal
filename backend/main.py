@@ -6,6 +6,7 @@ için bellek-içi durum tutar (gerçek üretimde bu veritabanına/oturuma taşı
 """
 import random
 import sys
+import time
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
@@ -21,6 +22,7 @@ from motor import gonderileri_puanla, sirala, spiral_olasiligi
 from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
 from topluluk_veri import TOPLULUK_GONDERILERI
 from sosyal_veri import SosyalDepo
+from duygu_katmani import analiz_et
 from psikolojik_durum import (
     psikolojik_durum_tahmini, KATEGORILER, kisisel_model_olustur, kisisel_guncelle,
 )
@@ -55,6 +57,8 @@ TAM_GUVEN_ESIGI = 8  # spiral oranı bu kadar farklı gönderi görülmeden tam 
 DOGRULAMA_GUNLUGU: list[dict] = []
 DOGRULAMA_ARALIGI = 20  # daha az invaziv: yaklaşık her 20 anlamlı etkileşimde bir
 SAYAC = {"son_dogrulamadan_beri": 0}
+MUDAHALE_DURUMU = {"son_gosterim": 0.0, "sessize_alindi": 0.0}
+MUDAHALE_SOGUMA_SURESI = 20 * 60
 
 # --- Kişiselleştirme (çevrimiçi/online öğrenme) ---
 # _VARSAYILAN_MODEL (psikolojik_durum.py içinde) hiç değişmez. KISISEL_MODEL,
@@ -196,6 +200,26 @@ def _sosyal_ile_zenginlestir(gonderiler: list[dict]) -> list[dict]:
     return sonuc
 
 
+def _kalibrasyon_guveni() -> float:
+    """Kullanıcı doğrulaması arttıkça modelin davranışsal yorumuna verilen ağırlık.
+    Az sayıda geri bildirimde nötr güven kullanılır; doğrulama hiçbir zaman tek
+    başına müdahale kararı vermez."""
+    if len(DOGRULAMA_GUNLUGU) < 3:
+        return 0.5
+    son = DOGRULAMA_GUNLUGU[-20:]
+    eslesme = sum(1 for kayit in son if kayit["eslesme"]) / len(son)
+    return round(0.3 + 0.7 * eslesme, 3)
+
+
+def _duygu_durumu() -> dict:
+    analiz = analiz_et(DAVRANIS_GUNLUGU, GONDERILER, _kalibrasyon_guveni())
+    simdi = time.time()
+    mudahale = analiz["surdurulmus_oruntu"] and simdi >= max(MUDAHALE_DURUMU["son_gosterim"] + MUDAHALE_SOGUMA_SURESI, MUDAHALE_DURUMU["sessize_alindi"])
+    if mudahale:
+        MUDAHALE_DURUMU["son_gosterim"] = simdi
+    return {**analiz, "mudahale_uygun": mudahale, "kalibrasyon_guveni": _kalibrasyon_guveni()}
+
+
 @app.get("/api/gonderiler")
 def api_gonderiler(sifirdan: bool = False):
     if sifirdan:
@@ -303,9 +327,22 @@ def api_demo_senaryo():
     DAVRANIS_GUNLUGU.clear()
     negatifler = sorted((g for g in GONDERILER if g["duygu"] < -0.2), key=lambda g: g["id"])[:8]
     for gonderi in negatifler:
-        DAVRANIS_GUNLUGU.append({"gonderi_id": gonderi["id"], "dwell_saniye": 18.0, "tiklama": True, "roket": False, "yorum": False})
+        DAVRANIS_GUNLUGU.append({"gonderi_id": gonderi["id"], "zaman": time.time(), "dwell_saniye": 18.0, "tiklama": True, "roket": False, "yorum": False})
     spiral = spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER)
-    return {"ok": True, "spiral_seviyesi": round(spiral, 3), "ornek_sayisi": len(negatifler)}
+    duygu_durumu = _duygu_durumu()
+    return {"ok": True, "spiral_seviyesi": round(spiral, 3), "ornek_sayisi": len(negatifler), "duygu_katmani": duygu_durumu}
+
+
+@app.post("/api/mudahale/ertele")
+def api_mudahale_ertele():
+    MUDAHALE_DURUMU["sessize_alindi"] = time.time() + 30 * 60
+    return {"ok": True, "sessize_kadar_saniye": 30 * 60}
+
+
+@app.get("/api/juri-durum")
+def api_juri_durum():
+    """Tüketici akışından ayrı, teknik inceleme için açıklanabilir durum özeti."""
+    return {"duygu_katmani": _duygu_durumu(), "spiral_seviyesi": round(spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER), 3), "dogrulama": {"toplam": len(DOGRULAMA_GUNLUGU), "kalibrasyon_guveni": _kalibrasyon_guveni()}, "son_sinyaller": DAVRANIS_GUNLUGU[-10:]}
 
 
 @app.post("/api/etkilesim")
@@ -313,7 +350,7 @@ def api_etkilesim(e: Etkilesim):
     birlesik = _sinyalleri_birlestir(e.gonderi_id, e)
     _bolumu_kapat(e.gonderi_id, e.cikis)
 
-    _gonderi_bazinda_yerine_koy(DAVRANIS_GUNLUGU, e.gonderi_id, {"gonderi_id": e.gonderi_id, **birlesik})
+    _gonderi_bazinda_yerine_koy(DAVRANIS_GUNLUGU, e.gonderi_id, {"gonderi_id": e.gonderi_id, "zaman": time.time(), **birlesik})
     del DAVRANIS_GUNLUGU[:-20]  # kayan pencere: son 20 FARKLI gönderi
     ham_spiral = spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER)
     spiral = ham_spiral * _guven_carpani(len(DAVRANIS_GUNLUGU))
@@ -348,9 +385,11 @@ def api_etkilesim(e: Etkilesim):
     if onay_sorulsun_mu:
         SAYAC["son_dogrulamadan_beri"] = 0
 
+    duygu_durumu = _duygu_durumu()
     return {
         "spiral_seviyesi": round(spiral, 3),
         "psikolojik_durum": psikolojik_oturum,
+        "duygu_katmani": duygu_durumu,
         "onay_sorulsun_mu": onay_sorulsun_mu,
     }
 
@@ -508,6 +547,8 @@ def api_sifirla():
     KISISEL_MOD["aktif"] = False
     KISISEL_GUNCELLEME_SAYISI["deger"] = 0
     SON_HAM_OZELLIK["deger"] = None
+    MUDAHALE_DURUMU["son_gosterim"] = 0.0
+    MUDAHALE_DURUMU["sessize_alindi"] = 0.0
     return {"ok": True}
 
 
