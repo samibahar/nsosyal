@@ -81,7 +81,7 @@ Ana akıştaki **Duygu Katmanı · Yerel** modu, yarışma demosu için tarayıc
 - İlgi ağırlıkları, etkileşimlerden artımlı olarak güncellenir.
 - Tekrarlayan yoğun içerikte uzun kalma, postları silmeden çeşitlilik ağırlığını artırır.
 - Bir tepki seçildiğinde görünür kartlar yeniden puanlanır ve yer değişimi animasyonla gösterilir. `✦ Akış güncellendi` bildirimi hareket eden kart sayısını açıklar; “Neden bu?” sayfasında ilgi, dengeleme, açık tepki etkisi ve nihai puan görülebilir.
-- `Demo akışını göster`, aynı yerel verilerle tekrarlanabilir bir yoğun-akış senaryosu çalıştırır; jüri için kartların canlı olarak yeniden sıralanmasını gösterir.
+- `Demo akışını göster`, aynı yerel verilerle tekrarlanabilir bir sıralama senaryosu çalıştırır; jüri için kartların canlı olarak yeniden sıralanmasını gösterir.
 - `✦ Bu cihazda kişiselleştiriliyor` bağlantısı kullanılan sinyal sayısını, güveni ve sıralama bileşenlerini gösterir.
 - `Yerel verileri sil` hem olay günlüğünü hem de öğrenilmiş profili bu tarayıcıdan kaldırır.
 
