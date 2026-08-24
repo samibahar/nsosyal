@@ -18,30 +18,77 @@
   async function addEvent(event) { const db = await openDatabase(); return new Promise((resolve, reject) => { const tx = db.transaction("events", "readwrite"); tx.objectStore("events").add(event); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const safeTone = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+
+  // spiral_model.py'nin _ozellik_cikar'iyla AYNI tanim: gonderi basina tek
+  // kayit (en son gorulme), en fazla 20 farkli gonderi -- eski DAVRANIS_GUNLUGU
+  // penceresinin ayni matematigi, sadece IndexedDB uzerinde.
+  function _dedupluGunluk(meaningful) {
+    const sonKayit = new Map();
+    meaningful.forEach(event => sonKayit.set(event.postId, event));
+    return [...sonKayit.values()].slice(-20);
+  }
+  function _spiralOzellikleri(log) {
+    if (!log.length) return null;
+    const toplamDwell = log.reduce((t, e) => t + e.dwell, 0) || 1e-9;
+    const negatifler = log.filter(e => e.tone < -0.2);
+    const negatifDwellToplam = negatifler.reduce((t, e) => t + e.dwell, 0);
+    return {
+      negatif_dwell_toplam: negatifDwellToplam,
+      negatif_dwell_orani: negatifDwellToplam / toplamDwell,
+      negatif_tekrar_sayisi: 0, // sunucudaki bilinen sinirlilikla tutarli (bkz. motor.py)
+      ortalama_duygu: log.reduce((t, e) => t + e.tone, 0) / log.length,
+      tiklama_orani: log.reduce((t, e) => t + (e.click ? 1 : 0), 0) / log.length,
+      kaydirma_hizi: log.length / Math.max(toplamDwell / 60, 0.1),
+    };
+  }
+  // Egitilmis spiral (lojistik regresyon) + psikolojik durum (SGDClassifier)
+  // modellerini, hicbir ham veri cihazdan cikmadan burada calistirir --
+  // trained-models.js ile trained-weights.js yuklu degilse (eski sayfa
+  // onbellegi vb.) eski basit esik-tabanli formule geri duser.
+  function _egitilmisYogunluk(meaningful) {
+    const log = _dedupluGunluk(meaningful);
+    const ozellikler = _spiralOzellikleri(log);
+    if (!ozellikler || typeof window.TrainedModels === "undefined") return null;
+    const spiralOlasilik = window.TrainedModels.spiralOlasiligi(ozellikler);
+    const son = meaningful[meaningful.length - 1];
+    const psikolojik = window.TrainedModels.psikolojikTahmin({
+      duygu: son.tone, dwell_saniye: son.dwell, tiklama: son.click ? 1 : 0,
+      roket: son.rocket ? 1 : 0, yorum: son.comment ? 1 : 0,
+    });
+    const negatifRuhHaliKutlesi = (psikolojik.olasiliklar.sinirli || 0) + (psikolojik.olasiliklar.anksiyete || 0);
+    return clamp(spiralOlasilik * 0.7 + negatifRuhHaliKutlesi * 0.3);
+  }
   function calculate(events, state) {
     const meaningful = events.filter(event => event.type === "interaction"), recent = meaningful.slice(-12), negative = recent.filter(event => event.tone < -0.15), sustained = negative.filter(event => event.dwell >= 3.5), unique = new Set(recent.map(event => event.topic)).size;
-    const intensity = clamp((recent.length ? sustained.length / recent.length : 0) * .72 + (recent.length > 3 ? 1 - unique / recent.length : 0) * .28), confidence = clamp(meaningful.length / 16), enoughData = meaningful.length >= 10;
+    const yedekYogunluk = clamp((recent.length ? sustained.length / recent.length : 0) * .72 + (recent.length > 3 ? 1 - unique / recent.length : 0) * .28);
+    const egitilmisYogunluk = _egitilmisYogunluk(meaningful);
+    const intensity = egitilmisYogunluk === null ? yedekYogunluk : egitilmisYogunluk;
+    const confidence = clamp(meaningful.length / 16), enoughData = meaningful.length >= 10;
     const preferred = Object.entries(state.topicWeights || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
-    const latestExplicit = [...events].reverse().find(event => (event.type === "post_reaction" || event.type === "news_reaction") && Date.now() - event.createdAt < 30 * 60 * 1000);
+    // Jüri demosunun betikli tepkileri (runDemoScenario) burada HARİÇ tutulur --
+    // aksi halde "Son tepkin: ... sen belirttin" etiketi, kullanıcının hiç
+    // tıklamadığı senaryo-içi bir tepkiyi kendisi vermiş gibi gösteriyordu
+    // (kullanıcı tarafından tespit edildi, 21.08.2026).
+    const latestExplicit = [...events].reverse().find(event => (event.type === "post_reaction" || event.type === "news_reaction") && !event.demo && Date.now() - event.createdAt < 30 * 60 * 1000);
     return { mode: "local", eventCount: meaningful.length, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, shouldCheckin: meaningful.length >= 12 && meaningful.length % 10 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
   }
   async function trimEvents() { const events = await getEvents(); if (events.length <= EVENT_LIMIT) return; const db = await openDatabase(), tx = db.transaction("events", "readwrite"); events.slice(0, events.length - EVENT_LIMIT).forEach(event => tx.objectStore("events").delete(event.id)); }
   async function summary() { return calculate(await getEvents(), await getState()); }
-  async function recordInteraction({ post, dwell, click, rocket, comment, exit }) {
+  async function recordInteraction({ post, dwell, click, rocket, comment, exit, demo }) {
     if (!post || dwell <= 0) return summary();
     const state = await getState(), topic = post.konu || "diger", reward = clamp((Math.min(dwell, 18) / 18) * .42 + (click ? .22 : 0) + (rocket ? .45 : 0) + (comment ? .32 : 0) - (exit ? .04 : 0), -.1, 1), previous = Number(state.topicWeights[topic] || 0);
     state.topicWeights[topic] = clamp(previous * .88 + reward * .12, 0, 1);
-    await Promise.all([addEvent({ type: "interaction", createdAt: Date.now(), postId: post.id, topic, tone: safeTone(post.duygu), dwell: Number(dwell.toFixed(2)), click: !!click, rocket: !!rocket, comment: !!comment, exit: !!exit }), setState(state)]);
+    await Promise.all([addEvent({ type: "interaction", createdAt: Date.now(), postId: post.id, topic, tone: safeTone(post.duygu), dwell: Number(dwell.toFixed(2)), click: !!click, rocket: !!rocket, comment: !!comment, exit: !!exit, demo: !!demo }), setState(state)]);
     await trimEvents(); return summary();
   }
   async function recordCheckin(value) { const state = await getState(); state.lastCheckinAt = Date.now(); state.checkins += 1; await Promise.all([addEvent({ type: "checkin", createdAt: Date.now(), value }), setState(state)]); return summary(); }
-  async function recordPostReaction(post, reaction) {
+  async function recordPostReaction(post, reaction, demo) {
     const allowed = ["begendim", "umutlandim", "dusundum", "kizdim", "gerildim"];
     if (!post || !allowed.includes(reaction)) return summary();
     const state = await getState(), topic = post.konu || "diger", previous = Number(state.topicWeights[topic] || 0), positiveSignal = reaction === "begendim" || reaction === "umutlandim" || reaction === "dusundum";
     state.postReactions = { ...(state.postReactions || {}), [post.id]: reaction };
     state.topicWeights[topic] = clamp(previous * .9 + (positiveSignal ? .12 : .03), 0, 1);
-    await Promise.all([addEvent({ type: "post_reaction", createdAt: Date.now(), postId: post.id, topic, tone: safeTone(post.duygu), reaction }), setState(state)]);
+    await Promise.all([addEvent({ type: "post_reaction", createdAt: Date.now(), postId: post.id, topic, tone: safeTone(post.duygu), reaction, demo: !!demo }), setState(state)]);
     await trimEvents(); return { ...(await summary()), postReactions: state.postReactions };
   }
   async function postReactionState() { return { reactions: (await getState()).postReactions || {} }; }
@@ -104,8 +151,8 @@
     for (const signal of scenario) {
       const post = byId.get(Number(signal.post_id));
       if (!post) continue;
-      await recordInteraction({ post, dwell: Number(signal.dwell || 0), click: !!signal.click, rocket: false, comment: false, exit: false });
-      if (signal.reaction) await recordPostReaction(post, signal.reaction);
+      await recordInteraction({ post, dwell: Number(signal.dwell || 0), click: !!signal.click, rocket: false, comment: false, exit: false, demo: true });
+      if (signal.reaction) await recordPostReaction(post, signal.reaction, true);
     }
     const after = await rank(posts), report = await summary(), beforeIndex = new Map(before.map((post, index) => [Number(post.id), index + 1]));
     const compact = post => ({ id: post.id, metin: post.metin, konu: post.konu, duygu: safeTone(post.duygu), yazar: post.yazar, yazar_bilgi: post.yazar_bilgi });

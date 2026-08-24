@@ -7,10 +7,31 @@ function rangeStart(range){const now=Date.now();if(range==="today"){const d=new 
 function scopedEvents(){return allEvents.filter(event=>event.createdAt>=rangeStart(activeRange));}
 function countBy(items,key){return items.reduce((result,item)=>{const value=key(item);if(value)result[value]=(result[value]||0)+1;return result;},{});}
 function empty(target,message){target.innerHTML=`<p class="chart-empty">${message}</p>`;}
+// Catmull-Rom -> kubik Bezier: noktalar arasinda yumusak bir egri ciker
+// (duz polyline'in keskin/cirkin durmasi yerine).
+function smoothPath(points){
+  if(points.length<2)return `M${points[0][0]},${points[0][1]}`;
+  let d=`M${points[0][0]},${points[0][1]}`;
+  for(let i=0;i<points.length-1;i++){
+    const p0=points[i===0?0:i-1],p1=points[i],p2=points[i+1],p3=points[i+2<points.length?i+2:i+1];
+    const c1x=p1[0]+(p2[0]-p0[0])/6,c1y=p1[1]+(p2[1]-p0[1])/6;
+    const c2x=p2[0]-(p3[0]-p1[0])/6,c2y=p2[1]-(p3[1]-p1[1])/6;
+    d+=` C${c1x},${c1y} ${c2x},${c2y} ${p2[0]},${p2[1]}`;
+  }
+  return d;
+}
 function renderLine(events){const target=$("rhythm-chart"),interactions=events.filter(event=>event.type==="interaction");if(!interactions.length){empty(target,"Akışta biraz gezindiğinde, burada zaman içindeki etkileşim ritmin görünür.");$("rhythm-caption").textContent="Henüz veri yok";return;}
   const start=rangeStart(activeRange),end=Date.now(),buckets=Array.from({length:7},()=>0),span=Math.max(1,end-start);interactions.forEach(event=>buckets[Math.min(6,Math.floor((event.createdAt-start)/span*7))]++);
-  const max=Math.max(1,...buckets),points=buckets.map((count,index)=>`${8+index*46},${104-(count/max)*76}`).join(" ");
-  target.innerHTML=`<svg viewBox="0 0 292 112" preserveAspectRatio="none" aria-hidden="true"><path class="chart-grid" d="M8 104H284M8 66H284M8 28H284"/><polyline class="chart-area" points="8,104 ${points} 284,104"/><polyline class="chart-line" points="${points}"/>${points.split(" ").map(point=>`<circle cx="${point.split(",")[0]}" cy="${point.split(",")[1]}" r="3"/>`).join("")}</svg>`;
+  // Tek bir zaman diliminde kumelenmis veri (orn. kisa bir demo oturumu),
+  // 6 sifir + 1 ani sivri uctan olusan yanitici/cirkin bir grafik uretir --
+  // veriyi uydurmak yerine, boyle durumlarda durustce "henuz yeterli zaman
+  // yayilimi yok" mesaji gosteriyoruz (konu×kategori isi haritasinda da
+  // aynen bu ilkeyi izledik).
+  const nonEmptyBuckets=buckets.filter(count=>count>0).length;
+  if(nonEmptyBuckets<=1){empty(target,"Etkileşimlerin şu ana kadar tek bir zaman diliminde kümelendi. Zamana yayıldıkça burada bir ritim görünecek.");$("rhythm-caption").textContent=`${interactions.length} etkileşim`;return;}
+  const max=Math.max(1,...buckets),points=buckets.map((count,index)=>[8+index*46,104-(count/max)*76]);
+  const linePath=smoothPath(points),areaPath=`${linePath} L284,104 L8,104 Z`;
+  target.innerHTML=`<svg viewBox="0 0 292 112" preserveAspectRatio="none" aria-hidden="true"><path class="chart-grid" d="M8 104H284M8 66H284M8 28H284"/><path class="chart-area" d="${areaPath}"/><path class="chart-line" d="${linePath}"/>${points.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3"/>`).join("")}</svg>`;
   $("rhythm-caption").textContent=`${interactions.length} etkileşim`;
 }
 function renderTopics(events){const target=$("topic-chart"),values=countBy(events.filter(event=>event.type==="interaction"),event=>event.topic);const rows=Object.entries(values).sort((a,b)=>b[1]-a[1]).slice(0,4);if(!rows.length){empty(target,"Konu dağılımı henüz oluşmadı.");return;}const max=Math.max(...rows.map(([,count])=>count));target.innerHTML=rows.map(([topic,count])=>`<div class="topic-row"><span>${topicLabels[topic]||topic}</span><div><i style="width:${count/max*100}%"></i></div><b>${count}</b></div>`).join("");}

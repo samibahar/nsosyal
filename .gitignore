@@ -6,3 +6,6 @@ __pycache__/
 # İnce ayarlı model (~420MB) -- git'e uygun değil, ince_ayar.py ile yeniden üretilebilir
 models/
 NSosyal_Proje_Kodlari.zip
+
+# calisma zamaninda uretilen demo veritabani (sosyal_veri.py, her baslangicta yeniden dolduruluyor)
+data/
