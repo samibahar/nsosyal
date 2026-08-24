@@ -19,11 +19,18 @@
     <section class="insight-chart-card"><div class="chart-heading"><div><span>KONU × OLASI RİTİM</span><h2>Hangi konularda nasıl hissettin?</h2></div></div><div id="heatmap-chart" class="heatmap"></div></section>
     <section class="insight-chart-card"><div class="chart-heading"><div><span>MODEL DOĞRULAMA</span><h2>Tahminler ne kadar tutuyor?</h2></div><small>Sorulmadan önce gösterilmez</small></div><div id="dogrulama-chart" class="validation-grid"></div></section>
     <section class="insight-data-note"><b>✦ Verin sende kalır</b><p>Grafikler bu tarayıcının yerel etkileşim kaydından hesaplanır. Bu ekran bir teşhis veya klinik değerlendirme değildir.</p></section>
+    <section class="insight-chart-card">
+      <div class="chart-heading"><div><span>UZMANA GÖTÜRMEK İSTERSEN</span><h2>Yorumsuz veri özeti</h2></div></div>
+      <p class="data-note" style="margin-top:6px">Yapay zekâ yorumu içermez, sadece bu cihazdaki sayıları düzenler. Klinik bir belge değildir; nihai değerlendirme uzmana aittir.</p>
+      <button id="terapist-ozet-buton" type="button" class="insight-action">Özeti oluştur</button>
+      <pre id="terapist-ozet-metin" style="display:none;white-space:pre-wrap;font-family:inherit;font-size:11.5px;line-height:1.55;background:rgba(255,255,255,.7);border-radius:14px;padding:13px;margin-top:12px"></pre>
+      <button id="terapist-ozet-kopyala" type="button" class="insight-action" style="display:none;margin-top:8px">Panoya kopyala</button>
+    </section>
   </main>
   <nav class="bottom-nav insight-nav" aria-label="Alt menü"><a class="nav-item" href="/index.html"><span>⌂</span><small>Ana Sayfa</small></a><a class="nav-item" href="/kesfet.html"><span>⌕</span><small>Keşfet</small></a><a class="create-button" href="/index.html?compose=1" aria-label="Yeni gönderi">＋</a><a class="nav-item" href="/haberler.html"><span>▤</span><small>Haberler</small></a><a class="nav-item active" href="/rapor.html"><span>◔</span><small>İçgörü</small></a></nav>
   <script src="/trained-weights.js?v=1"></script>
   <script src="/trained-models.js?v=1"></script>
   <script src="/local-agent.js?v=7"></script>
-  <script src="/rapor.js?v=25"></script>
+  <script src="/rapor.js?v=26"></script>
 </body>
 </html>
