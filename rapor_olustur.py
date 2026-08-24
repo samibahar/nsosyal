@@ -373,24 +373,21 @@ govde(
     "kullanılmaktadır."
 )
 govde(
-    "Sistemin teknik altyapısı, aşağıdaki uçtan uca veri akışıyla çalışır: kullanıcı "
-    "arayüzdeki bir gönderiyle etkileşime girer; tarayıcı bu sinyali (durma süresi, "
-    "tıklama, roket, yorum) bir REST API çağrısıyla backend'e iletir; backend gerekli "
-    "modelleri (duygu, spiral, psikolojik izlenim) çalıştırıp güncellenmiş skorları ve "
-    "bir doğal-dil açıklaması geri döner; arayüz bu yanıtla \"tespit edilen durum\" "
-    "göstergesini, renk doygunluğunu ve şeffaflık panelini anlık olarak günceller. Bu "
-    "akışı taşıyan başlıca uç noktalar:"
+    "Sistemin teknik altyapısı iki katmanlıdır. Sunucu tarafı, gönderi metnini BERT ile "
+    "bir kez skorlayıp temel ilgi + refah sıralamasını döner (GET /api/gonderiler); "
+    "davranışsal modellerin (spiral, psikolojik izlenim) katsayıları ise dışa aktarılıp "
+    "tarayıcıda saf JavaScript ile çalıştırılır (bkz. Bölüm 3.2) -- ham etkileşim verisi "
+    "hiçbir zaman cihazdan çıkmaz. Bu akışı taşıyan başlıca bileşenler:"
 )
 tablo(
-    ["Uç nokta", "İşlev"],
+    ["Bileşen (sunucu/istemci)", "İşlev"],
     [
-        ["GET /api/gonderiler", "İlgi + refah skoruna göre sıralanmış, sayfalanmış gönderi akışını döner"],
-        ["POST /api/etkilesim", "Bir etkileşimi işler; spiral seviyesini ve psikolojik izlenimi günceller"],
-        ["POST /api/dogrulama", "Kullanıcının onay cevabını modelin o anki tahminiyle karşılaştırır"],
-        ["GET /api/psikolojik-ozet", "Oturumda gerçekten gözlemlenen kategori dağılımını döner"],
-        ["GET /api/haftalik-rapor", "Oturum verisinden LLM ile gerçek zamanlı öz-farkındalık raporu üretir"],
-        ["GET /api/terapist-raporu", "Aynı veriden, yorumsuz/ham bir uzman-veri özeti üretir"],
-        ["POST /api/kisisel-mod", "Geçmişi Varsayılan/Kişiselleştirilmiş modelle yeniden skorlar"],
+        ["GET /api/gonderiler (sunucu)", "Gönderi metnini BERT ile skorlar, temel ilgi + refah sıralamasını döner"],
+        ["recordInteraction() (istemci, IndexedDB)", "Etkileşimi cihazda kaydeder; JS'e taşınan eğitilmiş modellerle spiral/psikolojik tahmini hesaplar"],
+        ["recordCheckin() (istemci)", "Onay cevabını modelin o anki tahminiyle karşılaştırır, eşleşme oranını biriktirir"],
+        ["renderHeatmap() / renderDogrulama() (istemci)", "Cihazdaki geçmişten konu x kategori ısı haritasını ve doğrulama istatistiklerini üretir"],
+        ["terapistOzetiOlustur() (istemci)", "Aynı veriden, LLM'siz/yorumsuz bir uzman-veri özeti üretir; kopyalanabilir"],
+        ["GET /api/haftalik-rapor, /api/terapist-raporu (sunucu, opsiyonel)", "LLM tabanlı doğal-dil özet; şu an arayüze bağlı değil, isteğe bağlı bir sonraki adım için hazır"],
     ],
 )
 govde(
@@ -510,6 +507,10 @@ madde([
     "örüntüleri, konu x psikolojik kategori ısı haritasını ve kendi kendini doğrulama "
     "döngüsünün canlı eşleşme oranını görebilir; bu sayfada hiçbir sabit/örnek bölüm "
     "yoktur, tamamı cihazdaki oturum verisinden üretilir.",
+    "İsterse aynı sayfada, bir uzmana götürülebilecek yorumsuz bir veri özetini "
+    "(kayıt aralığı, konu dağılımı, olası kategori dağılımı, doğrulama eşleşme oranı, "
+    "sınırlılıklar) tek tıkla oluşturup panoya kopyalayabilir; bu özet de LLM çağrısı "
+    "içermez, tamamen cihazdaki veriden hesaplanır.",
 ])
 govde(
     "Tasarım kararlarının gerekçesi şu şekildedir: arayüz, kullanıcıyı yeni bir "
