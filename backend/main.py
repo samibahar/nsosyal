@@ -188,6 +188,32 @@ def _dogal_cesitlilik_ekle(siralanmis: list[dict], genlik: float = 0.08) -> list
     return [g for g, _ in gurultulu]
 
 
+def _sayfa_sec(siralanmis: list[dict], gosterilmis: set, sayfa_boyu: int, konu_basina_ust_sinir: int = 3) -> list[dict]:
+    """Skor sırasından sayfa_boyu kadar gönderi seçer, ama aynı konudan
+    art arda konu_basina_ust_sinir'den fazlasını ALMAZ -- salt ilgi-skoru
+    farkına (ve rastgele gürültüye) güvenmek, en yüksek 1-2 ilgi alanının
+    tüm sayfayı kaplamasına yol açıyordu (kullanıcı tarafından tespit
+    edildi, 21.08.2026): 25 gönderilik iki güçlü konu, aralarındaki
+    gürültüyle rekabet edemeyen zayıf konuları pratikte hiç göstermiyordu.
+    Bu, ilgiye göre öne çıkarmayı korurken (üst sınıra takılmayan en
+    yüksek skorlu gönderiler yine önce gelir) görünür çeşitliliği garanti
+    eder -- gerçek sosyal medya akışlarının da yaptığı gibi."""
+    kalanlar = [g for g in siralanmis if g["id"] not in gosterilmis]
+    sayfa, konu_sayaci, ertelenmis = [], {}, []
+    for g in kalanlar:
+        if len(sayfa) >= sayfa_boyu:
+            break
+        konu = g["konu"]
+        if konu_sayaci.get(konu, 0) >= konu_basina_ust_sinir:
+            ertelenmis.append(g)
+            continue
+        sayfa.append(g)
+        konu_sayaci[konu] = konu_sayaci.get(konu, 0) + 1
+    if len(sayfa) < sayfa_boyu:
+        sayfa.extend(ertelenmis[: sayfa_boyu - len(sayfa)])
+    return sayfa
+
+
 def _sosyal_ile_zenginlestir(gonderiler: list[dict]) -> list[dict]:
     """Sıralama motorunun çıktısını kalıcı sosyal durumla birleştirir.
     Model skoru ve sosyal sayaçlar birbirinden bağımsız kalır."""
@@ -232,7 +258,7 @@ def api_gonderiler(sifirdan: bool = False):
     siralanmis = _dogal_cesitlilik_ekle(siralanmis)
 
     kalanlar = [g for g in siralanmis if g["id"] not in GOSTERILEN_ID_SETI]
-    sayfa = kalanlar[:SAYFA_BOYU]
+    sayfa = _sayfa_sec(siralanmis, GOSTERILEN_ID_SETI, SAYFA_BOYU)
     for g in sayfa:
         GOSTERILEN_ID_SETI.add(g["id"])
 

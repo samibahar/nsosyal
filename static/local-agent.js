@@ -137,7 +137,11 @@
       const reactionEffect = latestReaction?.topic === post.konu
         ? (positiveReaction ? .20 : intenseReaction && tone < -.15 ? -.28 : 0)
         : 0;
-      const diversity = seenTopics[post.konu] ? -.045 * seenTopics[post.konu] : .07;
+      // Ceza -.045 iken en yuksek ilgili 1-2 konu ilk sayfanin tamamini
+      // kaplayabiliyordu (kullanici tarafindan tespit edildi, 21.08.2026) --
+      // güçlendirildi ki ayni konu art arda birkac gonderiden sonra dogal
+      // olarak geri cekilsin.
+      const diversity = seenTopics[post.konu] ? -.09 * seenTopics[post.konu] : .07;
       seenTopics[post.konu] = (seenTopics[post.konu] || 0) + 1;
       const base = Number(post.ilgi_skoru || post.final_skor || .5), localScore = base * .48 + localInterest * .34 + diversity - balancing + reactionEffect - index * .0005;
       return { ...post, local_skor: localScore, local_ilgi: localInterest, local_dengeleme: balancing, local_tepki_etkisi: reactionEffect };

@@ -143,7 +143,13 @@ function createCard(post){
   const selectedReaction=localPostReactions[post.id];
   card.innerHTML=`<div class="post-body"><div class="post-meta"><span class="avatar" style="background:${topic.bg}">${topic.glyph}</span><div><div class="author">${escapeText(topic.author)}</div><div class="handle">${escapeText(topic.handle)} · şimdi</div></div><button class="post-menu" aria-label="Gönderi seçenekleri">•••</button></div><p class="post-text"></p></div><div class="post-visual" style="--visual-bg:${topic.bg};--visual-shape:${topic.shape}"><span class="visual-glyph">${topic.glyph}</span><span class="visual-caption">${escapeText(topic.name)} · Senin için seçildi</span></div><div class="post-actions"><div class="action-group"><div class="post-reaction-wrap"><button class="action-button post-reaction-trigger" type="button" aria-label="Duygu tepkisi ver" aria-expanded="false"><span>${selectedReaction?POST_REACTION_LABELS[selectedReaction]:"☺ Tepki"}</span></button></div><button class="action-button comment" type="button" aria-label="Yorum">◌ <span>Yorum</span></button></div>${post.refah_cezasi>0?'<span class="softened-pill">✦ dengelendi</span>':'<button class="why-button" type="button">✦ Neden bu?</button>'}</div>`;
   card.querySelector(".post-text").textContent=post.metin;
-  card.querySelector(".post-visual").insertAdjacentHTML("afterbegin",`<img class="post-photo" src="${postImage(post)}" alt="${escapeText(topic.name)} iÃ§eriÄŸi iÃ§in temsili gÃ¶rsel" loading="lazy">`);
+  // Her gonderiye zorla foto eklemek yerine (20 sabit stok fotografin 150+
+  // gonderide asiri tekrar etmesine yol aciyordu), yaklasik 2/3'une foto
+  // ekleniyor -- geri kalani zaten var olan konu-renkli/glyph'li ".post-visual"
+  // arka planini bosluk olarak koruyor, kart yuksekligi/ritmi bozulmuyor.
+  if (Number(post.id) % 3 !== 0) {
+    card.querySelector(".post-visual").insertAdjacentHTML("afterbegin",`<img class="post-photo" src="${postImage(post)}" alt="${escapeText(topic.name)} içeriği için temsili görsel" loading="lazy">`);
+  }
   const avatar=card.querySelector(".post-meta .avatar");avatar.textContent=author.initials;avatar.style.background=author.color;avatar.classList.add("profile-trigger");avatar.title=`${author.name} profilini aç`;
   const authorName=card.querySelector(".post-meta .author");authorName.innerHTML=`<a class="post-author-link" href="/profil.html?u=${encodeURIComponent(author.id)}">${escapeText(author.name)}</a>`;
   card.querySelector(".post-meta .handle").textContent=`${author.handle} · şimdi`;

@@ -204,7 +204,21 @@ ORNEK_GONDERILER = [
 # Şimdilik tüm konular EŞİT ağırlıkta -- ilgi skoru sıralamayı domine etmesin,
 # refah katmanının (spiral/duygu tabanlı) etkisi konu önyargısı olmadan net
 # gözlemlenebilsin diye (20.08.2026, test amaçlı geçici karar).
+# Onceden tum konular esit (0.5) yapilmisti (refah/spiral etkilerini konu
+# tercihinden bagimsiz gozlemlemek icin) -- ama bu, "ilgi alanina gore
+# siralama" etkisini de gorunmez kildi (kullanici tarafindan fark edildi,
+# 21.08.2026). Kademeli agirliklar geri getirildi; refah katmani (spiral
+# tespiti) zaten AYNI ilgi alani icinde daha az tetikleyici icerige kaydirarak
+# calisiyor, yani bu iki mekanizma birbirini bozmuyor.
+#
+# NOT: ilk denemede aralik cok genisti (0.35-0.85) -- en yuksek iki konu
+# (teknoloji/bilim) ilk sayfanin TAMAMINI kaplayip cesitliligi (ve dolayisiyla
+# o konulara ozel yazar kisiliklerini) tek boyuta indirgiyordu. Aralik
+# daralttildi: en guclu 2-3 ilgi hala belirgin bicimde one cikiyor (ve
+# _dogal_cesitlilik_ekle'nin rastgele genligini asiyor) ama tum konulari
+# silip atmiyor.
 ORNEK_KULLANICI_ILGI = {
-    "spor": 0.5, "oyun": 0.5, "sanat": 0.5, "teknoloji": 0.5, "seyahat": 0.5,
-    "saglik": 0.5, "gundem": 0.5, "bilim": 0.5, "ekonomi": 0.5, "egitim": 0.5,
+    "teknoloji": 0.72, "bilim": 0.68, "spor": 0.62, "oyun": 0.58,
+    "sanat": 0.54, "seyahat": 0.52, "gundem": 0.5, "saglik": 0.47,
+    "ekonomi": 0.44, "egitim": 0.41,
 }
