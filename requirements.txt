@@ -20,7 +20,7 @@ scikit-learn
 numpy
 pandas
 
-# LLM ile rapor metni üretimi (Gemini API — ücretsiz katman)
+# LLM ile rapor metni üretimi (opsiyonel, ücretsiz katmanı olan bir sağlayıcı)
 google-genai
 
 # Geliştirme kalitesi (opsiyonel ama önerilir)

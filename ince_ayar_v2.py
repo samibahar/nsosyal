@@ -40,11 +40,11 @@ LABEL2ID = {"negative": 0, "positive": 1}
 
 
 def veri_yukle():
-    """JSONL'i okur ve pozitif/negatif sinifi DENGELER -- Gemini'nin gunluk
-    kota siniri yuzunden pozitif tur (520) negatiften (Claude tarafindan
-    dogrudan uretildi) cok daha fazla kaldi. Dengesiz veriyle egitmek modeli
-    pozitife onyargili yapardi (savasy'nin zaten bilinen bir sorunu, bkz.
-    CLAUDE.md) -- bu yuzden coğunluk sinifi azinliga esitlenerek altorneklenir."""
+    """JSONL'i okur ve pozitif/negatif sinifi DENGELER -- LLM API'sinin gunluk
+    kota siniri yuzunden pozitif tur (520) negatiften (elle/dogrudan
+    uretildi) cok daha fazla kaldi. Dengesiz veriyle egitmek modeli
+    pozitife onyargili yapardi (savasy'nin zaten bilinen bir sorunu) --
+    bu yuzden coğunluk sinifi azinliga esitlenerek altorneklenir."""
     pozitif, negatif = [], []
     with open(VERI_DOSYASI, encoding="utf-8") as f:
         for satir in f:

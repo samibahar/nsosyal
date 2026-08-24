@@ -367,10 +367,10 @@ govde(
     "üretimi tercih edilmiştir (bkz. Bölüm 3.2). Frontend, dwell-time takibi için "
     "tarayıcının yerel Intersection Observer API'sini kullanan sade bir JavaScript/HTML/"
     "CSS arayüzüdür. Haftalık öz-farkındalık raporu, oturum verisini okunabilir bir metne "
-    "çeviren Google Gemini API'si (gemini-3.6-flash) ile üretilir; sağlayıcı seçimi "
-    "bilinçlidir: Gemini'nin kart istemeyen gerçek bir ücretsiz katmanı, açıklanabilirlik "
-    "ilkesiyle çelişmeyen, sağlayıcıdan bağımsız tasarlanmış bir prompt mimarisiyle "
-    "kullanılmaktadır."
+    "çeviren bir LLM API'si ile üretilir; sağlayıcı seçimi bilinçlidir: kart "
+    "istemeyen gerçek bir ücretsiz katmanı olan sağlayıcı tercih edilmiş, "
+    "açıklanabilirlik ilkesiyle çelişmeyen, sağlayıcıdan bağımsız tasarlanmış "
+    "bir prompt mimarisiyle kullanılmaktadır."
 )
 govde(
     "Sistemin teknik altyapısı iki katmanlıdır. Sunucu tarafı, gönderi metnini BERT ile "
@@ -424,7 +424,7 @@ govde(
     "duygu ifadeli haber-bülteni tarzı metinlerde, özellikle net negatif haberleri "
     "(deprem, tutuklama, sel gibi) yanlışlıkla pozitif okuma eğilimi. Bunun üzerine "
     "hedefli bir ikinci tur ince ayar uygulanmıştır: eğitim verisi aynı üslupta, iki "
-    "kaynaktan (kısmen Gemini API, kısmen doğrudan proje ekibi tarafından, çevrimiçi "
+    "kaynaktan (kısmen LLM API ile, kısmen doğrudan proje ekibi tarafından, çevrimiçi "
     "günlük istek kotası aşıldığında) üretilen dengeli sentetik örneklerden oluşmuştur. "
     "Bağımsız doğrulamada winvoker genel test setinde küçük bir gerileme (%94,3'ten "
     "%93,3'e, F1 0,964'ten 0,958'e) karşılığında, hedeflenen zayıf alt-türde belirgin "

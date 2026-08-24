@@ -15,7 +15,7 @@ huzursuz-ama-çekingen kontrol) üzerinden kaba biçimde ayırt ediyoruz, gerçe
 bir duygu okuması iddiasında bulunmuyoruz. "sinirli" kategorisi önceki
 "korku" (donup-izleme) tasarımının yerine, 19.08.2026'da davranışsal olarak
 DAHA AYIRT EDİLEBİLİR bir sinyal olduğu için (aktif tepki vs. pasif donma)
-tercih edildi -- bkz. CLAUDE.md.
+tercih edildi.
 "sakin" kategorisi bilinçli olarak eklendi: davranışsal sinyal zayıf/nötr
 olduğunda modelin zorla bir duyguya (örn. anksiyete) yönelmesini önler, "her
 şey bir duygudur" gibi aşırı iddialı bir çıkarımdan kaçınmamızı sağlar.

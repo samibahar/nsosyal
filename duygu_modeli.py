@@ -8,7 +8,7 @@ Model ikili (pozitif/negatif) sınıflandırma yapıyor, nötr sınıfı yok —
 nötr/duygu içermeyen cümlelerde bile model bir yöne (zayıf bir güven skoruyla)
 karar veriyor. Bu, gerçek sürümde raporda dürüstçe belirtilmesi gereken bir
 sınırlılık (savasy modelinin kendi kart bilgisine göre %95.4 doğruluk; bizim
-dogrulama.py ile ölçtüğümüz bağımsız doğruluk %69.8 -- bkz. CLAUDE.md).
+dogrulama.py ile ölçtüğümüz bağımsız doğruluk %69.8).
 
 İNCE AYARLI MODEL: ince_ayar.py, alan kayması sorununu azaltmak için bu modeli
 winvoker veri setiyle devam ederek eğitip models/bert-turkish-sentiment-ince-ayarli/

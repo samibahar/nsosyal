@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Zayif alt-tur icin NEGATIF ornekler -- Gemini kotasi bittigi icin (gunluk
-20 istek siniri) bu kez Claude (ben) tarafindan dogrudan uretildi, hicbir
+"""Zayif alt-tur icin NEGATIF ornekler -- LLM API kotasi bittigi icin (gunluk
+20 istek siniri) bu kez elle/dogrudan uretildi, hicbir
 API'ye ihtiyac olmadan. Ayni uslup kurallari: kisa/resmi/ucuncu-sahis,
 dolayli/cikarimsal olumsuz sonuc, acik "kotu/berbat" gibi kelime yok,
 gercek isim yok, siyasi/dini icerik yok, cesitli konular.

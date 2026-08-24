@@ -92,7 +92,7 @@
   // modelin o anki tahmini hic gosterilmez (taraflilik olmasin diye) --
   // cevap geldiginde, cevaptan ETKILENMEMIS bu tahminle karsilastirilip
   // gercek bir eslesme orani biriktirilir. Bu, projenin "iddia degil olcum"
-  // ilkesinin yerel mimaride yeniden kurulmus hali (bkz. CLAUDE.md).
+  // ilkesinin yerel mimaride yeniden kurulmus hali.
   async function recordCheckin(value) {
     const state = await getState();
     const meaningful = (await getEvents()).filter(event => event.type === "interaction");

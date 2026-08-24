@@ -4,7 +4,7 @@
 dogrulama.py/ince_ayar.py'nin bağımsız ölçümleri, hem orijinal hem ince ayarlı
 modelin kısa/resmi/üçüncü-şahıs "haber bülteni" tarzı cümlelerde (doğrudan
 "harika/kötü" gibi açık duygu kelimesi olmayan, dolaylı/çıkarımsal duygu
-ifadeli) zorlandığını gösterdi (~%65, bkz. CLAUDE.md). winvoker veri seti
+ifadeli) zorlandığını gösterdi (~%65). winvoker veri seti
 büyük ölçüde ürün/film yorumu tarzında olduğundan bu alt-türü yeterince
 kapsamıyor.
 

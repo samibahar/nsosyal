@@ -1,7 +1,7 @@
 """
 Demo akışı için örnek gönderi havuzu — 10 konu, konu başına 15 gönderi (150
 toplam), karışık duygu tonlarıyla (pozitif/negatif/nötr). Gerçek kullanıcı/olay
-adı geçmiyor; tüm metinler betimsel/anonim örnek içerik (CLAUDE.md kuralına
+adı geçmiyor; tüm metinler betimsel/anonim örnek içeriktir (gizlilik kuralına
 uygun). Sayı, infinite-scroll sayfalamasının (SAYFA_BOYU=12) birkaç sayfa
 boyunca gerçekten anlamlı kalması için 50'den 150'ye çıkarıldı.
 """

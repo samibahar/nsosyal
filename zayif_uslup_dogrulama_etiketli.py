@@ -4,7 +4,7 @@ Hedef zayif alt-tur (kisa/resmi/haber-bulteni tarzi, dolayli duygu ifadesi)
 icin ELLE ETIKETLENMIS dogrulama seti.
 
 ONEMLI -- BIRINCI DENEME REDDEDILDI (21.08.2026): ilk yazilan 40 ornek,
-Claude tarafindan v1_v2_farklari.txt (dogrulama_v2.py'nin ciktisi, bu
+v1_v2_farklari.txt (dogrulama_v2.py'nin ciktisi, bu
 oturumda az once okunmustu) okunduktan HEMEN SONRA yazildi -- konu secimi
 (deprem/tutuklama/siber saldiri/sel) o dosyayla belirgin ortusuyordu, hatta
 bir pozitif ornek ("Kutuphanenin calisma saatleri...") o dosyadaki tek

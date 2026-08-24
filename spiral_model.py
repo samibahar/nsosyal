@@ -3,7 +3,7 @@ Spiral sınıflandırıcı — gerçek eğitilmiş model (scikit-learn), spike_p
 kaba "15 saniyeden fazla negatif içerikte kalma = spiral" kuralının yerini alır.
 
 Gerçek kullanıcı davranış verisi yok (platform henüz bize API erişimi vermiyor),
-bu yüzden CLAUDE.md'de kararlaştırıldığı gibi küçük, senaryo-bazlı SENTETİK bir
+bu yüzden küçük, senaryo-bazlı SENTETİK bir
 veri seti kullanıyoruz. Etiketler kural-tabanlı ama doğrusal olmayan bir üretici
 fonksiyondan + %8 etiket gürültüsünden geliyor, ki model gerçek sinyali gürültüden
 ayırt etmeyi öğrensin ve F1/doğruluk metrikleri gerçekçi (mükemmel değil) çıksın.

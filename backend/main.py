@@ -30,7 +30,7 @@ from psikolojik_durum import (
 )
 import haftalik_rapor
 
-app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Kanıt-of-Konsept")
+app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Prototip")
 
 DEPO = SosyalDepo(BASE_DIR / "data" / "nsosyal_demo.sqlite3")
 DEPO.hazirla([*ORNEK_GONDERILER, *TOPLULUK_GONDERILERI])
@@ -55,7 +55,7 @@ TAM_GUVEN_ESIGI = 8  # spiral oranı bu kadar farklı gönderi görülmeden tam 
 # verisine değil. Bunu
 # "doğrulanmış" gibi sunmak yerine, kullanıcıya ara sıra hafif bir onay sorusu
 # sorup CEVABINI modelin tahminiyle karşılaştırıyoruz -- gerçek bir dayanak
-# ancak böyle oluşur. Bkz. CLAUDE.md "Kendi Kendini Doğrulayan Aktif Öğrenme".
+# ancak böyle oluşur.
 DOGRULAMA_GUNLUGU: list[dict] = []
 DOGRULAMA_ARALIGI = 20  # daha az invaziv: yaklaşık her 20 anlamlı etkileşimde bir
 SAYAC = {"son_dogrulamadan_beri": 0}

@@ -1,16 +1,16 @@
 """
-LLM destekli "haftalık öz-farkındalık raporu" üretimi — CLAUDE.md'de baştan beri
-planlanan ama önce statik bir örnekle gösterilen özelliğin gerçek hâli.
+LLM destekli "haftalık öz-farkındalık raporu" üretimi -- önce statik bir
+örnekle gösterilen özelliğin gerçek hâli.
 
 Gerçek oturum verisinden (psikolojik_durum kategorileri, konu, saat) bir özet
-çıkarılıp Gemini API'sine prompt olarak verilir; model bunu okunabilir, nazik,
-TEŞHİS OLMAYAN bir rapor metnine çevirir. API anahtarı yoksa (ör. .env dosyası
-eksikse) `mevcut()` False döner ve arayüz zaten var olan statik örneğe düşer --
-kod hiçbir zaman "sahte" bir LLM çıktısı uydurmaz.
+çıkarılıp bir LLM API'sine prompt olarak verilir; model bunu okunabilir,
+nazik, TEŞHİS OLMAYAN bir rapor metnine çevirir. API anahtarı yoksa (ör. .env
+dosyası eksikse) `mevcut()` False döner ve arayüz zaten var olan statik
+örneğe düşer -- kod hiçbir zaman "sahte" bir LLM çıktısı uydurmaz.
 
-Gemini kullanılıyor (Claude değil) -- ücretsiz katmanı olduğu için (bkz. CLAUDE.md,
-19.08.2026 notu). Mantık/prompt tasarımı sağlayıcıdan bağımsız, istenirse
-Anthropic'e geri dönmek tek fonksiyonu (uret) değiştirmek kadar basit.
+Ücretsiz katmanı olan bir sağlayıcı tercih edildi. Mantık/prompt tasarımı
+sağlayıcıdan bağımsız, başka bir sağlayıcıya geçmek tek fonksiyonu (uret)
+değiştirmek kadar basit.
 """
 import os
 
