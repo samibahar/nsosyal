@@ -5,23 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#dff8d6" />
   <title>İçgörü — NSosyal</title>
-  <link rel="stylesheet" href="/style.css?v=33" />
+  <link rel="stylesheet" href="/style.css?v=36" />
 </head>
 <body class="insight-body">
   <main class="insight-page">
     <header class="insight-topbar"><a class="insight-brand" href="/index.html"><span class="brand-mark">n</span><b>nSosyal</b></a><button class="insight-bell" aria-label="Bildirimler">♧<i></i></button></header>
     <section class="insight-hero"><p>Bu cihazdaki akışın</p><h1>Oturum<br>içgörüleri</h1></section>
     <section class="range-switch" aria-label="Zaman aralığı"><button type="button" data-range="month">Ay</button><button class="active" type="button" data-range="week">Hafta</button><button type="button" data-range="today">Bugün</button></section>
-    <section class="insight-summary" aria-live="polite"><div class="summary-heading"><span>✦</span><div><b id="insight-status-title">Veri bekleniyor</b><p id="insight-status-text">Etkileşimlerin yalnızca bu cihazda özetlenir.</p></div></div><button id="insight-detail-button" type="button">Ayrıntılar <span>→</span></button></section>
+    <section class="insight-summary" aria-live="polite"><div class="summary-heading"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2.5-7 4 14 2.5-7H21"/></svg></span><div><b id="insight-status-title">Veri bekleniyor</b><p id="insight-status-text">Etkileşimlerin yalnızca bu cihazda özetlenir.</p></div></div><button id="insight-detail-button" type="button">Ayrıntılar <span>→</span></button></section>
     <section class="data-kpis" aria-label="Oturum özeti"><article><small>Etkileşim</small><b id="kpi-interactions">0</b><span>bu cihazda</span></article><article><small>Gönüllü tepki</small><b id="kpi-reactions">0</b><span>sen belirttin</span></article><article><small>Akış hareketi</small><b id="kpi-moved">—</b><span>son demo</span></article></section>
     <section id="real-insights" class="insight-chart-card"><div class="chart-heading"><div><span>ETKİLEŞİM RİTMİ</span><h2>Zaman içinde sinyaller</h2></div><small id="rhythm-caption">Henüz veri yok</small></div><div id="rhythm-chart" class="session-line-chart" role="img" aria-label="Oturumdaki etkileşim ritmi grafiği"></div></section>
     <section class="insight-grid useful-grid"><article class="insight-chart-card"><div class="chart-heading"><div><span>KONU DAĞILIMI</span><h2>Nelerle etkileştin?</h2></div></div><div id="topic-chart" class="topic-chart"></div></article><article class="insight-chart-card"><div class="chart-heading"><div><span>GÖNÜLLÜ TEPKİLER</span><h2>Senin geri bildirimin</h2></div></div><div id="reaction-chart" class="reaction-chart"></div></article></section>
+    <section class="insight-chart-card"><div class="chart-heading"><div><span>KONU × OLASI RİTİM</span><h2>Hangi konularda nasıl hissettin?</h2></div></div><div id="heatmap-chart" class="heatmap"></div></section>
+    <section class="insight-chart-card"><div class="chart-heading"><div><span>MODEL DOĞRULAMA</span><h2>Tahminler ne kadar tutuyor?</h2></div><small>Sorulmadan önce gösterilmez</small></div><div id="dogrulama-chart" class="validation-grid"></div></section>
     <section class="insight-data-note"><b>✦ Verin sende kalır</b><p>Grafikler bu tarayıcının yerel etkileşim kaydından hesaplanır. Bu ekran bir teşhis veya klinik değerlendirme değildir.</p></section>
   </main>
   <nav class="bottom-nav insight-nav" aria-label="Alt menü"><a class="nav-item" href="/index.html"><span>⌂</span><small>Ana Sayfa</small></a><a class="nav-item" href="/kesfet.html"><span>⌕</span><small>Keşfet</small></a><a class="create-button" href="/index.html?compose=1" aria-label="Yeni gönderi">＋</a><a class="nav-item" href="/haberler.html"><span>▤</span><small>Haberler</small></a><a class="nav-item active" href="/rapor.html"><span>◔</span><small>İçgörü</small></a></nav>
   <script src="/trained-weights.js?v=1"></script>
   <script src="/trained-models.js?v=1"></script>
-  <script src="/local-agent.js?v=6"></script>
-  <script src="/rapor.js?v=24"></script>
+  <script src="/local-agent.js?v=7"></script>
+  <script src="/rapor.js?v=25"></script>
 </body>
 </html>

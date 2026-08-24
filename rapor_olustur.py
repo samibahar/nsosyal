@@ -459,13 +459,25 @@ govde(
     "o anki tahminiyle karşılaştırılır; bu mekanizma psikolojideki Ecological Momentary "
     "Assessment (EMA) yönteminin bağımsız bir uygulamasıdır [1][2]; literatür bu tür "
     "tekrarlı öz-bildirim sorgularının kullanıcı yorgunluğuna (fatigue) yol açabileceğini "
-    "de not eder [3], bu yüzden soru sıklığı bilinçli olarak düşük (her ~8 etkileşimde "
-    "bir) tutulmuştur. Bu mekanizmanın kendisi de aynı doğrulama disiplinine tabi "
-    "tutulmuştur: canlı testte, karşılaştırmanın yanlışlıkla anlık tahmin yerine "
-    "oturumun ağırlıklı ortalamasıyla yapıldığı bir mantık hatası tespit edilip "
-    "düzeltilmiştir; düzeltmeden önce bu hata, eşleşme oranını yapay biçimde neredeyse "
-    "sıfıra çekiyordu. Bu, projenin yalnızca dış bileşenleri değil kendi doğrulama "
-    "araçlarını da sorguladığının somut bir örneğidir."
+    "de not eder [3], bu yüzden soru sıklığı bilinçli olarak düşük tutulmuştur. Bu "
+    "mekanizmanın kendisi de aynı doğrulama disiplinine tabi tutulmuştur: canlı testte, "
+    "karşılaştırmanın yanlışlıkla anlık tahmin yerine oturumun ağırlıklı ortalamasıyla "
+    "yapıldığı bir mantık hatası tespit edilip düzeltilmiştir; düzeltmeden önce bu hata, "
+    "eşleşme oranını yapay biçimde neredeyse sıfıra çekiyordu. Bu, projenin yalnızca dış "
+    "bileşenleri değil kendi doğrulama araçlarını da sorguladığının somut bir örneğidir."
+)
+govde(
+    "Prototipin ikinci sürümünde bilinçli bir mimari tercih yapılmıştır: eğitilmiş "
+    "spiral ve psikolojik izlenim modellerinin katsayıları (ağırlık + kesişim + "
+    "ölçekleyici parametreleri, toplam birkaç düzine sayı) tek seferlik dışa "
+    "aktarılıp istemci tarafında saf JavaScript ile çalıştırılmaktadır -- bu bir "
+    "yaklaşıklama değil, aynı eğitilmiş modelin birebir aynı matematiğidir (nokta "
+    "çarpımı + sigmoid/softmax). Böylece ham davranışsal veri (hangi gönderiye ne "
+    "kadar bakıldığı, tıklama/tepki geçmişi) hiçbir zaman cihazdan çıkmaz; sunucu "
+    "yalnızca gönderi metnini BERT ile bir kez skorlar, kişiye özel öğrenme ve "
+    "kendi kendini doğrulama döngüsü tamamen tarayıcıda (IndexedDB) tutulur. Bu, "
+    "\"veri minimizasyonu\" ilkesinin somut bir uygulamasıdır ve Bölüm 5.1'deki "
+    "toplumsal fayda iddiasını doğrudan güçlendirir."
 )
 
 t_ozet = tablo(
@@ -476,8 +488,8 @@ t_ozet = tablo(
         ["Spiral tespiti", "Doğruluk 0,714 / F1 0,748", "Stratified train/test, senaryo verisi"],
         ["Psikolojik izlenim (5 kategori)", "F1 makro 0,704",
          "Ölçek düzeltmesi (StandardScaler) ile 0,686'dan iyileştirildi"],
-        ["Kendi kendini doğrulama döngüsü", "Canlı test edildi, çalışır durumda",
-         "Gerçek etkileşimde model tahmini ile kullanıcı onayı eşleşti"],
+        ["Kendi kendini doğrulama döngüsü", "Cihaz-içi çalışır durumda; eşleşme oranı canlı hesaplanır",
+         "IndexedDB'deki onay geçmişi ile o anki model tahmini karşılaştırılır"],
     ],
 )
 
@@ -493,12 +505,11 @@ madde([
     "akışın renk doygunluğu güncellenir.",
     "\"Neden bunu görüyorsun?\" butonuna basarak, o gönderiye özel şeffaflık panelini "
     "(ilgi skoru/refah cezası/final skoru) açabilir.",
-    "Yaklaşık her 8 etkileşimde bir, kısa ve geçilebilir bir onay sorusu görünür.",
-    "İstediği an \"Haftalık Rapor\" sayfasına geçip o oturumda gerçekten gözlemlenen "
-    "örüntüleri, konu x psikolojik kategori ısı haritasını, model doğrulama "
-    "istatistiklerini ve gerçek zamanlı üretilen yapay zekâ yorumunu görebilir; bu "
-    "sayfada artık hiçbir sabit/örnek bölüm yoktur, tamamı canlı oturum verisinden "
-    "üretilir.",
+    "Ara sıra kısa ve geçilebilir bir onay sorusu görünür.",
+    "İstediği an \"İçgörüler\" sayfasına geçip o oturumda gerçekten gözlemlenen "
+    "örüntüleri, konu x psikolojik kategori ısı haritasını ve kendi kendini doğrulama "
+    "döngüsünün canlı eşleşme oranını görebilir; bu sayfada hiçbir sabit/örnek bölüm "
+    "yoktur, tamamı cihazdaki oturum verisinden üretilir.",
 ])
 govde(
     "Tasarım kararlarının gerekçesi şu şekildedir: arayüz, kullanıcıyı yeni bir "
@@ -514,12 +525,16 @@ govde(
     "sessizce eziyordu, sinyal birleştirme mantığıyla giderildi; çok kısa/edilgen bir "
     "görünme (<0,6sn) tam bir gözlem gibi sayılıp barları saptırıyordu, etkileşim-ağırlıklı "
     "ortalamayla düzeltildi; ilk sürümde sayfalama sığ kalıyordu, gerçek sonsuz-kaydırma "
-    "(infinite scroll) ile 150 örnek gönderiye genişletildi; aşırı hızlı kaydırma "
+    "(infinite scroll) ile 250 örnek gönderiye genişletildi; aşırı hızlı kaydırma "
     "sırasında her gönderi 0,3 saniyenin altında göründüğü için istemci tarafındaki bir "
     "gürültü filtresi bu etkileşimleri backend'e hiç iletmiyor, dolayısıyla \"kaydırma "
     "hızı\" özelliği (spiral tespitinin altı özelliğinden biri) en hızlı kaydırılan "
     "anlarda hiç güncellenemiyordu; filtre kaldırılıp bu sorumluluk zaten var olan "
-    "sunucu-taraflı ağırlıklandırmaya bırakıldı. Ayrıca arayüz, gerçek NSosyal "
+    "ağırlıklandırma mekanizmasına bırakıldı. Ayrı bir testte, içerik havuzu genişledikçe "
+    "en yüksek ilgi alanına sahip 1-2 konunun (aralarındaki rastgele çeşitlilik gürültüsü "
+    "onları ayırt edemediği için) sayfanın tamamını tek başına kaplayabildiği görülmüştür; "
+    "puan farkına güvenmek yerine \"aynı konudan sayfa başına en fazla N gönderi\" kuralı "
+    "eklenerek ilgiye göre öne çıkarma korunmuş, tekdüzelik giderilmiştir. Ayrıca arayüz, gerçek NSosyal "
     "arayüzünün genel yapısı (sol gezinme menüsü, sağ bilgi paneli, gönderi kartı "
     "düzeni) görsel referans alınarak yeniden tasarlandı; NSosyal'in kullanım "
     "koşulları otomatik/programatik erişimi yasakladığından bu inceleme tamamen "

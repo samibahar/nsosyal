@@ -35,12 +35,38 @@ function renderLine(events){const target=$("rhythm-chart"),interactions=events.f
   $("rhythm-caption").textContent=`${interactions.length} etkileşim`;
 }
 function renderTopics(events){const target=$("topic-chart"),values=countBy(events.filter(event=>event.type==="interaction"),event=>event.topic);const rows=Object.entries(values).sort((a,b)=>b[1]-a[1]).slice(0,4);if(!rows.length){empty(target,"Konu dağılımı henüz oluşmadı.");return;}const max=Math.max(...rows.map(([,count])=>count));target.innerHTML=rows.map(([topic,count])=>`<div class="topic-row"><span>${topicLabels[topic]||topic}</span><div><i style="width:${count/max*100}%"></i></div><b>${count}</b></div>`).join("");}
+const KATEGORI_RENK={sakin:"#8fb3a8",mutluluk:"#adeb4b",umut:"#79c4e8",sinirli:"#f0bd76",anksiyete:"#f4868e"};
+const KATEGORI_SIRA=["sakin","mutluluk","umut","sinirli","anksiyete"];
+function renderHeatmap(events){
+  const target=$("heatmap-chart");
+  if(typeof window.TrainedModels==="undefined"){empty(target,"Model bu sayfada henüz yüklenmedi.");return;}
+  const interactions=events.filter(event=>event.type==="interaction");
+  if(interactions.length<5){empty(target,"Birkaç etkileşimden sonra burada konu × olası ritim örüntün görünecek.");return;}
+  const sayim={};
+  interactions.forEach(event=>{
+    const tahmin=window.TrainedModels.psikolojikTahmin({duygu:event.tone,dwell_saniye:event.dwell,tiklama:event.click?1:0,roket:event.rocket?1:0,yorum:event.comment?1:0});
+    sayim[event.topic]=sayim[event.topic]||{};
+    sayim[event.topic][tahmin.kategori]=(sayim[event.topic][tahmin.kategori]||0)+1;
+  });
+  const konular=Object.entries(sayim).map(([topic,kats])=>[topic,Object.values(kats).reduce((a,b)=>a+b,0)]).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([topic])=>topic);
+  const max=Math.max(1,...konular.flatMap(topic=>KATEGORI_SIRA.map(kat=>sayim[topic][kat]||0)));
+  target.innerHTML=`<div class="heatmap-row"><b></b>${KATEGORI_SIRA.map(kat=>`<span style="background:none;font-size:8px;color:var(--muted)">${kat.slice(0,4)}</span>`).join("")}</div>`+
+    konular.map(topic=>`<div class="heatmap-row"><b>${topicLabels[topic]||topic}</b>${KATEGORI_SIRA.map(kat=>{const deger=sayim[topic][kat]||0;return `<span style="--heat-color:${KATEGORI_RENK[kat]};--heat:${deger/max}" title="${kat}: ${deger}">${deger||""}</span>`;}).join("")}</div>`).join("");
+}
+async function renderDogrulama(){
+  const target=$("dogrulama-chart"),agent=window.LocalPersonalization;
+  if(!agent){empty(target,"Yerel model bu sayfada yüklenmedi.");return;}
+  const ozet=await agent.dogrulamaOzeti();
+  if(!ozet.toplam){empty(target,"Ara sıra çıkan kısa onay sorusuna cevap verdikçe, tahminin gerçekle ne kadar örtüştüğü burada görünür.");return;}
+  const yuzde=Math.round(ozet.eslesmeOrani*100);
+  target.innerHTML=`<div><b>${ozet.toplam}</b><span>onay sorusu</span></div><div><b>%${yuzde}</b><span>tahmin eşleşti</span></div><div><b>${KATEGORI_SIRA.length}</b><span>olası kategori</span></div>`;
+}
 function renderReactions(events){const target=$("reaction-chart"),values=countBy(events.filter(event=>event.type==="post_reaction"||event.type==="news_reaction"),event=>event.reaction);const rows=Object.entries(values);if(!rows.length){empty(target,"Bir tepkini seçtiğinde burada görünür.");return;}target.innerHTML=rows.map(([reaction,count])=>`<div class="reaction-row"><span>${reactionLabels[reaction]?.[0]||"☺"}</span><b>${reactionLabels[reaction]?.[1]||reaction}</b><i>${count}</i></div>`).join("");}
 function renderSummary(events){const interactions=events.filter(event=>event.type==="interaction"),reactions=events.filter(event=>event.type==="post_reaction"||event.type==="news_reaction");$("kpi-interactions").textContent=interactions.length;$("kpi-reactions").textContent=reactions.length;$("kpi-moved").textContent=trace?.movedCount??"—";
   if(!interactions.length){$("insight-status-title").textContent="Veri bekleniyor";$("insight-status-text").textContent="Etkileşimlerin yalnızca bu cihazda özetlenir.";return;}
   const topics=Object.entries(countBy(interactions,event=>event.topic)).sort((a,b)=>b[1]-a[1]);const top=topicLabels[topics[0]?.[0]]||"çeşitli konular";$("insight-status-title").textContent="Akış ritmin oluşuyor";$("insight-status-text").textContent=`Bu ${activeRange==="today"?"gün":activeRange==="week"?"hafta":"ay"} en çok ${top} içeriğiyle etkileştin. ${reactions.length?"Gönüllü tepkilerin sıralamayı yerelde günceller.":"İstersen tepki vererek akışı daha açık biçimde şekillendirebilirsin."}`;
 }
-function render(){const events=scopedEvents();renderSummary(events);renderLine(events);renderTopics(events);renderReactions(events);}
+function render(){const events=scopedEvents();renderSummary(events);renderLine(events);renderTopics(events);renderReactions(events);renderHeatmap(events);renderDogrulama();}
 async function init(){const agent=window.LocalPersonalization;if(!agent)return;await agent.init();[allEvents,trace]=await Promise.all([agent.getLocalEvents(),agent.getDecisionTrace()]);render();}
 document.querySelectorAll(".range-switch button").forEach(button=>button.addEventListener("click",()=>{activeRange=button.dataset.range;document.querySelectorAll(".range-switch button").forEach(item=>item.classList.toggle("active",item===button));render();}));
 $("insight-detail-button").addEventListener("click",()=>$("real-insights").scrollIntoView({behavior:"smooth",block:"start"}));

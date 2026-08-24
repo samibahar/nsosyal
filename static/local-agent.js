@@ -45,16 +45,23 @@
   // modellerini, hicbir ham veri cihazdan cikmadan burada calistirir --
   // trained-models.js ile trained-weights.js yuklu degilse (eski sayfa
   // onbellegi vb.) eski basit esik-tabanli formule geri duser.
+  // psikolojik_durum.py'nin 5 kategorili tahminini, IndexedDB'deki EN SON
+  // etkilesimden hesaplar (typeof kontrolu: trained-models.js yuklenmediyse
+  // -- eski sayfa onbellegi -- null doner).
+  function _anlikKategoriTahmini(meaningful) {
+    if (!meaningful.length || typeof window.TrainedModels === "undefined") return null;
+    const son = meaningful[meaningful.length - 1];
+    return window.TrainedModels.psikolojikTahmin({
+      duygu: son.tone, dwell_saniye: son.dwell, tiklama: son.click ? 1 : 0,
+      roket: son.rocket ? 1 : 0, yorum: son.comment ? 1 : 0,
+    });
+  }
   function _egitilmisYogunluk(meaningful) {
     const log = _dedupluGunluk(meaningful);
     const ozellikler = _spiralOzellikleri(log);
     if (!ozellikler || typeof window.TrainedModels === "undefined") return null;
     const spiralOlasilik = window.TrainedModels.spiralOlasiligi(ozellikler);
-    const son = meaningful[meaningful.length - 1];
-    const psikolojik = window.TrainedModels.psikolojikTahmin({
-      duygu: son.tone, dwell_saniye: son.dwell, tiklama: son.click ? 1 : 0,
-      roket: son.rocket ? 1 : 0, yorum: son.comment ? 1 : 0,
-    });
+    const psikolojik = _anlikKategoriTahmini(meaningful);
     const negatifRuhHaliKutlesi = (psikolojik.olasiliklar.sinirli || 0) + (psikolojik.olasiliklar.anksiyete || 0);
     return clamp(spiralOlasilik * 0.7 + negatifRuhHaliKutlesi * 0.3);
   }
@@ -81,7 +88,28 @@
     await Promise.all([addEvent({ type: "interaction", createdAt: Date.now(), postId: post.id, topic, tone: safeTone(post.duygu), dwell: Number(dwell.toFixed(2)), click: !!click, rocket: !!rocket, comment: !!comment, exit: !!exit, demo: !!demo }), setState(state)]);
     await trimEvents(); return summary();
   }
-  async function recordCheckin(value) { const state = await getState(); state.lastCheckinAt = Date.now(); state.checkins += 1; await Promise.all([addEvent({ type: "checkin", createdAt: Date.now(), value }), setState(state)]); return summary(); }
+  // Kendi kendini dogrulama (EMA) dongusu: kullaniciya soru sorulmadan ONCE
+  // modelin o anki tahmini hic gosterilmez (taraflilik olmasin diye) --
+  // cevap geldiginde, cevaptan ETKILENMEMIS bu tahminle karsilastirilip
+  // gercek bir eslesme orani biriktirilir. Bu, projenin "iddia degil olcum"
+  // ilkesinin yerel mimaride yeniden kurulmus hali (bkz. CLAUDE.md).
+  async function recordCheckin(value) {
+    const state = await getState();
+    const meaningful = (await getEvents()).filter(event => event.type === "interaction");
+    const tahmin = _anlikKategoriTahmini(meaningful);
+    state.lastCheckinAt = Date.now(); state.checkins += 1;
+    await Promise.all([
+      addEvent({ type: "checkin", createdAt: Date.now(), value, tahmin: tahmin?.kategori || null, eslesme: tahmin ? tahmin.kategori === value : null }),
+      setState(state),
+    ]);
+    return summary();
+  }
+  async function dogrulamaOzeti() {
+    const checkinler = (await getEvents()).filter(event => event.type === "checkin" && event.eslesme !== null && event.eslesme !== undefined);
+    if (!checkinler.length) return { toplam: 0, eslesmeOrani: null };
+    const eslesen = checkinler.filter(event => event.eslesme).length;
+    return { toplam: checkinler.length, eslesmeOrani: eslesen / checkinler.length };
+  }
   async function recordPostReaction(post, reaction, demo) {
     const allowed = ["begendim", "umutlandim", "dusundum", "kizdim", "gerildim"];
     if (!post || !allowed.includes(reaction)) return summary();
@@ -171,5 +199,5 @@
   }
   async function getDecisionTrace() { return (await getState()).demoTrace || null; }
   async function erase() { const db = await openDatabase(); await new Promise((resolve, reject) => { const tx = db.transaction(["events", "state"], "readwrite"); tx.objectStore("events").clear(); tx.objectStore("state").clear(); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); return summary(); }
-  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, rankNews, runDemoScenario, getDecisionTrace, erase };
+  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, rankNews, runDemoScenario, getDecisionTrace, erase };
 })();
