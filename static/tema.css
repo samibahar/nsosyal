@@ -302,6 +302,69 @@ html, body { background: var(--canvas); }
 .checkin-card { border-radius: 18px; box-shadow: 0 12px 40px rgba(10, 14, 12, .16); }
 .dogrulama-secenek { border: 1px solid var(--line); border-radius: 12px; }
 .dogrulama-secenek:hover { background: var(--accent-yumusak); border-color: var(--accent); }
+
+/* "KISA BIR KONTROL" etiketi 9px ve 4.16:1 kontrastta kaliyordu; kart
+   gizliyken denetimlere hic takilmadigi icin gozden kacmisti. */
+.checkin-card > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--eyebrow);
+}
+
+/* Duygu secenekleri: ikon USTTE, etiket ALTTA.
+   arayuz.css'teki dokunma hedefi kurali bunlari "inline-flex" (satir) yapmisti;
+   ikon ile etiket yan yana dizilince "Mutluluk" kutuya sigmiyor, "Yoğun"
+   kesiliyor, mobilde son secenek kartin disina tasiyordu. */
+.checkin-options { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.dogrulama-secenek {
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 9px 2px 8px;
+}
+.dogrulama-secenek small {
+  display: block;
+  margin-top: 0;
+  max-width: 100%;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Masaustu/tablet: kart ekranin ortasini kapatmak yerine sag altta,
+   kucuk bir bildirim olarak cikar (560px -> 400px).
+   Mobilde alt menunun ustunde tam genislikte kalmaya devam eder. */
+@media (min-width: 681px) {
+  .checkin-card {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    transform: none;
+    width: 400px;
+    padding: 16px 16px 14px;
+    border-radius: 18px;
+  }
+  .checkin-card.gizli { transform: translateY(12px); }
+  .checkin-card h2 { font-size: 16px; margin: 6px 0 4px; }
+  .checkin-card p { font-size: 12.5px; line-height: 1.45; margin: 0 0 12px; padding-right: 28px; }
+  .checkin-options { gap: 6px; }
+  .dogrulama-secenek { min-height: 66px; border-radius: 14px; }
+  .dogrulama-secenek .ikon { width: 24px; height: 24px; }
+  .checkin-close {
+    right: 8px;
+    top: 8px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+  }
+  /* "Akis guncellendi" bildirimi de masaustunde sag altta (bottom:24px)
+     ve z-index'i daha yuksek; ikisi ayni anda cikarsa kart ortulmesin. */
+  body:has(.ranking-notice.show) .checkin-card { bottom: 88px; }
+}
 .explore-chips button,
 .news-categories button,
 .range-switch button { border-radius: 999px; }
