@@ -104,13 +104,12 @@ select:focus-visible,
 .post-author-link { padding: 4px 2px; margin: -4px -2px; }
 .post-menu { min-width: 40px; min-height: 40px; }
 .jury-demo-button { min-width: var(--hedef); }
-.local-privacy-button { min-height: 26px; padding-top: 6px !important; }
 #status-detail-button { min-width: 34px; min-height: 34px; }
 
 /* Kucuk metin butonlarina gorunmez dokunma payi ekle (layout kaymadan) */
 .text-button,
 #sifirla-buton,
-.local-privacy-button,
+#local-privacy-button,
 .feed-heading button,
 .card-title-row button,
 .chart-heading button {
@@ -119,7 +118,7 @@ select:focus-visible,
 }
 .text-button::after,
 #sifirla-buton::after,
-.local-privacy-button::after,
+#local-privacy-button::after,
 .feed-heading button::after,
 .card-title-row button::after,
 .chart-heading button::after {
@@ -155,6 +154,38 @@ select:focus-visible,
 .insight-data-note p,
 .chart-empty { color: var(--muted); }
 
+/* 2f. Koyu alt menudeki etiketler #abb3a6 ile 3.12:1'de kaliyordu (AA icin
+   4.5:1 gerekli); aciklastirildi.
+   DIKKAT: yukaridaki ".nav-item small" kurali etiket rengini --eyebrow (koyu
+   yesil) yapiyor; koyu zeminde okunmuyor, bu yuzden burada geri aliniyor. */
+.bottom-nav .nav-item { color: #b9c1b4; }
+.bottom-nav .nav-item small { color: inherit; }
+.bottom-nav .nav-item.active,
+.bottom-nav .nav-item.active small { color: var(--lime); }
+
+/* 2g. 7-9px'lik etiketler okunabilirlik sinirinin altindaydi.
+   .flow-eyebrow icin style.css'te ".flow-status .flow-eyebrow" (0,2,0)
+   kurali var; ayni ozgullukle yaziyoruz. Rengi de 3.69:1'den yukari cekiyoruz. */
+.dogrulama-secenek small { font-size: 10px; }
+.brand-text small { font-size: 10px; }
+.flow-status .flow-eyebrow { font-size: 10px; color: var(--eyebrow); }
+.nav-item small { font-size: 10px; }
+
+/* app.js bu dugmeye yalnizca id veriyor (class yok), ama enjekte ettigi
+   stil ".flow-status .local-privacy-button" class secicisini kullaniyor --
+   yani o kural hicbir zaman eslesmiyor. Dogru secici id uzerinden. */
+#local-privacy-button {
+  min-height: 26px;
+  padding: 6px 0 2px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+/* 2h. Hikaye halkalarindaki bas harfler acik uclu gradyanlar uzerinde
+   soluk kaliyordu. Bilgi zaten hemen altindaki isim etiketinde de var
+   (yani tek tasiyici degil), yine de okunurlugu artiriyoruz. */
+.story-photo { text-shadow: 0 1px 4px rgba(12, 18, 10, .55); }
+
 /* 2e. Ekran okuyucu metni */
 .sr-only {
   position: absolute;
@@ -181,13 +212,17 @@ select:focus-visible,
   }
   .desktop-rail { padding: 26px 8px; }
 
-  /* Etiketleri geri getir */
-  .brand span:last-child,
-  .rail-link span,
-  .profile-mini > span:nth-child(2),
-  .rail-new-post { display: revert; }
+  /* Etiketleri geri getir.
+     Not: "display: revert" burada UA varsayilanina (inline) donuyordu ve
+     marka yazisi "nsosyalduygu katmaniprototip" diye bitisiyordu; bu yuzden
+     masaustundeki degerler acikca tekrarlaniyor. */
+  .brand span:last-child { display: flex; flex-direction: column; gap: 1px; }
+  .rail-link span { display: inline; }
+  .profile-mini > span:nth-child(2) { display: flex; flex-direction: column; min-width: 0; }
+  .profile-mini > span:nth-child(2) b { font-size: 13px; }
+  .profile-mini > span:nth-child(2) small { font-size: 11px; color: var(--muted); }
   .brand { justify-content: flex-start; }
-  .profile-mini { justify-content: flex-start; }
+  .profile-mini { justify-content: flex-start; gap: 9px; }
 
   .rail-link {
     justify-content: flex-start;
@@ -292,6 +327,65 @@ select:focus-visible,
 }
 
 /* --------------------------------------------------------------------------
+   5b) ICGORU SAYFASI — MOBIL DUZEN
+   Sorunlar: 36px'lik zorunlu iki satirlik baslik + genis bosluklar ilk ekranin
+   ucte birini yiyordu; bos grafik kutusu 132px'lik gri bir bosluk olarak
+   kaliyordu; kartlar alt menunun altinda kesiliyordu.
+   -------------------------------------------------------------------------- */
+@media (max-width: 680px) {
+  .insight-hero { padding: 14px 2px 12px; }
+  .insight-hero h1 { font-size: 27px; line-height: 1.08; }
+  /* Zorunlu satir sonu mobilde gereksiz yer kapliyordu.
+     HTML'de <br> oncesinde bilincli bir bosluk var; aksi halde
+     "Oturumiçgörüleri" diye bitisik yaziliyordu. */
+  .insight-hero h1 br { display: none; }
+  .insight-hero p { font-size: 12px; margin-bottom: 3px; }
+
+  /* Uc KPI etiketinden biri ("Gönüllü tepki") iki satira tasip kartlari
+     esitsiz yukseklikte birakiyordu */
+  .data-kpis small { font-size: 10px; white-space: nowrap; }
+  .data-kpis article { display: grid; align-content: start; }
+
+  .range-switch { padding: 4px; border-radius: 17px; }
+  .range-switch button { padding: 9px 3px; font-size: 13px; min-height: var(--hedef); }
+
+  .insight-chart-card { padding: 14px; margin-top: 12px; }
+  .chart-heading h2 { font-size: 16px; }
+  .data-kpis { gap: 7px; margin: 12px 0; }
+  .data-kpis b { font-size: 21px; }
+
+  /* Alt menu (65px + 9px alt bosluk) icerigi kesmesin */
+  .insight-body { padding-bottom: 96px; }
+}
+
+/* Bos durum bir grid/flex kabin icine dustugunde tek bir sutuna sikisip
+   kelimeleri alt alta kiriyordu; tum genisligi kaplamasi gerekiyor. */
+.validation-grid .bos-durum,
+.heatmap .bos-durum,
+.topic-chart .bos-durum,
+.reaction-chart .bos-durum,
+.session-line-chart .bos-durum {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.validation-grid:has(.bos-durum),
+.heatmap:has(.bos-durum) {
+  display: block;
+  background: transparent;
+  padding: 0;
+}
+
+/* Bos grafik: sabit yukseklikli gri kutu yerine icerige gore buyuyen alan */
+.session-line-chart:has(.bos-durum) {
+  height: auto;
+  min-height: 0;
+  background: transparent;
+  padding: 0;
+}
+.topic-chart:has(.bos-durum),
+.reaction-chart:has(.bos-durum) { min-height: 0; }
+
+/* --------------------------------------------------------------------------
    6) IKON YERLESIM DUZELTMELERI
    Glifler metin akisinda hizalaniyordu; SVG'ler flex hizalamasi ister.
    -------------------------------------------------------------------------- */
@@ -324,7 +418,7 @@ select:focus-visible,
 .action-button,
 #ranking-notice,
 #akis > .feed-sentinel,
-.local-privacy-button {
+#local-privacy-button {
   display: inline-flex;
   align-items: center;
   gap: 6px;

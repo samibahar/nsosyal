@@ -171,8 +171,8 @@ const sentinel=document.createElement("div");sentinel.className="loading-state";
 const pageObserver=new IntersectionObserver(entries=>{if(entries[0].isIntersecting)loadMore();},{rootMargin:"420px"});
 async function getPage(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();if(!localAgent)updateStatus(data.spiral_seviyesi);exhausted=data.tukendi;return localAgent?await localAgent.rank(data.gonderiler):data.gonderiler;}
 async function firstLoad(){
-  juryDemoActive=false;loading=true;exhausted=false;feed.innerHTML="";resetTopics();if(localAgent)localPostReactions=(await localAgent.postReactionState()).reactions;const posts=await getPage(true);
-  if(!posts.length){feed.innerHTML='<div class="loading-state">Gösterilecek gönderi yok.</div>';loading=false;return;}
+  juryDemoActive=false;loading=true;exhausted=false;feed.innerHTML="";feed.removeAttribute("aria-busy");resetTopics();if(localAgent)localPostReactions=(await localAgent.postReactionState()).reactions;const posts=await getPage(true);
+  if(!posts.length){feed.removeAttribute("aria-busy");feed.innerHTML='<div class="bos-durum"><svg class="ikon" aria-hidden="true"><use href="#i-icgoru"/></svg><b>Akışta gösterilecek gönderi yok</b><p>Akışı yenileyip tekrar deneyebilirsin.</p></div>';loading=false;return;}
   posts.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.textContent="";pageObserver.observe(sentinel);updateTopics();loading=false;
 }
 async function loadMore(){if(loading||exhausted)return;loading=true;sentinel.textContent="Yeni gönderiler hazırlanıyor…";const posts=await getPage(false);posts.forEach(post=>feed.insertBefore(createCard(post),sentinel));sentinel.textContent=exhausted?"Akışın sonuna geldin.":"";if(exhausted)pageObserver.unobserve(sentinel);updateTopics();loading=false;}
@@ -201,7 +201,7 @@ async function startJuryDemo(){
   try{
     const response=await fetch("/api/demo-paketi");if(!response.ok)throw new Error("Demo paketi yüklenemedi.");
     const pack=await response.json(),trace=await localAgent.runDemoScenario(pack),beforeMap=new Map(trace.before.map(item=>[Number(item.id),item.position]));
-    juryDemoActive=true;loading=true;exhausted=true;pageObserver.unobserve(sentinel);feed.innerHTML="";postCache.clear();resetTopics();localPostReactions={};
+    juryDemoActive=true;loading=true;exhausted=true;pageObserver.unobserve(sentinel);feed.innerHTML="";feed.removeAttribute("aria-busy");postCache.clear();resetTopics();localPostReactions={};
     const initial=[...pack.gonderiler].sort((a,b)=>(beforeMap.get(Number(a.id))||99)-(beforeMap.get(Number(b.id))||99));
     initial.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.innerHTML='<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Hazır örnek senaryo · karar yerelde hesaplanıyor';updateTopics();updateLocalAgent(trace.summary);loading=false;
     setTimeout(()=>rerankVisibleFeed(),420);

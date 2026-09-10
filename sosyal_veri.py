@@ -12,11 +12,11 @@ from pathlib import Path
 
 
 DEMO_KULLANICILAR = {
-    "denizcetin": {"ad": "Deniz Çetin", "handle": "@denizcetin", "bas_harf": "DÇ", "bio": "Teknoloji, bilim ve açık kaynak notları.", "renk": "#527da7"},
-    "eceyilmaz": {"ad": "Ece Yılmaz", "handle": "@eceyilmaz", "bas_harf": "EY", "bio": "Kültür rotaları, sergiler ve küçük keşifler.", "renk": "#ad657a"},
-    "ardaatlas": {"ad": "Arda Atlas", "handle": "@ardaatlas", "bas_harf": "AA", "bio": "Spor, oyun ve her gün biraz hareket.", "renk": "#4d8659"},
-    "selinkaya": {"ad": "Selin Kaya", "handle": "@selinkaya", "bas_harf": "SK", "bio": "Kampüs hayatı ve iyi yaşam üzerine.", "renk": "#5b8c7b"},
-    "mertdemir": {"ad": "Mert Demir", "handle": "@mertdemir", "bas_harf": "MD", "bio": "Şehir, ekonomi ve gündelik notlar.", "renk": "#9b7049"},
+    "denizcetin": {"ad": "Deniz Çetin", "handle": "@denizcetin", "bas_harf": "DÇ", "bio": "Teknoloji, bilim ve açık kaynak notları.", "renk": "#5079a2"},
+    "eceyilmaz": {"ad": "Ece Yılmaz", "handle": "@eceyilmaz", "bas_harf": "EY", "bio": "Kültür rotaları, sergiler ve küçük keşifler.", "renk": "#a66175"},
+    "ardaatlas": {"ad": "Arda Atlas", "handle": "@ardaatlas", "bas_harf": "AA", "bio": "Spor, oyun ve her gün biraz hareket.", "renk": "#4a8155"},
+    "selinkaya": {"ad": "Selin Kaya", "handle": "@selinkaya", "bas_harf": "SK", "bio": "Kampüs hayatı ve iyi yaşam üzerine.", "renk": "#527e6f"},
+    "mertdemir": {"ad": "Mert Demir", "handle": "@mertdemir", "bas_harf": "MD", "bio": "Şehir, ekonomi ve gündelik notlar.", "renk": "#966d47"},
     "emiryusuf": {"ad": "Emir Yusuf", "handle": "@emiryusuf", "bas_harf": "EU", "bio": "NSosyal'de yeni fikirleri takip ediyor.", "renk": "#1f2720"},
 }
 
