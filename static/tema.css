@@ -1,0 +1,385 @@
+/* ==========================================================================
+   tema.css — sade / modern gorsel dil
+   arayuz.css'ten SONRA yuklenir. Yapisal hicbir sey degistirmez; yalnizca
+   renk, yuzey, kenarlik, yaricap ve tipografiyi yeniden tanimlar.
+   Kaldirmak icin: HTML'deki <link> satirini silmek yeterli.
+
+   Gerekce (X / Instagram'in fiilen yaptigi):
+   - Akista kart YOK. Gonderiler kenarliksiz satirlardir, aralarinda 1px cizgi.
+   - Golge yok. Yuzeyler duz.
+   - Arka plan tonlu bej degil, saf beyaz.
+   - Tek bir aksan rengi, yalnizca birincil eylem ve aktif durum icin.
+   - Alt menude renk degismez; secili ikon DOLAR, digerleri cizgi kalir.
+   ========================================================================== */
+
+:root {
+  /* Yuzeyler */
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --yuzey-2: #f7f8f8;        /* girinti/ikincil alanlar */
+
+  /* Metin */
+  --ink: #0e1113;
+  --muted: #5b6470;          /* beyaz uzerinde 6.4:1 */
+  --eyebrow: #5b6470;
+
+  /* Cizgiler */
+  --line: #e9ebed;
+  --line-guclu: #d7dbdf;
+
+  /* Tek aksan. Onceki #c9ff62 (lime) sablon/AI izlenimi veriyordu.
+     Bu deger beyaz uzerinde 5.36:1, uzerine beyaz metinle de 5.36:1. */
+  --accent: #0f7a4e;
+  --accent-koyu: #0c6440;
+  --accent-yumusak: #eaf5ef;
+  --accent-ink: #ffffff;
+
+  --lime: var(--accent);     /* eski degiskeni yeniden yonlendir */
+  --focus: var(--accent);
+
+  --radius: 14px;
+  --shadow: none;
+}
+
+/* Sistem fontu: Inter "AI tasarimi" isaretlerinden biri olarak aniliyor ve
+   platformun kendi fontu arayuzu "yerli uygulama" gibi hissettiriyor
+   (Instagram ve X web'de fiilen bunu yapiyor). */
+body,
+button,
+input,
+textarea,
+select {
+  font-family: system-ui, -apple-system, "Segoe UI Variable Text", "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html, body { background: var(--canvas); }
+
+/* --------------------------------------------------------------------------
+   AKIS: karttan satira
+   -------------------------------------------------------------------------- */
+.feed { padding: 0; }
+
+.post-card {
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  margin: 0;
+  box-shadow: none;
+  background: var(--surface);
+  transition: background .12s;
+}
+.post-card:hover { transform: none; box-shadow: none; background: #fcfcfd; }
+.post-card.yumusatildi { box-shadow: none; background: #fffdf6; }
+
+.post-body { padding: 14px 16px 8px; }
+.post-text { font-size: 15px; line-height: 1.45; margin: 6px 0 10px; letter-spacing: 0; }
+.post-meta .avatar { width: 40px; height: 40px; border-radius: 50%; font-size: 12px; }
+.author { font-size: 14px; font-weight: 700; letter-spacing: -.01em; }
+.handle { font-size: 13px; color: var(--muted); margin-top: 0; }
+
+/* Fotografsiz gonderilerde gradyan + glif yer tutucu, uretilmis/sahte
+   goruntusunun en belirgin kaynagiydi. Metin-yalniz gonderi hem daha
+   gercekci hem de gercek sosyal aglarda en yaygin bicim. */
+.post-visual:not(.foto-var) { display: none; }
+
+.post-visual {
+  margin: 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  min-height: 0;
+}
+/* Fotograf position:absolute oldugu icin kapsayicinin kendi yuksekligi
+   olmali. Sabit piksel yerine en-boy orani: her genislikte dogru davranir. */
+.post-visual.foto-var {
+  background: var(--yuzey-2);
+  aspect-ratio: 16 / 10;
+}
+/* Fotograf uzerindeki konu etiketi kaldirildi: gercek sosyal aglar gorsele
+   yazi basmaz, filigran/stok-gorsel izlenimi veriyordu ve her fotografta
+   yeterli kontrasti garanti etmek mumkun degildi. Bilgi artik baslik
+   satirinda ("@kullanici · simdi · Teknoloji"). */
+.visual-caption { display: none; }
+.post-visual::before { display: none; }
+
+/* Eylem satiri */
+.post-actions { padding: 6px 12px 10px; gap: 4px; }
+.action-button {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 999px;
+  padding: 8px 10px;
+}
+.action-button:hover { background: var(--yuzey-2); color: var(--ink); }
+.action-button.active.comment { background: var(--accent-yumusak); color: var(--accent-koyu); }
+
+.why-button {
+  background: transparent;
+  border: 1px solid var(--line-guclu);
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: 999px;
+  padding: 7px 12px;
+}
+.why-button:hover { background: var(--yuzey-2); color: var(--ink); border-color: var(--muted); }
+.softened-pill {
+  background: #fdf6e3; color: #7a5d16;
+  border-radius: 999px; font-size: 12px; font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   UST BAR / BASLIK
+   -------------------------------------------------------------------------- */
+.topbar {
+  background: rgba(255, 255, 255, .86);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: saturate(1.6) blur(12px);
+}
+.feed-page { border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+.feed-heading { padding: 14px 16px 8px; }
+.feed-heading h1 { font-size: 19px; letter-spacing: -.02em; }
+.desktop-title b { letter-spacing: -.02em; }
+
+.round-button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 50%;
+}
+.round-button:hover { background: var(--yuzey-2); }
+
+.brand-mark { border-radius: 8px; background: var(--ink); color: #fff; }
+
+/* --------------------------------------------------------------------------
+   HIKAYELER
+   -------------------------------------------------------------------------- */
+.story-strip { border-bottom: 1px solid var(--line); padding: 12px 16px; }
+.story { font-size: 12px; color: var(--ink); }
+/* Cok renkli gradyan halka yerine tek renk ince cerceve */
+.story-ring {
+  background: transparent;
+  border: 2px solid var(--accent);
+  padding: 2px;
+}
+.add-story .story-ring { border-color: var(--line-guclu); }
+.story-photo { border: 2px solid #fff; font-size: 15px; font-weight: 600; }
+
+/* --------------------------------------------------------------------------
+   DUYGU KATMANI DURUM SERIDI
+   Pastel gradyan kart -> sade, cizgili bilgi satiri
+   -------------------------------------------------------------------------- */
+.flow-status {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin: 12px 16px 4px;
+  padding: 12px;
+}
+.status-spark {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  background: var(--accent-yumusak);
+  color: var(--accent-koyu);
+}
+.flow-status b { font-size: 14px; letter-spacing: -.01em; }
+.flow-status p { font-size: 13px; color: var(--muted); }
+.flow-current-mood {
+  display: inline-block;
+  background: var(--yuzey-2);
+  border-radius: 6px;
+  padding: 3px 7px;
+  color: var(--muted);
+}
+#local-privacy-button { color: var(--accent-koyu) !important; }
+
+/* --------------------------------------------------------------------------
+   ALT MENU
+   Koyu yuzen hap -> standart beyaz cubuk. Aktif oge renk degistirmez,
+   ikon DOLAR (X'in fiilen yaptigi ayrim).
+   -------------------------------------------------------------------------- */
+@media (max-width: 680px) {
+  .bottom-nav {
+    left: 0; right: 0; bottom: 0;
+    height: 58px;
+    border-radius: 0;
+    background: rgba(255, 255, 255, .94);
+    backdrop-filter: saturate(1.6) blur(12px);
+    border-top: 1px solid var(--line);
+    box-shadow: none;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  body { padding-bottom: 62px; }
+  .feed-page { min-height: calc(100vh - 62px); }
+  .insight-body { padding-bottom: 72px; }
+
+  .nav-item { color: var(--muted); }
+  .nav-item small { display: none; }          /* etiketsiz, X gibi */
+  .nav-item .ikon { width: 25px; height: 25px; }
+  .bottom-nav .nav-item.active,
+  .bottom-nav .nav-item.active small { color: var(--ink); }
+  /* Aktif ikon dolar */
+  .bottom-nav .nav-item.active .ikon {
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-width: 1.2;
+  }
+  .create-button {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    box-shadow: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   SOL MENU (masaustu / tablet)
+   -------------------------------------------------------------------------- */
+.rail-link {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 999px;
+}
+.rail-link:hover { background: var(--yuzey-2); }
+.rail-link.active { font-weight: 700; background: var(--yuzey-2); }
+.rail-link.active .ikon { fill: currentColor; stroke-width: 1.2; }
+
+.rail-new-post {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: none;
+}
+.rail-new-post:hover { background: var(--accent-koyu); }
+.jury-rail-button {
+  background: transparent;
+  border: 1px solid var(--line-guclu);
+  color: var(--ink);
+  font-weight: 500;
+}
+.jury-rail-button:hover { background: var(--yuzey-2); }
+
+.jury-demo-button {
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+}
+.jury-demo-button:hover { background: #000; }
+
+.profile-mini:hover { background: var(--yuzey-2); border-radius: 999px; }
+
+/* --------------------------------------------------------------------------
+   SAG PANEL
+   -------------------------------------------------------------------------- */
+.aside-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.balance-card { background: var(--yuzey-2); border-color: transparent; }
+.aside-card h2 { font-size: 16px; letter-spacing: -.02em; }
+.text-button { color: var(--accent-koyu); font-weight: 600; }
+.topic-row { font-size: 13px; font-weight: 500; }
+.weekly-card { background: var(--ink); border-radius: var(--radius); }
+.weekly-card > span { background: var(--accent); color: #fff; border-radius: 9px; }
+
+/* --------------------------------------------------------------------------
+   PANELLER / SAYFA ICI DIYALOGLAR
+   -------------------------------------------------------------------------- */
+.explanation-sheet,
+.app-panel {
+  border-radius: 18px 18px 0 0;
+}
+.sheet-close, .checkin-close { background: var(--yuzey-2); border-radius: 50%; }
+.score-box { background: var(--yuzey-2); border-radius: 12px; }
+.checkin-card { border-radius: 18px; box-shadow: 0 12px 40px rgba(10, 14, 12, .16); }
+.dogrulama-secenek { border: 1px solid var(--line); border-radius: 12px; }
+.dogrulama-secenek:hover { background: var(--accent-yumusak); border-color: var(--accent); }
+.explore-chips button,
+.news-categories button,
+.range-switch button { border-radius: 999px; }
+
+/* Eski tema aksani acik lime idi, uzerine SIYAH metin konuyordu. Aksan
+   koyulasinca bu butonlarda siyah-uzeri-koyu-yesil (3.9:1) olustu. */
+#comment-form button,
+#panel-composer button[type="submit"],
+.composer-footer button,
+#balance-feed {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 999px;
+  font-weight: 600;
+}
+#comment-form button:hover,
+#panel-composer button[type="submit"]:hover,
+.composer-footer button:hover { background: var(--accent-koyu); }
+
+/* --------------------------------------------------------------------------
+   ICGORU SAYFASI
+   Tam sayfa pastel yesil gradyan -> duz beyaz + cizgili kartlar
+   -------------------------------------------------------------------------- */
+.insight-body { background: var(--canvas); }
+.insight-page {
+  background: var(--canvas);
+  box-shadow: none;
+  border-radius: 0;
+}
+.insight-hero h1 { letter-spacing: -.03em; }
+.insight-chart-card,
+.data-kpis article,
+.insight-data-note {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+.range-switch {
+  background: var(--yuzey-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.range-switch button.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 3px rgba(10, 14, 12, .12);
+}
+.session-line-chart { background: var(--yuzey-2); border-radius: 12px; }
+.chart-line { stroke: var(--accent); }
+.chart-area { fill: rgba(15, 122, 78, .1); }
+.session-line-chart circle { stroke: var(--accent); }
+.topic-row i { background: var(--accent); }
+.reaction-row { background: var(--yuzey-2); border-radius: 10px; }
+.insight-action, .bos-durum-eylem {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 999px;
+  font-weight: 600;
+}
+.insight-summary { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+
+/* --------------------------------------------------------------------------
+   KESFET / HABERLER / PROFIL kabuklari
+   -------------------------------------------------------------------------- */
+.explore-body, .news-body, .profile-body { background: var(--canvas); }
+.explore-page, .profile-page, .news-page {
+  background: var(--canvas);
+  box-shadow: none;
+  border-radius: 0;
+}
+.explore-card, .profile-post, .news-card { border-radius: var(--radius); }
+.jury-body { background: var(--canvas); }
+.jury-intro { border-radius: var(--radius); background: var(--ink); }
+.jury-section, .jury-summary article, .jury-empty {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+.jury-receipt { background: var(--yuzey-2); }
+.jury-actions .primary, .jury-empty a { background: var(--accent); color: var(--accent-ink); }

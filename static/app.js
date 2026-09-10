@@ -156,7 +156,10 @@ function createCard(post){
   }
   const avatar=card.querySelector(".post-meta .avatar");avatar.textContent=author.initials;avatar.style.background=author.color;avatar.classList.add("profile-trigger");avatar.title=`${author.name} profilini aç`;
   const authorName=card.querySelector(".post-meta .author");authorName.innerHTML=`<a class="post-author-link" href="/profil.html?u=${encodeURIComponent(author.id)}">${escapeText(author.name)}</a>`;
-  card.querySelector(".post-meta .handle").textContent=`${author.handle} · şimdi`;
+  // Konu bilgisi eskiden fotografin uzerine filigran gibi basiliyordu
+  // (hem stok-gorsel damgasi gibi duruyor hem de her fotografta okunakli
+  // olmasi garanti degildi). Artik baslik satirinda, sade metin olarak.
+  card.querySelector(".post-meta .handle").textContent=`${author.handle} · şimdi · ${topic.name}`;
   avatar.addEventListener("click",event=>{event.stopPropagation();location.href=`/profil.html?u=${encodeURIComponent(author.id)}`;});
   const why=card.querySelector(".why-button");if(why)why.addEventListener("click",event=>{event.stopPropagation();openSheet(postCache.get(post.id)||post);});
   card.querySelector(".comment").addEventListener("click",event=>{event.stopPropagation();sendInteraction(post.id,dwellFor(post.id),false,false,true);openComments(post);});
