@@ -369,6 +369,16 @@ html, body { background: var(--canvas); }
 .news-categories button,
 .range-switch button { border-radius: 999px; }
 
+/* "Akis biraz yogunlasti" dengeleme karti: app.js stilini ".balance-intervention"
+   class secicisiyle enjekte ediyordu ama elemana yalnizca id veriliyordu --
+   kart gosterildiginde biçimsiz, sayfanin en altina dusuyordu. Class eklendi;
+   burada da lime vurgular temaya uyduruluyor. */
+/* app.js bu kurallari calisma aninda <head>'e tema.css'ten SONRA ekliyor;
+   ayni ozgullukte onunki kazaniyordu, bu yuzden "body" ile bir kademe arttirildi. */
+body .balance-intervention > span { display: inline-flex; align-items: center; gap: 5px; color: #9fe0bf; font-size: 10px; }
+body .balance-intervention #balance-feed { background: var(--accent); color: var(--accent-ink); }
+body .balance-intervention { border-radius: var(--radius); }
+
 /* Eski tema aksani acik lime idi, uzerine SIYAH metin konuyordu. Aksan
    koyulasinca bu butonlarda siyah-uzeri-koyu-yesil (3.9:1) olustu. */
 #comment-form button,
