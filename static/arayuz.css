@@ -93,14 +93,20 @@ select:focus-visible,
 
 /* Gonderi basligindaki yazar adi/avatar: 16px yuksekliginde satir ici
    baglantilardi, WCAG 2.5.8'in 24px alt sinirini gecmiyorlardi. */
+/* NOT: ".profile-trigger" (gonderi avatari) bu listede DEGIL. Avatar zaten
+   40x40, yani 24px alt sinirinin cok uzerinde; listeye alindiginda
+   ".avatar"in "display:grid; place-items:center" merkezlemesini
+   "inline-flex; align-items:center" ile eziyor ve bas harfler daireye
+   sola yaslanmis gibi kayiyordu. */
 .post-author-link,
 .mobile-brand,
-.profile-trigger,
 .post-menu {
   display: inline-flex;
   align-items: center;
   min-height: 24px;
 }
+/* Avatar merkezlemesi her kosulda korunsun */
+.avatar { display: grid; place-items: center; }
 .post-author-link { padding: 4px 2px; margin: -4px -2px; }
 .post-menu { min-width: 40px; min-height: 40px; }
 .jury-demo-button { min-width: var(--hedef); }
