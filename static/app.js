@@ -267,3 +267,21 @@ if(localAgent){document.getElementById("sifirla-buton").textContent="Yerel veril
 firstLoad();
 if(new URLSearchParams(location.search).has("demo"))setTimeout(startJuryDemo,550);
 if(new URLSearchParams(location.search).has("compose"))setTimeout(()=>openPanel("composer"),450);
+
+// Masaustunde (sag panel gorunurken) duygu katmani durum karti akistan sag
+// panele tasinir; sagdaki ayni icerikli kart CSS ile gizlenir. Eleman
+// kopyalanmadan TASINDIGI icin id'ler ve app.js'in guncellemeleri aynen calisir.
+// Pencere daraldiginda (tablet/mobil, sag panel yok) akistaki yerine geri doner.
+(function durumKartiniYerlestir(){
+  const kart=document.getElementById("flow-status"), panel=document.querySelector(".desktop-aside");
+  if(!kart||!panel)return;
+  const yer=document.createComment("flow-status-yeri");
+  kart.parentNode.insertBefore(yer,kart);
+  const genis=window.matchMedia("(min-width: 1001px)");
+  const uygula=()=>{
+    if(genis.matches){panel.prepend(kart);document.body.classList.add("durum-sagda");}
+    else{yer.parentNode.insertBefore(kart,yer.nextSibling);document.body.classList.remove("durum-sagda");}
+  };
+  genis.addEventListener("change",uygula);
+  uygula();
+})();

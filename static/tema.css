@@ -277,6 +277,30 @@ html, body { background: var(--canvas); }
 /* --------------------------------------------------------------------------
    SAG PANEL
    -------------------------------------------------------------------------- */
+/* Masaustunde sag panel sayfa kaydirilirken yerinde kalir (X'in sag sutunu
+   gibi). Grid ogesinde sticky'nin calismasi icin align-self:start sart. */
+@media (min-width: 1001px) {
+  .desktop-aside {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+  .desktop-aside::-webkit-scrollbar { display: none; }
+}
+/* Akistaki "Akis dengeli" durum karti masaustunde sag panele tasinir
+   (app.js). Sag paneldeki ayni icerikli kart o zaman gereksiz kalir. */
+.durum-sagda .balance-card { display: none; }
+.desktop-aside .flow-status {
+  margin: 0 0 14px;
+  padding: 14px;
+  align-items: flex-start;
+}
+.desktop-aside .flow-status .flow-current-mood { display: inline; line-height: 1.7; }
 .aside-card {
   background: var(--surface);
   border: 1px solid var(--line);
