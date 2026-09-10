@@ -14,7 +14,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))  # motor.py, duygu_modeli.py, spiral_model.py kök dizinde
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -31,6 +31,19 @@ from psikolojik_durum import (
 import haftalik_rapor
 
 app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Prototip")
+
+
+# Statik yanitlarda Cache-Control yoktu; tarayici HTML'i kendi tahminiyle
+# onbellege alip arayuz guncellemelerinden sonra eski sayfayi gostermeye
+# devam ediyordu. "no-cache" her istekte sunucuya sordurur -- dosya
+# degismediyse ETag sayesinde yine hafif bir 304 doner.
+@app.middleware("http")
+async def onbellek_dogrula(request: Request, call_next):
+    yanit = await call_next(request)
+    if request.url.path.endswith((".html", ".css", ".js", "/")):
+        yanit.headers["Cache-Control"] = "no-cache"
+    return yanit
+
 
 DEPO = SosyalDepo(BASE_DIR / "data" / "nsosyal_demo.sqlite3")
 DEPO.hazirla([*ORNEK_GONDERILER, *TOPLULUK_GONDERILERI])
