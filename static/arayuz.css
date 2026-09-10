@@ -1,0 +1,347 @@
+/* ==========================================================================
+   arayuz.css — erisilebilirlik, ikon sistemi ve genis ekran duzeni katmani
+   style.css'ten SONRA yuklenir; mevcut kurallari bozmadan uzerine yazar.
+   ========================================================================== */
+
+:root {
+  /* WCAG AA icin koyulastirilmis metin renkleri (eskisi 4.5:1 esigini gecmiyordu) */
+  --muted: #5f645e;          /* canvas uzerinde 5.5:1  (onceki #747774 -> 4.1:1) */
+  --eyebrow: #5c6a4d;        /* canvas uzerinde 5.3:1  (onceki #79866a -> 3.9:1) */
+  --focus: #2f6b12;
+
+  /* Dokunma hedefi taban olcusu (Apple HIG 44, Material 48) */
+  --hedef: 44px;
+
+  /* Tipografi tabani: 9-10px etiketler okunabilir sinirin altindaydi */
+  --etiket: 11px;
+}
+
+/* --------------------------------------------------------------------------
+   1) IKON SISTEMI
+   Unicode glifler (⌂ ▤ ◔ ⌕ ♡ ↻ ♧ ☺ ◌) yerine tek izgarada, tek cizgi
+   kalinliginda SVG seti. currentColor kullanir, her yerde renge uyum saglar.
+   -------------------------------------------------------------------------- */
+.ikon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+.ikon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -0.2em;
+  pointer-events: none;
+}
+.ikon-sm { width: 18px; height: 18px; stroke-width: 1.9; }
+.ikon-lg { width: 26px; height: 26px; stroke-width: 1.7; }
+.ikon-xl { width: 32px; height: 32px; stroke-width: 1.6; }
+/* Dolu varyant (secili kalp / aktif durum) */
+.ikon-dolu { fill: currentColor; stroke: currentColor; }
+
+/* --------------------------------------------------------------------------
+   2) ERISILEBILIRLIK
+   -------------------------------------------------------------------------- */
+
+/* 2a. Odak halkasi: onceki kural sadece button/a/summary'yi kapsiyordu.
+   Form alanlari ve role=button tasiyan ogeler disarida kalmisti. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible,
+[role="button"]:focus-visible,
+.story:focus-visible,
+.nav-item:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+/* Odak halkasi koyu zeminde kaybolmasin */
+.bottom-nav :focus-visible,
+.jury-intro :focus-visible,
+.story-dialog :focus-visible {
+  outline-color: #cdf58a;
+}
+
+/* 2b. Dokunma hedefleri.
+   Olcum: 77 etkilesimli oge 44x44 altindaydi; bir kismi WCAG 2.5.8'in
+   mutlak alt siniri olan 24x24'u de gecmiyordu (ornegin 16px yuksekliginde
+   metin butonlari). Gorsel boyutu buyutmeden tiklanabilir alani buyutuyoruz. */
+.action-button,
+.why-button,
+.round-button,
+.jury-demo-button,
+.nav-item,
+.rail-link,
+.dogrulama-secenek,
+.checkin-close,
+.sheet-close,
+.story-close,
+.create-button {
+  min-height: var(--hedef);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.action-button, .why-button { min-width: 64px; }
+.round-button, .checkin-close, .sheet-close, .story-close {
+  min-width: var(--hedef);
+}
+
+/* Gonderi basligindaki yazar adi/avatar: 16px yuksekliginde satir ici
+   baglantilardi, WCAG 2.5.8'in 24px alt sinirini gecmiyorlardi. */
+.post-author-link,
+.mobile-brand,
+.profile-trigger,
+.post-menu {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
+.post-author-link { padding: 4px 2px; margin: -4px -2px; }
+.post-menu { min-width: 40px; min-height: 40px; }
+.jury-demo-button { min-width: var(--hedef); }
+.local-privacy-button { min-height: 26px; padding-top: 6px !important; }
+#status-detail-button { min-width: 34px; min-height: 34px; }
+
+/* Kucuk metin butonlarina gorunmez dokunma payi ekle (layout kaymadan) */
+.text-button,
+#sifirla-buton,
+.local-privacy-button,
+.feed-heading button,
+.card-title-row button,
+.chart-heading button {
+  position: relative;
+  min-height: 24px;
+}
+.text-button::after,
+#sifirla-buton::after,
+.local-privacy-button::after,
+.feed-heading button::after,
+.card-title-row button::after,
+.chart-heading button::after {
+  content: "";
+  position: absolute;
+  inset: -12px -10px;
+}
+
+/* 2c. Okunabilirlik tabani: 8-10px etiketler cok kucuktu */
+.eyebrow,
+.flow-eyebrow,
+.nav-item small,
+.data-kpis small,
+.chart-heading span,
+.jury-topbar span,
+.jury-summary small {
+  font-size: var(--etiket);
+  color: var(--eyebrow);
+  letter-spacing: .08em;
+}
+.nav-item small { font-size: 10px; letter-spacing: .01em; }
+.flow-current-mood,
+.post-actions small,
+.topic-row,
+.reaction-row { font-size: 12px; }
+
+/* 2d. Kontrast duzeltmeleri */
+.mobile-brand small,
+.brand-text small,
+.profile-mini small,
+.post-head small,
+.discover-list p,
+.insight-data-note p,
+.chart-empty { color: var(--muted); }
+
+/* 2e. Ekran okuyucu metni */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   3) TABLET DUZENI (681px - 1000px)
+   Onceki davranis: 1000px altinda sol menu 72px'lik SADECE IKON seridine
+   dusuyor, etiketler ve sag panel tamamen kayboluyordu. 820px'lik bir iPad'de
+   bol bos alan varken menu okunamaz hale geliyordu. Artik etiketler korunuyor.
+   -------------------------------------------------------------------------- */
+@media (min-width: 681px) and (max-width: 1000px) {
+  .app-shell {
+    grid-template-columns: 196px minmax(0, 1fr);
+    gap: 18px;
+    padding: 0 18px;
+    max-width: 900px;
+  }
+  .desktop-rail { padding: 26px 8px; }
+
+  /* Etiketleri geri getir */
+  .brand span:last-child,
+  .rail-link span,
+  .profile-mini > span:nth-child(2),
+  .rail-new-post { display: revert; }
+  .brand { justify-content: flex-start; }
+  .profile-mini { justify-content: flex-start; }
+
+  .rail-link {
+    justify-content: flex-start;
+    gap: 12px;
+    font-size: 14px;
+    padding: 11px 12px;
+    min-height: var(--hedef);
+  }
+  .rail-new-post {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: var(--hedef);
+    font-size: 13px;
+  }
+  .profile-mini .avatar { width: 34px; height: 34px; }
+  .profile-mini i { display: none; }
+}
+
+/* Genis tablet / kucuk dizustu: sag paneli erken kaybetme */
+@media (min-width: 1001px) and (max-width: 1180px) {
+  .app-shell {
+    grid-template-columns: 200px minmax(0, 1fr) 260px;
+    gap: 18px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4) ISKELET (SKELETON) YUKLEME DURUMU
+   "Akis hazirlaniyor..." duz metni yerine icerigin seklini onceden gosteren
+   iskelet kartlar. Algilanan bekleme suresini kisaltir.
+   -------------------------------------------------------------------------- */
+.iskelet-liste { display: grid; gap: 12px; padding: 4px 0; }
+.iskelet-kart {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.iskelet-satir,
+.iskelet-daire,
+.iskelet-gorsel {
+  background: linear-gradient(90deg, #eceee8 25%, #f6f7f3 50%, #eceee8 75%);
+  background-size: 200% 100%;
+  animation: iskelet-parla 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+.iskelet-daire { width: 42px; height: 42px; border-radius: 50%; flex: none; }
+.iskelet-gorsel { height: 168px; border-radius: 18px; margin-top: 12px; }
+.iskelet-bas { display: flex; align-items: center; gap: 10px; }
+.iskelet-bas > div { flex: 1; display: grid; gap: 6px; }
+.iskelet-satir.kisa { width: 38%; height: 10px; }
+.iskelet-satir.orta { width: 62%; height: 10px; }
+.iskelet-satir { height: 12px; }
+.iskelet-metin { display: grid; gap: 8px; margin-top: 14px; }
+
+@keyframes iskelet-parla {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .iskelet-satir, .iskelet-daire, .iskelet-gorsel {
+    animation: none;
+    background: #eceee8;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5) BOS DURUM (EMPTY STATE)
+   Icgoru sayfasi ilk acilista tamamen bostu; "—" ve "henuz veri yok"
+   metinleri urunu bitmemis gosteriyordu. Artik yonlendirici bir bos durum.
+   -------------------------------------------------------------------------- */
+.bos-durum {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 26px 18px;
+  color: var(--muted);
+}
+.bos-durum .ikon {
+  width: 30px; height: 30px;
+  color: #9aa695;
+}
+.bos-durum b { color: var(--ink); font-size: 14px; letter-spacing: -.02em; }
+.bos-durum p { margin: 0; font-size: 12px; line-height: 1.5; max-width: 34ch; }
+.bos-durum-eylem {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--hedef);
+  margin-top: 4px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lime);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+/* --------------------------------------------------------------------------
+   6) IKON YERLESIM DUZELTMELERI
+   Glifler metin akisinda hizalaniyordu; SVG'ler flex hizalamasi ister.
+   -------------------------------------------------------------------------- */
+.rail-link, .nav-item, .action-button, .why-button,
+.jury-demo-button, .rail-new-post, .text-button,
+.bos-durum-eylem, .jury-home, .jury-actions a {
+  align-items: center;
+}
+.nav-item {
+  flex-direction: column;
+  gap: 3px;
+}
+.round-button .ikon { vertical-align: 0; }
+.story .ikon, .create-button .ikon { vertical-align: 0; }
+
+/* Marka kivilcimi: metin akisinda degil, kendi kutusunda */
+.status-spark {
+  display: grid;
+  place-items: center;
+}
+.status-spark .ikon { width: 20px; height: 20px; }
+
+/* Konu glifi gercek fotografin uzerinde filigran/artefakt gibi duruyordu;
+   yalnizca fotografsiz (duz gradyan) kartlarda gorsel doku olarak kalsin. */
+.post-visual.foto-var .visual-glyph { display: none; }
+
+/* Ikonlu kucuk etiket ve butonlarin hizasi */
+.softened-pill,
+.why-button,
+.action-button,
+#ranking-notice,
+#akis > .feed-sentinel,
+.local-privacy-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+#ranking-notice { justify-content: center; }
+.post-menu {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  min-height: 34px;
+  border-radius: 10px;
+}
+.post-menu:hover { background: #f1f3ed; }
+
+/* Tepki tepsisindeki emojiler kasitli olarak korunuyor: renkli emoji bir
+   duygu seciciyi tek renk cizgi ikondan daha okunur kilar. Cizgi ikonlar
+   yalnizca eylem butonlarinda (Tepki/Yorum/Neden bu?) kullaniliyor. */
+.post-reaction-tray span,
+.explore-reaction-tray span,
+.news-reaction-wheel span { font-size: 20px; line-height: 1; }

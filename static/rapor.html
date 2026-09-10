@@ -5,20 +5,49 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#dff8d6" />
   <title>İçgörü — NSosyal</title>
-  <link rel="stylesheet" href="/style.css?v=37" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
+  <link rel="stylesheet" href="/style.css?v=40" />
+  <link rel="stylesheet" href="/arayuz.css?v=4" />
 </head>
 <body class="insight-body">
+<svg class="ikon-sprite" aria-hidden="true" focusable="false"><defs>
+<symbol id="i-ev" viewBox="0 0 24 24"><path d="M3.2 10.6 12 3.5l8.8 7.1V19a2 2 0 0 1-2 2h-3.4v-5.3a1.6 1.6 0 0 0-1.6-1.6h-1.6a1.6 1.6 0 0 0-1.6 1.6V21H5.2a2 2 0 0 1-2-2Z"/></symbol>
+<symbol id="i-haber" viewBox="0 0 24 24"><path d="M4 6.2a1.4 1.4 0 0 1 1.4-1.4h10.4a1.4 1.4 0 0 1 1.4 1.4v12.4a1.4 1.4 0 0 1-1.4 1.4H6.6A2.6 2.6 0 0 1 4 17.4Z"/><path d="M17.2 9h1.4A1.4 1.4 0 0 1 20 10.4v7.4a2.2 2.2 0 0 1-2.2 2.2"/><path d="M7.2 8.6h6.8M7.2 12h6.8M7.2 15.4h4.2"/></symbol>
+<symbol id="i-icgoru" viewBox="0 0 24 24"><path d="M4.5 20.2V13M9.7 20.2V8.2M14.9 20.2v-4.6M20.1 20.2V4.4"/></symbol>
+<symbol id="i-kesfet" viewBox="0 0 24 24"><circle cx="10.9" cy="10.9" r="6.6"/><path d="m15.8 15.8 4.3 4.3"/></symbol>
+<symbol id="i-etkinlik" viewBox="0 0 24 24"><path d="M12 20.4c-.4 0-7.7-4.5-7.7-9.6A4.5 4.5 0 0 1 12 8a4.5 4.5 0 0 1 7.7 2.8c0 5.1-7.3 9.6-7.7 9.6Z"/></symbol>
+<symbol id="i-yenile" viewBox="0 0 24 24"><path d="M20.2 12a8.2 8.2 0 1 1-2.6-6"/><path d="M20.4 4.2v4.9h-4.9"/></symbol>
+<symbol id="i-bildirim" viewBox="0 0 24 24"><path d="M6.4 10.4a5.6 5.6 0 0 1 11.2 0c0 3.9 1.5 5.4 1.5 5.4H4.9s1.5-1.5 1.5-5.4Z"/><path d="M9.9 19a2.3 2.3 0 0 0 4.2 0"/></symbol>
+<symbol id="i-tepki" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M8.4 13.9a4.4 4.4 0 0 0 7.2 0"/><path d="M9.4 9.7h.01M14.6 9.7h.01" stroke-width="2.6"/></symbol>
+<symbol id="i-yorum" viewBox="0 0 24 24"><path d="M20.2 11.9c0 3.9-3.7 7.1-8.2 7.1a9.6 9.6 0 0 1-2.4-.3L5 20.4l1.4-3.5a6.6 6.6 0 0 1-2.6-5c0-3.9 3.7-7.1 8.2-7.1s8.2 3.2 8.2 7.1Z"/></symbol>
+<symbol id="i-kivilcim" viewBox="0 0 24 24"><path d="M12 2.8 13.6 9a3.5 3.5 0 0 0 2.4 2.4l6.2 1.6-6.2 1.6A3.5 3.5 0 0 0 13.6 17L12 23.2 10.4 17A3.5 3.5 0 0 0 8 14.6L1.8 13 8 11.4A3.5 3.5 0 0 0 10.4 9Z"/></symbol>
+<symbol id="i-terazi" viewBox="0 0 24 24"><path d="M12 4.6v15.2M7 20.2h10M3.6 8.2h16.8M12 6.4a1.8 1.8 0 1 0 0-.1"/><path d="M6.9 8.4 4.1 14a2.8 2.8 0 0 0 5.6 0ZM17.1 8.4 14.3 14a2.8 2.8 0 0 0 5.6 0Z"/></symbol>
+<symbol id="i-arti" viewBox="0 0 24 24"><path d="M12 5.4v13.2M5.4 12h13.2"/></symbol>
+<symbol id="i-ok-sag" viewBox="0 0 24 24"><path d="M4.6 12h14.2M12.9 6.3 18.7 12l-5.8 5.7"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9.4 5.6 6.4 6.4-6.4 6.4"/></symbol>
+<symbol id="i-kapat" viewBox="0 0 24 24"><path d="M6.2 6.2 17.8 17.8M17.8 6.2 6.2 17.8"/></symbol>
+<symbol id="i-daha" viewBox="0 0 24 24"><path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="2.8"/></symbol>
+<symbol id="i-kilit" viewBox="0 0 24 24"><rect x="4.8" y="10.4" width="14.4" height="9.4" rx="2.2"/><path d="M8.4 10.4V7.9a3.6 3.6 0 0 1 7.2 0v2.5"/></symbol>
+<symbol id="i-mutluluk" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M8.2 13.6a4.6 4.6 0 0 0 7.6 0"/><path d="M9.3 9.6h.01M14.7 9.6h.01" stroke-width="2.6"/></symbol>
+<symbol id="i-umut" viewBox="0 0 24 24"><circle cx="12" cy="12.4" r="3.9"/><path d="M12 3.6v2.4M12 18.8v2.4M5.8 6.2 7.5 7.9M16.5 16.9l1.7 1.7M3.4 12.4h2.4M18.2 12.4h2.4M5.8 18.6 7.5 16.9M16.5 7.9l1.7-1.7"/></symbol>
+<symbol id="i-sakin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M8.6 14.4h6.8"/><path d="M9.3 9.6h.01M14.7 9.6h.01" stroke-width="2.6"/></symbol>
+<symbol id="i-sinirli" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M8.4 15.4a4.4 4.4 0 0 1 7.2 0"/><path d="M7.9 8.7l2.6 1.2M16.1 8.7l-2.6 1.2"/></symbol>
+<symbol id="i-yogun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M8.3 15.1c.9-1 1.9-1 2.8 0s1.9 1 2.8 0"/><path d="M7.9 9.4l2.6-.9M16.1 9.4l-2.6-.9"/></symbol>
+<symbol id="i-veri" viewBox="0 0 24 24"><path d="M4.4 16.6 9 11.2l3.6 3.1 6.4-7.3"/><path d="M14.6 7h4.8v4.6"/></symbol>
+<symbol id="i-cop" viewBox="0 0 24 24"><path d="M4.8 7.2h14.4M9.4 7.2V5.6a1.4 1.4 0 0 1 1.4-1.4h2.4a1.4 1.4 0 0 1 1.4 1.4v1.6"/><path d="M6.6 7.2 7.4 19a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.8-11.8"/></symbol>
+</defs></svg>
   <main class="insight-page">
-    <header class="insight-topbar"><a class="insight-brand" href="/index.html"><span class="brand-mark">n</span><b>nSosyal</b></a><button class="insight-bell" aria-label="Bildirimler">♧<i></i></button></header>
+    <header class="insight-topbar"><a class="insight-brand" href="/index.html"><span class="brand-mark">n</span><b>nSosyal</b></a><button class="insight-bell" aria-label="Bildirimler"><svg class="ikon" aria-hidden="true"><use href="#i-bildirim"/></svg><i></i></button></header>
     <section class="insight-hero"><p>Bu cihazdaki akışın</p><h1>Oturum<br>içgörüleri</h1></section>
     <section class="range-switch" aria-label="Zaman aralığı"><button type="button" data-range="month">Ay</button><button class="active" type="button" data-range="week">Hafta</button><button type="button" data-range="today">Bugün</button></section>
-    <section class="insight-summary" aria-live="polite"><div class="summary-heading"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2.5-7 4 14 2.5-7H21"/></svg></span><div><b id="insight-status-title">Veri bekleniyor</b><p id="insight-status-text">Etkileşimlerin yalnızca bu cihazda özetlenir.</p></div></div><button id="insight-detail-button" type="button">Ayrıntılar <span>→</span></button></section>
+    <section class="insight-summary" aria-live="polite"><div class="summary-heading"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2.5-7 4 14 2.5-7H21"/></svg></span><div><b id="insight-status-title">Veri bekleniyor</b><p id="insight-status-text">Etkileşimlerin yalnızca bu cihazda özetlenir.</p></div></div><button id="insight-detail-button" type="button">Ayrıntılar <span><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-ok-sag"/></svg></span></button></section>
     <section class="data-kpis" aria-label="Oturum özeti"><article><small>Etkileşim</small><b id="kpi-interactions">0</b><span>bu cihazda</span></article><article><small>Gönüllü tepki</small><b id="kpi-reactions">0</b><span>sen belirttin</span></article><article><small>Akış hareketi</small><b id="kpi-moved">—</b><span>son demo</span></article></section>
     <section id="real-insights" class="insight-chart-card"><div class="chart-heading"><div><span>ETKİLEŞİM RİTMİ</span><h2>Zaman içinde sinyaller</h2></div><small id="rhythm-caption">Henüz veri yok</small></div><div id="rhythm-chart" class="session-line-chart" role="img" aria-label="Oturumdaki etkileşim ritmi grafiği"></div></section>
     <section class="insight-grid useful-grid"><article class="insight-chart-card"><div class="chart-heading"><div><span>KONU DAĞILIMI</span><h2>Nelerle etkileştin?</h2></div></div><div id="topic-chart" class="topic-chart"></div></article><article class="insight-chart-card"><div class="chart-heading"><div><span>GÖNÜLLÜ TEPKİLER</span><h2>Senin geri bildirimin</h2></div></div><div id="reaction-chart" class="reaction-chart"></div></article></section>
     <section class="insight-chart-card"><div class="chart-heading"><div><span>KONU × OLASI RİTİM</span><h2>Hangi konularda nasıl hissettin?</h2></div></div><div id="heatmap-chart" class="heatmap"></div></section>
     <section class="insight-chart-card"><div class="chart-heading"><div><span>MODEL DOĞRULAMA</span><h2>Tahminler ne kadar tutuyor?</h2></div><small>Sorulmadan önce gösterilmez</small></div><div id="dogrulama-chart" class="validation-grid"></div></section>
-    <section class="insight-data-note"><b>✦ Verin sende kalır</b><p>Grafikler bu tarayıcının yerel etkileşim kaydından hesaplanır. Bu ekran bir teşhis veya klinik değerlendirme değildir.</p></section>
+    <section class="insight-data-note"><b><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Verin sende kalır</b><p>Grafikler bu tarayıcının yerel etkileşim kaydından hesaplanır. Bu ekran bir teşhis veya klinik değerlendirme değildir.</p></section>
     <section class="insight-chart-card">
       <div class="chart-heading"><div><span>UZMANA GÖTÜRMEK İSTERSEN</span><h2>Yorumsuz veri özeti</h2></div></div>
       <p class="data-note" style="margin-top:6px">Yapay zekâ yorumu içermez, sadece bu cihazdaki sayıları düzenler. Klinik bir belge değildir; nihai değerlendirme uzmana aittir.</p>
@@ -27,10 +56,10 @@
       <button id="terapist-ozet-kopyala" type="button" class="insight-action" style="display:none;margin-top:8px">Panoya kopyala</button>
     </section>
   </main>
-  <nav class="bottom-nav insight-nav" aria-label="Alt menü"><a class="nav-item" href="/index.html"><span>⌂</span><small>Ana Sayfa</small></a><a class="nav-item" href="/kesfet.html"><span>⌕</span><small>Keşfet</small></a><a class="create-button" href="/index.html?compose=1" aria-label="Yeni gönderi">＋</a><a class="nav-item" href="/haberler.html"><span>▤</span><small>Haberler</small></a><a class="nav-item active" href="/rapor.html"><span>◔</span><small>İçgörü</small></a></nav>
+  <nav class="bottom-nav insight-nav" aria-label="Alt menü"><a class="nav-item" href="/index.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-ev"/></svg></span><small>Ana Sayfa</small></a><a class="nav-item" href="/kesfet.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-kesfet"/></svg></span><small>Keşfet</small></a><a class="create-button" href="/index.html?compose=1" aria-label="Yeni gönderi"><svg class="ikon ikon-lg" aria-hidden="true"><use href="#i-arti"/></svg></a><a class="nav-item" href="/haberler.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-haber"/></svg></span><small>Haberler</small></a><a class="nav-item active" href="/rapor.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-icgoru"/></svg></span><small>İçgörü</small></a></nav>
   <script src="/trained-weights.js?v=1"></script>
   <script src="/trained-models.js?v=1"></script>
-  <script src="/local-agent.js?v=7"></script>
-  <script src="/rapor.js?v=26"></script>
+  <script src="/local-agent.js?v=11"></script>
+  <script src="/rapor.js?v=11"></script>
 </body>
 </html>
