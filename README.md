@@ -42,6 +42,13 @@ Sayfalar: ana akış (`/`), Haberler, İçgörü (`/rapor.html`), Ayarlar
 (`/ayarlar.html`) ve jüri için karar kanıtı (`/juri.html`). Ana akıştaki
 "Jüri demosu" düğmesi hazır bir örnek senaryoyu cihaz içinde çalıştırır.
 
+Sunucu açıkken tek komutla kontrol (sayfalar, yüklü duygu modeli, aday
+listesi, demo paketi, sıkıştırma):
+
+```bash
+python demo_kontrol.py
+```
+
 ## Nasıl çalışır (özet)
 
 - **Ham davranış cihazda kalır.** Hangi gönderiye ne kadar bakıldığı

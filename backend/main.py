@@ -284,6 +284,20 @@ def api_gonderi_olustur(yeni: YeniGonderi):
     return {"ok": True, "gonderi": _sosyal_ile_zenginlestir([gonderi])[0]}
 
 
+@app.get("/api/durum")
+def api_durum():
+    """Canlı demo öncesi hızlı kontrol (demo_kontrol.py): hangi duygu modeli
+    yüklü, havuzda kaç gönderi var. Model yolu yerine yalnızca klasör adı döner."""
+    import duygu_modeli
+    kaynak = duygu_modeli._kullanilan_model or ""
+    return {
+        "duygu_modeli": Path(kaynak).name if kaynak else None,
+        "gonderi_sayisi": len(GONDERILER),
+        "yogun_pay": round(sum(g["duygu"] < -0.15 for g in GONDERILER) / max(1, len(GONDERILER)), 3),
+        "resmi_gonderi": sum(1 for g in GONDERILER if g.get("yazar") in RESMI_HESAPLAR),
+    }
+
+
 @app.get("/api/kesfet")
 def api_kesfet():
     """Ana akış sayfalamasından bağımsız, görsel keşfet görünümü için tüm demo içeriği."""
