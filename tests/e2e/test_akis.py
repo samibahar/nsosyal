@@ -19,6 +19,9 @@ def test_ilk_acilista_acik_riza_sorulur_kapali_secince_katman_kapanir(mobil):
     mobil.goto(f"{ADRES}/index.html")
     mobil.wait_for_selector(".onay-kutu")
     assert mobil.locator("#onay-acik").is_visible() and mobil.locator("#onay-kapali").is_visible()
+    for _ in range(5):  # aria-modal: Tab odağı kutunun içinde döner
+        mobil.keyboard.press("Tab")
+        assert mobil.evaluate("!!document.activeElement.closest('.onay-kutu')")
     mobil.locator("#onay-kapali").click()
     mobil.wait_for_selector(".onay-arka", state="detached")
     ayarlar = mobil.evaluate("() => LocalPersonalization.getAyarlar()")
@@ -43,12 +46,31 @@ def test_ana_akis_48_aday_ister_yalniz_gosterilenlerin_fotografini_indirir(mobil
     assert not mobil.hatalar
 
 
-def test_yerel_depolama_engelliyse_akis_sunucu_siralamasiyla_acilir(depolamasiz):
+def test_yerel_depolama_engelliyse_akis_acilir_davranis_verisi_gonderilmez(depolamasiz):
+    istekler = []
+    depolamasiz.on("request", lambda istek: istekler.append(istek.url))
     depolamasiz.goto(f"{ADRES}/index.html")
     depolamasiz.wait_for_selector("#akis .post-card")
     assert depolamasiz.locator("#akis .post-card").count() == 12
     assert depolamasiz.locator(".onay-kutu").count() == 0
+    assert depolamasiz.locator("#flow-status-title").inner_text() == "Kişiselleştirme kapalı"
+    depolamasiz.locator("#akis .post-card .post-text").first.click()
+    depolamasiz.mouse.wheel(0, 2500)
+    depolamasiz.wait_for_timeout(800)
+    assert not [url for url in istekler if "/api/etkilesim" in url or "/api/dogrulama" in url]
     assert not depolamasiz.hatalar
+
+
+def test_dengeleme_bildirimi_oturum_icin_kapatilabilir(masaustu):
+    akisi_ac(masaustu)
+    masaustu.locator("#jury-demo-rail").click()
+    masaustu.wait_for_selector("#balance-intervention:not([hidden])")
+    masaustu.locator("#denge-kapat").click()
+    masaustu.wait_for_function("document.getElementById('flow-status-title').textContent === 'Bu oturumda dengeleme kapalı'")
+    iz = juri_demosu(masaustu)
+    assert iz["dengelemeAcik"] is False
+    assert max(g["balancing"] for g in iz["after"]) == 0
+    assert masaustu.evaluate("() => LocalPersonalization.getAyarlar()")["dengeleme"] is True  # kalıcı ayar değişmedi
 
 
 def test_mobilde_hicbir_sayfa_yatay_tasmaz_ve_hata_vermez(mobil):

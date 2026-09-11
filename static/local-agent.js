@@ -24,6 +24,8 @@
   async function clearStores() { const db = await openDatabase(); await new Promise((resolve, reject) => { const tx = db.transaction(["events", "state"], "readwrite"); tx.objectStore("events").clear(); tx.objectStore("state").clear(); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
   const safeTone = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+  // "Bu oturumda dengeleme yapma" secimi yalnizca bu sekme oturumu icin gecerli.
+  const _oturumdaKapali = () => { try { return sessionStorage.getItem("nsosyal-denge-oturum-kapali") === "1"; } catch { return false; } };
 
   // Uzun donem ozeti icin GUNLUK TOPLAMLAR. Ham olay kaydi 240 etkilesimle
   // sinirli (veri minimizasyonu); haftalar arasi karsilastirma icin yalnizca
@@ -78,7 +80,7 @@
     // tıklamadığı senaryo-içi bir tepkiyi kendisi vermiş gibi gösteriyordu
     // (kullanıcı tarafından tespit edildi, 21.08.2026).
     const latestExplicit = [...events].reverse().find(event => (event.type === "post_reaction" || event.type === "news_reaction") && !event.demo && Date.now() - event.createdAt < 30 * 60 * 1000);
-    return { mode: "local", eventCount: meaningful.length, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, shouldCheckin: state.ayarlar.kontrolSorulari && meaningful.length >= 12 && meaningful.length % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
+    return { mode: "local", eventCount: meaningful.length, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, oturumdaKapali: _oturumdaKapali(), kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, shouldCheckin: state.ayarlar.kontrolSorulari && meaningful.length >= 12 && meaningful.length % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
   }
   async function trimEvents() { const events = await getEvents(); if (events.length <= EVENT_LIMIT) return; const db = await openDatabase(), tx = db.transaction("events", "readwrite"); events.slice(0, events.length - EVENT_LIMIT).forEach(event => tx.objectStore("events").delete(event.id)); }
   async function summary() { return calculate(await getEvents(), await getState()); }
@@ -242,7 +244,7 @@
   async function rank(posts) {
     const state = await getState(), events = await getEvents(), report = calculate(events, state);
     const latestReaction = [...events].reverse().find(event => event.type === "post_reaction" && Date.now() - event.createdAt < 60 * 60 * 1000) || null;
-    return siralaSaf(posts, { topicWeights: state.topicWeights || {}, intensity: report.intensity, enoughData: report.enoughData, dengelemeAcik: state.ayarlar.dengeleme, latestReaction });
+    return siralaSaf(posts, { topicWeights: state.topicWeights || {}, intensity: report.intensity, enoughData: report.enoughData, dengelemeAcik: state.ayarlar.dengeleme && !_oturumdaKapali(), latestReaction });
   }
   // Jüri demosu yalnizca siralama profilini sifirlar. Ayarlar, uzun donem
   // gunluk ozetleri ve kisisel model korunur; demo etkilesimleri gunluk
@@ -266,7 +268,7 @@
     const after = await rank(posts), report = await summary(), beforeIndex = new Map(before.map((post, index) => [Number(post.id), index + 1]));
     const compact = post => ({ id: post.id, metin: post.metin, konu: post.konu, duygu: safeTone(post.duygu), yazar: post.yazar, yazar_bilgi: post.yazar_bilgi });
     const trace = {
-      version: pack.surum || pack.version || "jury-replay-v1", createdAt: Date.now(), demo: true, dengelemeAcik: report.ayarlar.dengeleme,
+      version: pack.surum || pack.version || "jury-replay-v1", createdAt: Date.now(), demo: true, dengelemeAcik: report.ayarlar.dengeleme && !report.oturumdaKapali,
       candidates: posts.map(compact), signals: scenario.map(signal => ({ ...signal })), summary: report,
       before: before.map((post, index) => ({ id: post.id, position: index + 1, score: post.local_skor })),
       after: after.map((post, index) => ({ id: post.id, position: index + 1, score: post.local_skor, interest: post.local_ilgi, balancing: post.local_dengeleme, reactionEffect: post.local_tepki_etkisi })),

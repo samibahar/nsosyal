@@ -414,6 +414,14 @@ html, body { background: var(--canvas); }
 body .balance-intervention > span { display: inline-flex; align-items: center; gap: 5px; color: #9fe0bf; font-size: 10px; }
 body .balance-intervention #balance-feed { background: var(--accent); color: var(--accent-ink); }
 body .balance-intervention { border-radius: var(--radius); }
+/* Dengeleme bildirimi ustte cikar: alttaki "Akis guncellendi" bildirimi ve
+   kontrol sorusu karti ile cakismasin. */
+body .balance-intervention { top: 72px; bottom: auto; }
+@media (min-width: 681px) {
+  body .balance-intervention { top: 24px; left: auto; right: 24px; transform: none; width: 380px; }
+}
+body .balance-intervention #denge-tamam { background: var(--accent); color: var(--accent-ink); }
+body .balance-intervention #denge-kapat { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, .4); }
 
 /* Eski tema aksani acik lime idi, uzerine SIYAH metin konuyordu. Aksan
    koyulasinca bu butonlarda siyah-uzeri-koyu-yesil (3.9:1) olustu. */

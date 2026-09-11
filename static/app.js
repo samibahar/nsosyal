@@ -48,13 +48,6 @@ function updateMood(psikolojikDurum){
   document.getElementById("flow-current-mood").textContent=metin;
   document.getElementById("desktop-current-mood").textContent=metin;
 }
-function updateDuyguKatmani(katman){
-  if(!katman)return;
-  const title=document.getElementById("flow-status-title"), text=document.getElementById("flow-status-text"), desktopTitle=document.getElementById("desktop-status-title"), desktopText=document.getElementById("desktop-status-text");
-  if(!katman.veri_yeterli){title.textContent="Akışını tanıyoruz";text.textContent=`${katman.anlamli_etkilesim}/10 anlamlı etkileşim · henüz yorum yapmak için erken`;desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;return;}
-  if(katman.surdurulmus_oruntu){title.textContent="Akış biraz yoğunlaştı";text.textContent="Sürdürülebilir bir örüntü gördük; akışı nazikçe dengeleyebilirsin.";desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;}
-  if(katman.mudahale_uygun&&typeof intervention!=="undefined")intervention.hidden=false;
-}
 function updateTopics(){
   const list=document.getElementById("konu-sayaclari"); const rows=Object.entries(topicCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   list.innerHTML=rows.length?rows.map(([key,count])=>`<div class="topic-row"><b>${escapeText(topicFor(key).name)}</b><span>${count} gönderi</span></div>`).join(""):'<span class="topic-loading">Akış yükleniyor…</span>';
@@ -62,12 +55,12 @@ function updateTopics(){
 function updateLocalAgent(summary){
   localSummary=summary;
   const title=document.getElementById("flow-status-title"),text=document.getElementById("flow-status-text"),desktopTitle=document.getElementById("desktop-status-title"),desktopText=document.getElementById("desktop-status-text");
-  const dengelemeKapali=summary.ayarlar?.dengeleme===false;
+  const oturumda=summary.oturumdaKapali&&summary.ayarlar?.dengeleme!==false,dengelemeKapali=summary.ayarlar?.dengeleme===false||oturumda;
   if(!summary.enoughData){title.textContent="Bu cihazda öğreniyor";text.textContent=`${summary.eventCount}/10 anlamlı etkileşim · ${dengelemeKapali?"dengeleme kapalı":"ham davranış verisi cihazında kalır"}`;desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;if(summary.lastExplicitReaction){const mood=`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`;document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;}else updateMood(null);return;}
   // Dengeleme Ayarlar'dan kapatildiysa yogunluk yine olculur ama akisa
   // yansimaz; kart bunu acikca soyler (rapor 5.1: "istedigi an kapatabilir").
-  if(dengelemeKapali){currentSpiral=summary.intensity;title.textContent="Dengeleme kapalı";text.textContent="Akış yalnızca ilgi alanlarına göre sıralanıyor. Ayarlar'dan yeniden açabilirsin.";desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;feed.style.filter="none";}
-  else updateStatus(summary.intensity);
+  if(dengelemeKapali){currentSpiral=summary.intensity;title.textContent=oturumda?"Bu oturumda dengeleme kapalı":"Dengeleme kapalı";text.textContent=oturumda?"Akış yalnızca ilgi alanlarına göre sıralanıyor; sekmeyi kapatınca yeniden açılır.":"Akış yalnızca ilgi alanlarına göre sıralanıyor. Ayarlar'dan yeniden açabilirsin.";desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;feed.style.filter="none";}
+  else{updateStatus(summary.intensity);dengeBildirimi(summary);}
   const mood=summary.lastExplicitReaction?`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`:`Olası anlık ritim: ${summary.currentMood} · kullanıcı tarafından doğrulanmadı`;
   document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;
 }
@@ -79,10 +72,8 @@ async function sendInteraction(id,dwell,click=false,rocket=false,comment=false,e
   if(localAgent){
     try{const data=await localAgent.recordInteraction({post:postCache.get(id),dwell,click,rocket,comment,exit});updateLocalAgent(data);if(data.shouldCheckin)showCheckin();}catch(error){console.warn("Local interaction could not be recorded",error);}return;
   }
-  try{
-    const res=await fetch("/api/etkilesim",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({gonderi_id:id,dwell_saniye:dwell,tiklama:click,roket:rocket,yorum:comment,cikis:exit})});
-    const data=await res.json(); updateStatus(data.spiral_seviyesi); updateMood(data.psikolojik_durum); updateDuyguKatmani(data.duygu_katmani); if(data.onay_sorulsun_mu)showCheckin();
-  }catch(error){console.warn("Interaction could not be recorded",error);}
+  // Yerel depolama yoksa davranis verisi hicbir yere gonderilmez (sunucuya da):
+  // kisisellestirme yapilmaz. "Ham davranis cihazda kalir" ilkesi yedek yolda da gecerli.
 }
 function dwellFor(id){return visibleSince.has(id)?Math.max(.3,(performance.now()-visibleSince.get(id))/1000):1.5;}
 const dwellObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
@@ -94,7 +85,7 @@ const dwellObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
 function scoreBox(label,value){return `<div class="score-box"><small>${label}</small><b>${value}</b></div>`;}
 function openLocalSheet(post){
   const sheet=document.getElementById("explanation-sheet"),summary=document.getElementById("sheet-summary"),scores=document.getElementById("sheet-score-grid"),technical=document.getElementById("technical-details-content");
-  const dengelemeAcik=localSummary.ayarlar?.dengeleme!==false;
+  const dengelemeAcik=localSummary.ayarlar?.dengeleme!==false&&!localSummary.oturumdaKapali;
   if(post){
     const secim=post.aday_toplami?`Cihazına gelen ${post.aday_toplami} aday arasından ${post.aday_sirasi}. sırada seçildi. `:"";
     const muafMetin=post.resmi?"Resmi/acil bilgilendirme hesabından; bu tür gönderiler akış yoğunluğu ne olursa olsun duygu dengelemesiyle aşağı itilmez. ":"";
@@ -191,7 +182,7 @@ const SAYFA_BOYU=12,ADAY_SAYISI=48;
 let adayHavuzu=[],sunucuTukendi=false;
 async function adaylariGetir(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}&aday=${ADAY_SAYISI}`);const data=await response.json();sunucuTukendi=data.tukendi;return data.gonderiler||[];}
 async function getPage(reset){
-  if(!localAgent){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();updateStatus(data.spiral_seviyesi);exhausted=data.tukendi;return data.gonderiler;}
+  if(!localAgent){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();exhausted=data.tukendi;return data.gonderiler;}
   if(reset){adayHavuzu=[];sunucuTukendi=false;}
   if(adayHavuzu.length<SAYFA_BOYU&&!sunucuTukendi)adayHavuzu=adayHavuzu.concat(await adaylariGetir(reset));
   const siralanmis=await localAgent.rank(adayHavuzu),toplam=siralanmis.length;
@@ -249,7 +240,7 @@ document.getElementById("sifirla-buton").addEventListener("click",eraseLocalProf
 function showCheckin(){const until=Number(sessionStorage.getItem("nsosyal-checkin-snooze-until")||0);if(Date.now()<until)return;document.getElementById("dogrulama-karti").classList.remove("gizli");}
 function hideCheckin(){document.getElementById("dogrulama-karti").classList.add("gizli");}
 document.getElementById("dogrulama-gec-buton").addEventListener("click",()=>{sessionStorage.setItem("nsosyal-checkin-snooze-until",String(Date.now()+20*60*1000));hideCheckin();});
-document.querySelectorAll(".dogrulama-secenek").forEach(button=>button.addEventListener("click",async()=>{hideCheckin();if(localAgent){updateLocalAgent(await localAgent.recordCheckin(button.dataset.kategori));return;}await fetch("/api/dogrulama",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kullanici_cevabi:button.dataset.kategori})});}));
+document.querySelectorAll(".dogrulama-secenek").forEach(button=>button.addEventListener("click",async()=>{hideCheckin();if(localAgent)updateLocalAgent(await localAgent.recordCheckin(button.dataset.kategori));}));
 
 // Navigation sheets and composer keep the social app controls usable without
 // changing the ranking/interaction API used by the feed.
@@ -282,14 +273,23 @@ function openStory(index){if(index<0||index>=stories.length)return;activeStoryIn
 function closeStory(){const viewer=document.getElementById("story-viewer");viewer.classList.remove("open");viewer.setAttribute("aria-hidden","true");}
 async function setupStories(){try{stories=(await (await fetch("/api/hikayeler")).json()).hikayeler||[];document.querySelectorAll(".story[data-user]").forEach(button=>button.addEventListener("click",event=>{event.preventDefault();event.stopImmediatePropagation();const index=stories.findIndex(story=>story.user_id===button.dataset.user);if(index>=0)openStory(index);},true));}catch{}}
 document.getElementById("story-close").addEventListener("click",closeStory);document.getElementById("story-previous").addEventListener("click",()=>openStory(Math.max(0,activeStoryIndex-1)));document.getElementById("story-next").addEventListener("click",()=>activeStoryIndex>=stories.length-1?closeStory():openStory(activeStoryIndex+1));document.getElementById("story-viewer").addEventListener("click",event=>{if(event.target.id==="story-viewer")closeStory();});
-const intervention=document.createElement("aside");intervention.id="balance-intervention";intervention.className="balance-intervention";intervention.hidden=true;intervention.innerHTML='<span><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> AKIŞ DENGESİ</span><h2>Akış biraz yoğunlaştı.</h2><p>Benzer yoğun içeriklerde daha uzun kaldığını fark ettik. İstersen akışına daha çeşitli postlar ekleyelim.</p><div><button id="balance-feed" type="button">Akışı dengele</button><button id="dismiss-intervention" type="button">Boşver</button></div>';document.body.appendChild(intervention);
+// Dengeleme devreye girdiginde kullaniciya oturum basina BIR kez haber verilir
+// ve bu oturum icin tek dokunusla kapatabilir (rapor 6.2: "mudahaleyi gecebilir").
+// Kalici kapatma Ayarlar'da. Onceki kart yalnizca sunucu yolunda calisiyordu.
+const intervention=document.createElement("aside");intervention.id="balance-intervention";intervention.className="balance-intervention";intervention.hidden=true;intervention.setAttribute("role","status");intervention.innerHTML='<span><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> AKIŞ DENGESİ</span><h2>Akış biraz yoğunlaştı</h2><p>Yoğun tonlu içeriklerde uzun kaldığını fark ettik. Bu oturumda onların payını biraz azaltıp aralıklandırıyoruz; hiçbir gönderi silinmiyor.</p><div><button id="denge-tamam" type="button">Tamam</button><button id="denge-kapat" type="button">Bu oturumda dengeleme yapma</button></div>';document.body.appendChild(intervention);
+document.getElementById("denge-tamam").addEventListener("click",()=>{intervention.hidden=true;});
+document.getElementById("denge-kapat").addEventListener("click",async()=>{intervention.hidden=true;try{sessionStorage.setItem("nsosyal-denge-oturum-kapali","1");}catch{}if(localAgent){updateLocalAgent(await localAgent.summary());await rerankVisibleFeed();}});
+function dengeBildirimi(summary){
+  if(!summary.enoughData||summary.intensity<=.58||summary.ayarlar?.dengeleme===false||summary.oturumdaKapali)return;
+  try{if(sessionStorage.getItem("nsosyal-denge-bildirildi"))return;sessionStorage.setItem("nsosyal-denge-bildirildi","1");}catch{}
+  intervention.hidden=false;
+}
 const rankingNotice=document.createElement("div");rankingNotice.id="ranking-notice";rankingNotice.className="ranking-notice";rankingNotice.setAttribute("role","status");rankingNotice.setAttribute("aria-live","polite");document.body.appendChild(rankingNotice);
 function yerelArayuzuKur(){const privacyButton=document.createElement("button");privacyButton.id="local-privacy-button";privacyButton.type="button";privacyButton.innerHTML='<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Bu cihazda kişiselleştiriliyor';privacyButton.title="Yerel kişiselleştirme ayrıntıları";privacyButton.addEventListener("click",()=>openSheet());document.querySelector("#flow-status>div").appendChild(privacyButton);const localStyle=document.createElement("style");localStyle.textContent='.flow-status .local-privacy-button{display:block;width:auto;height:auto;border:0;background:transparent;color:#5d7350;font-size:10px;font-weight:800;line-height:1.25;padding:4px 0 0;text-decoration:underline;text-underline-offset:3px}.flow-status .local-privacy-button:focus-visible{outline:2px solid #719740;outline-offset:3px;border-radius:3px}';document.head.appendChild(localStyle);}
 document.getElementById("jury-demo-button").addEventListener("click",startJuryDemo);
 document.getElementById("jury-demo-rail").addEventListener("click",event=>{event.preventDefault();startJuryDemo();});
 const demoStyle=document.createElement("style");demoStyle.textContent='.demo-scenario{display:block;margin-top:8px;border:0;background:transparent;color:#56674a;padding:0;font-size:10px;font-weight:800;text-decoration:underline}.balance-intervention{position:fixed;z-index:60;left:50%;bottom:84px;width:min(560px,calc(100% - 28px));transform:translateX(-50%);border-radius:26px;background:#1a2019;color:white;padding:18px 19px;box-shadow:0 20px 60px rgba(0,0,0,.26)}.balance-intervention[hidden]{display:none}.balance-intervention>span{color:#c9ff62;font-size:9px;font-weight:850;letter-spacing:.1em}.balance-intervention h2{margin:7px 0 5px;font-size:19px}.balance-intervention p{margin:0;color:#c9d1c5;font-size:12px;line-height:1.45}.balance-intervention div{display:flex;gap:8px;margin-top:15px}.balance-intervention button{border:0;border-radius:999px;padding:9px 12px;font-size:11px;font-weight:800}.balance-intervention #balance-feed{background:#c9ff62;color:#121314}.balance-intervention #dismiss-intervention{background:transparent;color:white}.ranking-notice{position:fixed;z-index:70;left:50%;bottom:92px;width:min(560px,calc(100% - 28px));transform:translate(-50%,18px);opacity:0;pointer-events:none;border-radius:16px;background:#1a2019;color:#fff;padding:12px 15px;box-shadow:0 16px 40px rgba(0,0,0,.2);font-size:11px;font-weight:750;line-height:1.35;transition:opacity .2s,transform .2s}.ranking-notice.show{opacity:1;transform:translate(-50%,0)}@media(min-width:681px){.ranking-notice{bottom:24px;left:calc(50% + 110px)}}@media(prefers-reduced-motion:reduce){.ranking-notice{transition:none}}';document.head.appendChild(demoStyle);
 const originalUpdateStatus=updateStatus;updateStatus=function(level){originalUpdateStatus(level);};
-document.getElementById("dismiss-intervention").addEventListener("click",async()=>{intervention.hidden=true;await fetch("/api/mudahale/ertele",{method:"POST"});});document.getElementById("balance-feed").addEventListener("click",async()=>{intervention.hidden=true;await firstLoad();});
 setupStories();
 // Ilk acilis: acik riza. Iki secenek esit agirlikta sunulur; secim cihazda
 // saklanir ve Ayarlar'dan her an degistirilebilir.
@@ -298,6 +298,8 @@ async function ilkBilgilendirme(){
   const arka=document.createElement("div");arka.className="onay-arka";
   arka.innerHTML=`<section class="onay-kutu" role="dialog" aria-modal="true" aria-labelledby="onay-baslik" aria-describedby="onay-aciklama"><span class="eyebrow"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kilit"/></svg> DUYGU KATMANI</span><h2 id="onay-baslik">Başlamadan önce</h2><ul id="onay-aciklama"><li><b>Bu cihazda kalır.</b> Hangi gönderide ne kadar durduğun ve verdiğin tepkiler yalnızca bu tarayıcıda tutulur, sunucuya gönderilmez.</li><li><b>Teşhis değildir.</b> Bu sinyallerden akışın olası yoğunluğu tahmin edilir; yoğunlaşınca benzer içerikler biraz aşağı alınır, hiçbir şey silinmez.</li><li><b>Kontrol sende.</b> Ayarlar'dan istediğin an kapatabilir, verilerini silebilirsin. Kapalı başlatırsan akış yalnızca ilgi alanlarına göre kişiselleşir.</li></ul><div class="onay-secenek"><button type="button" id="onay-acik" data-onay="acik">Açık başlat</button><button type="button" id="onay-kapali" data-onay="kapali">Kapalı başlat</button></div><a class="onay-ayrinti" href="/ayarlar.html">Ayrıntılar ve ayarlar</a></section>`;
   document.body.appendChild(arka);arka.querySelector("#onay-acik").focus();
+  // aria-modal diyalog: Tab odagi kutunun icinde doner, arkadaki akisa kacmaz.
+  arka.addEventListener("keydown",event=>{if(event.key!=="Tab")return;const odaklar=[...arka.querySelectorAll("button,a[href]")],ilk=odaklar[0],son=odaklar[odaklar.length-1];if(event.shiftKey&&document.activeElement===ilk){event.preventDefault();son.focus();}else if(!event.shiftKey&&document.activeElement===son){event.preventDefault();ilk.focus();}});
   arka.querySelectorAll("[data-onay]").forEach(buton=>buton.addEventListener("click",async()=>{await localAgent.setOnay(buton.dataset.onay);arka.remove();updateLocalAgent(await localAgent.summary());if(buton.dataset.onay==="kapali")await rerankVisibleFeed();}));
 }
 // Acilis. Yerel depolama (IndexedDB) acilamazsa -- bazi gizli modlar, "site
@@ -305,6 +307,7 @@ async function ilkBilgilendirme(){
 // gecilir; duygu katmani o durumda sunucudaki referans yolu kullanir.
 async function baslat(){
   if(localAgent){try{await localAgent.init();}catch(error){console.warn("Yerel depolama kullanılamıyor; sunucu sıralamasına geçildi",error);localAgent=null;}}
+  if(!localAgent){const baslik="Kişiselleştirme kapalı",metin="Tarayıcın yerel depolamaya izin vermediği için akış kişiselleştirilmeden gösteriliyor; davranış verin hiçbir yere gönderilmiyor.";["flow-status-title","desktop-status-title"].forEach(id=>{document.getElementById(id).textContent=baslik;});["flow-status-text","desktop-status-text"].forEach(id=>{document.getElementById(id).textContent=metin;});}
   if(localAgent){yerelArayuzuKur();document.getElementById("sifirla-buton").textContent="Yerel verileri sil";document.querySelector(".flow-eyebrow").textContent="DUYGU KATMANI · YEREL";try{updateLocalAgent(await localAgent.summary());}catch(error){console.warn("Local agent unavailable",error);}}
   await firstLoad();
   if(localAgent)ilkBilgilendirme().catch(error=>console.warn("Bilgilendirme gösterilemedi",error));
