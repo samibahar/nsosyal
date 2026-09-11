@@ -3,8 +3,12 @@ __pycache__/
 *.pyc
 .env
 
-# İnce ayarlı model (~420MB) -- git'e uygun değil, ince_ayar.py ile yeniden üretilebilir
-models/
+# İnce ayarlı modeller. Yalnızca uygulamanın kullandığı v3 repoya girer
+# (model.safetensors Git LFS ile); v1, v2 ve ara dosyalar ince_ayar*.py ile
+# yeniden üretilebilir.
+models/*
+!models/bert-turkish-sentiment-ince-ayarli-v3/
+models/bert-turkish-sentiment-ince-ayarli-v3/_checkpoint_gecici/
 NSosyal_Proje_Kodlari.zip
 
 # calisma zamaninda uretilen demo veritabani (sosyal_veri.py, her baslangicta yeniden dolduruluyor)
