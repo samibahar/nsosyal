@@ -28,7 +28,10 @@ function smoothPath(points){
   }
   return d;
 }
-function renderLine(events){const target=$("rhythm-chart"),interactions=events.filter(event=>event.type==="interaction");if(!interactions.length){empty(target,"Akışta biraz gezindiğinde, zaman içindeki etkileşim ritmin burada belirir.","icgoru",{href:"/index.html?demo=1",metin:"Örnek senaryoyu çalıştır"});$("rhythm-caption").textContent="Henüz veri yok";return;}
+// Grafik cizildiginde kutu role="img" tasir; bos durumda icine tiklanabilir
+// bir baglanti konuldugu icin rol kaldirilir (resim rolu etkilesimli oge
+// iceremez; axe: nested-interactive).
+function renderLine(events){const target=$("rhythm-chart"),interactions=events.filter(event=>event.type==="interaction");target.removeAttribute("role");if(!interactions.length){empty(target,"Akışta biraz gezindiğinde, zaman içindeki etkileşim ritmin burada belirir.","icgoru",{href:"/index.html?demo=1",metin:"Örnek senaryoyu çalıştır"});$("rhythm-caption").textContent="Henüz veri yok";return;}
   const start=rangeStart(activeRange),end=Date.now(),buckets=Array.from({length:7},()=>0),span=Math.max(1,end-start);interactions.forEach(event=>buckets[Math.min(6,Math.floor((event.createdAt-start)/span*7))]++);
   // Tek bir zaman diliminde kumelenmis veri (orn. kisa bir demo oturumu),
   // 6 sifir + 1 ani sivri uctan olusan yanitici/cirkin bir grafik uretir --
@@ -39,6 +42,7 @@ function renderLine(events){const target=$("rhythm-chart"),interactions=events.f
   if(nonEmptyBuckets<=1){empty(target,"Etkileşimlerin tek bir zaman diliminde kümelendi. Zamana yayıldıkça burada bir ritim çizilir.","icgoru");$("rhythm-caption").textContent=`${interactions.length} etkileşim`;return;}
   const max=Math.max(1,...buckets),points=buckets.map((count,index)=>[8+index*46,104-(count/max)*76]);
   const linePath=smoothPath(points),areaPath=`${linePath} L284,104 L8,104 Z`;
+  target.setAttribute("role","img");
   target.innerHTML=`<svg viewBox="0 0 292 112" preserveAspectRatio="none" aria-hidden="true"><path class="chart-grid" d="M8 104H284M8 66H284M8 28H284"/><path class="chart-area" d="${areaPath}"/><path class="chart-line" d="${linePath}"/>${points.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3"/>`).join("")}</svg>`;
   $("rhythm-caption").textContent=`${interactions.length} etkileşim`;
 }
