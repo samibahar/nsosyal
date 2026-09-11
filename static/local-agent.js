@@ -6,7 +6,9 @@
   const VARSAYILAN_AYARLAR = { dengeleme: true, doygunluk: true, kontrolSorulari: true, kisiselUyarlama: true };
   const KATEGORI_SAYISI = 5;
   let database;
-  const defaults = () => ({ version: 4, topicWeights: {}, postReactions: {}, newsCategoryWeights: {}, newsReactions: {}, lastCheckinAt: 0, checkins: 0, demoTrace: null, ayarlar: { ...VARSAYILAN_AYARLAR }, gunluk: {}, kisiselModel: null, dogrulama: null, onay: null });
+  const defaults = () => ({ version: 4, topicWeights: {}, postReactions: {}, newsCategoryWeights: {}, newsReactions: {}, lastCheckinAt: 0, checkins: 0, demoTrace: null, ayarlar: { ...VARSAYILAN_AYARLAR }, gunluk: {}, kisiselModel: null, dogrulama: null, onay: null, spiralKalibrasyon: null, spiralDogrulama: null, pilotKayitlari: [], pilotBaslangic: 0, pilotKimlik: null });
+  // Demo sifirlamasinda korunan, kullanicinin kendi cevaplarindan olusan alanlar.
+  const KALICI_ALANLAR = ["ayarlar", "onay", "gunluk", "kisiselModel", "dogrulama", "spiralKalibrasyon", "spiralDogrulama", "pilotKayitlari", "pilotBaslangic", "pilotKimlik"];
   function _tamamla(kayit) { const state = { ...defaults(), ...(kayit || {}) }; state.ayarlar = { ...VARSAYILAN_AYARLAR, ...(state.ayarlar || {}) }; state.gunluk = state.gunluk || {}; return state; }
   function openDatabase() {
     if (database) return Promise.resolve(database);
@@ -49,29 +51,48 @@
   // Egitilmis spiral (lojistik regresyon) + psikolojik durum (SGDClassifier)
   // modellerini, hicbir ham veri cihazdan cikmadan burada calistirir --
   // trained-models.js yuklu degilse (eski sayfa onbellegi vb.) eski basit
-  // esik-tabanli formule geri duser. SIRALAMAYI etkileyen yogunluk her zaman
-  // VARSAYILAN modelle hesaplanir: kisisel uyarlama yalnizca tahmin
-  // etiketlerini degistirir, akisin kullanici basina kaymasina yol acmaz.
+  // esik-tabanli formule geri duser. Kisisel psikolojik model yalnizca tahmin
+  // etiketlerini degistirir, siralamaya girmez. Spiral olasiligi ise kisisel
+  // kalibrasyondan gecebilir, ama ANCAK _spiralKalibrasyonEtkin kosulu
+  // saglandiginda (asagida): aksi halde akisi varsayilan model belirler.
   function _anlikKategoriTahmini(meaningful, model) {
     if (!meaningful.length || typeof window.TrainedModels === "undefined") return null;
     return window.TrainedModels.psikolojikTahmin(_psikolojikOzellik(meaningful[meaningful.length - 1]), model);
   }
+  // Spiral icin zayif etiket: kontrol sorusunda "yogun" ya da "sinirli"
+  // cevabi 1, "sakin/mutluluk/umut" 0. Klinik bir etiket degil, kullanicinin
+  // o anki oz-bildirimi (EMA); sentetik egitim verisinin yerine gecen tek
+  // gercek sinyal budur.
+  const SPIRAL_ETIKETI = { anksiyete: 1, sinirli: 1, sakin: 0, mutluluk: 0, umut: 0 };
+  const KALIBRASYON_ESIGI = 6, PILOT_SINIRI = 400;
+  const _bosSpiralDogrulama = () => ({ toplam: 0, pozitif: 0, varsayilanDogru: 0, varsayilanBrier: 0, kisiselToplam: 0, kisiselDogru: 0, kisiselBrier: 0, ayniVarsayilanBrier: 0 });
+  // Kisisel kalibrasyon siralamaya yalnizca bu kullanicinin kendi
+  // cevaplarinda varsayilandan daha iyi tuttugu GOSTERILDIYSE baglanir: her
+  // cevap once tahmin edilip sonra ogrenilir (prequential), en az 6 cevap ve
+  // ayni cevaplarda daha dusuk Brier hatasi gerekir. Model kendini ancak
+  // gercek cevaplarla kanitlayinca akisi etkiler.
+  function _spiralKalibrasyonEtkin(state) {
+    const d = state.spiralDogrulama;
+    return !!(state.ayarlar.kisiselUyarlama && state.spiralKalibrasyon && d && d.kisiselToplam >= KALIBRASYON_ESIGI && d.kisiselBrier < d.ayniVarsayilanBrier);
+  }
   // Son 30 dakikada yeterli gonderi yoksa yogunluk 0'dir: dunku oturum bugunun
   // akisini dengelemez.
-  function _egitilmisYogunluk(meaningful) {
+  function _egitilmisYogunluk(meaningful, kalibrasyon) {
     const T = window.TrainedModels;
     if (typeof T === "undefined" || !T.spiralOzellikleri) return null;
     const ozellikler = T.spiralOzellikleri(_spiralOlaylari(meaningful), Date.now() / 1000);
     if (!ozellikler) return 0;
-    const spiralOlasilik = T.spiralOlasiligi(ozellikler);
+    const spiralOlasilik = T.spiralKalibre ? T.spiralKalibre(T.spiralOlasiligi(ozellikler), kalibrasyon) : T.spiralOlasiligi(ozellikler);
     const psikolojik = _anlikKategoriTahmini(meaningful);
     const negatifRuhHaliKutlesi = (psikolojik.olasiliklar.sinirli || 0) + (psikolojik.olasiliklar.anksiyete || 0);
     return clamp(spiralOlasilik * 0.7 + negatifRuhHaliKutlesi * 0.3);
   }
-  function calculate(events, state) {
+  // kalibrasyonsuz: jüri demosu her cihazda aynı sonucu versin diye varsayılan modelle çalışır.
+  function calculate(events, state, { kalibrasyonsuz = false } = {}) {
     const meaningful = events.filter(event => event.type === "interaction"), recent = meaningful.slice(-12), negative = recent.filter(event => event.tone < -0.15), sustained = negative.filter(event => event.dwell >= 3.5), unique = new Set(recent.map(event => event.topic)).size;
     const yedekYogunluk = clamp((recent.length ? sustained.length / recent.length : 0) * .72 + (recent.length > 3 ? 1 - unique / recent.length : 0) * .28);
-    const egitilmisYogunluk = _egitilmisYogunluk(meaningful);
+    const kalibrasyonEtkin = !kalibrasyonsuz && _spiralKalibrasyonEtkin(state);
+    const egitilmisYogunluk = _egitilmisYogunluk(meaningful, kalibrasyonEtkin ? state.spiralKalibrasyon : null);
     const intensity = egitilmisYogunluk === null ? yedekYogunluk : egitilmisYogunluk;
     const confidence = clamp(meaningful.length / 16), enoughData = meaningful.length >= 10;
     const preferred = Object.entries(state.topicWeights || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
@@ -80,7 +101,7 @@
     // tıklamadığı senaryo-içi bir tepkiyi kendisi vermiş gibi gösteriyordu
     // (kullanıcı tarafından tespit edildi, 21.08.2026).
     const latestExplicit = [...events].reverse().find(event => (event.type === "post_reaction" || event.type === "news_reaction") && !event.demo && Date.now() - event.createdAt < 30 * 60 * 1000);
-    return { mode: "local", eventCount: meaningful.length, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, oturumdaKapali: _oturumdaKapali(), kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, shouldCheckin: state.ayarlar.kontrolSorulari && meaningful.length >= 12 && meaningful.length % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
+    return { mode: "local", eventCount: meaningful.length, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, oturumdaKapali: _oturumdaKapali(), kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, spiralKalibrasyonEtkin: kalibrasyonEtkin, shouldCheckin: state.ayarlar.kontrolSorulari && meaningful.length >= 12 && meaningful.length % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
   }
   async function trimEvents() { const events = await getEvents(); if (events.length <= EVENT_LIMIT) return; const db = await openDatabase(), tx = db.transaction("events", "readwrite"); events.slice(0, events.length - EVENT_LIMIT).forEach(event => tx.objectStore("events").delete(event.id)); }
   async function summary() { return calculate(await getEvents(), await getState()); }
@@ -100,9 +121,10 @@
   // gelmeden hesaplanir, kisisel model ANCAK ondan sonra cevapla guncellenir.
   // Boylece kisisel modelin eslesme orani, hic gormedigi cevaplar uzerinden olculur.
   // Sayaclar state'te tutulur; ham olay kaydi 240'ta kirpilsa da kaybolmaz.
+  const _yuvarla = nesne => Object.fromEntries(Object.entries(nesne).map(([ad, deger]) => [ad, +Number(deger).toFixed(4)]));
   async function recordCheckin(value) {
     const state = await getState(), T = window.TrainedModels;
-    const son = (await getEvents()).filter(event => event.type === "interaction").at(-1);
+    const etkilesimler = (await getEvents()).filter(event => event.type === "interaction"), son = etkilesimler.at(-1);
     const ozellik = son && T ? _psikolojikOzellik(son) : null;
     const varsayilan = ozellik ? T.psikolojikTahmin(ozellik).kategori : null;
     const kisisel = ozellik && state.kisiselModel ? T.psikolojikTahmin(ozellik, state.kisiselModel).kategori : null;
@@ -115,6 +137,31 @@
       d.cevaplar[value] = (d.cevaplar[value] || 0) + 1;
       state.dogrulama = d;
     }
+    // Spiral: ayni "once tahmin et, sonra ogren" sirasi. Kalibrasyon ilk
+    // cevapta varsayilanla ayni baslar (egim 1, kayma 0).
+    const spiralOzellik = T && T.spiralKalibre ? T.spiralOzellikleri(_spiralOlaylari(etkilesimler), Date.now() / 1000) : null;
+    const etiket = SPIRAL_ETIKETI[value];
+    let spiral = null;
+    if (spiralOzellik && etiket !== undefined) {
+      const p0 = T.spiralOlasiligi(spiralOzellik), etkinOnce = _spiralKalibrasyonEtkin(state);
+      const kal = state.ayarlar.kisiselUyarlama ? state.spiralKalibrasyon || T.varsayilanSpiralKalibrasyonu() : null;
+      const pk = kal ? T.spiralKalibre(p0, kal) : null;
+      const s = state.spiralDogrulama || _bosSpiralDogrulama();
+      s.toplam += 1; s.pozitif += etiket; s.varsayilanDogru += Number((p0 >= .5 ? 1 : 0) === etiket); s.varsayilanBrier += (p0 - etiket) ** 2;
+      if (kal) {
+        s.kisiselToplam += 1; s.kisiselDogru += Number((pk >= .5 ? 1 : 0) === etiket); s.kisiselBrier += (pk - etiket) ** 2; s.ayniVarsayilanBrier += (p0 - etiket) ** 2;
+        state.spiralKalibrasyon = T.spiralKalibrasyonGuncelle(kal, p0, etiket);
+      }
+      state.spiralDogrulama = s;
+      spiral = { ozellik: _yuvarla(spiralOzellik), p0: +p0.toFixed(4), pk: pk === null ? null : +pk.toFixed(4), etkin: etkinOnce };
+    }
+    // Pilot kaydi: yalnizca bu an icin cevap, tahminler ve tahmine giren ozet
+    // sayilar. Gonderi kimligi, metin, konu ve saat tutulmaz; gun, ilk kayda
+    // gore kacinci gun oldugudur.
+    if (!state.pilotBaslangic) state.pilotBaslangic = Date.now();
+    const kayitlar = state.pilotKayitlari || [];
+    kayitlar.push({ sira: (kayitlar.at(-1)?.sira || 0) + 1, gun: Math.floor((Date.now() - state.pilotBaslangic) / 86400000), cevap: value, demo: !!son?.demo, psikolojik: ozellik ? { ozellik: _yuvarla(ozellik), varsayilan, kisisel } : null, spiral });
+    state.pilotKayitlari = kayitlar.slice(-PILOT_SINIRI);
     state.lastCheckinAt = Date.now(); state.checkins += 1;
     _gunlugeIsle(state, gun => { gun.kontroller[value] = (gun.kontroller[value] || 0) + 1; });
     await Promise.all([
@@ -146,6 +193,37 @@
       kisiselSayisi: d.kisiselToplam,
       cogunlukOrani: enSik / d.toplam,
       rastgeleOrani: 1 / KATEGORI_SAYISI,
+    };
+  }
+  // Spiral tahmininin oz-bildirimle uyumu. "Hep en sik cevap" tabani geriye
+  // donuk hesaplanir (modele karsi comert). Brier: olasilik ile 0/1 cevap
+  // arasindaki ortalama kare fark, dusuk olan iyi.
+  async function spiralDogrulamaOzeti() {
+    const state = await getState(), s = state.spiralDogrulama;
+    if (!s || !s.toplam) return { toplam: 0, esik: KALIBRASYON_ESIGI, etkin: false };
+    const k = s.kisiselToplam;
+    return {
+      toplam: s.toplam, pozitifOrani: s.pozitif / s.toplam,
+      varsayilanUyum: s.varsayilanDogru / s.toplam, varsayilanBrier: s.varsayilanBrier / s.toplam,
+      cogunlukUyum: Math.max(s.pozitif, s.toplam - s.pozitif) / s.toplam,
+      kisiselSayisi: k, kisiselUyum: k ? s.kisiselDogru / k : null, kisiselBrier: k ? s.kisiselBrier / k : null, ayniVarsayilanBrier: k ? s.ayniVarsayilanBrier / k : null,
+      esik: KALIBRASYON_ESIGI, etkin: _spiralKalibrasyonEtkin(state), kalibrasyon: state.spiralKalibrasyon,
+    };
+  }
+  // Gonullu pilot icin disa aktarma (Ayarlar > Pilot). Dosya kullanici
+  // indirip kendisi gondermedikce cihazdan cikmaz. Katilimci kodu rastgele
+  // uretilir; ayni kisinin iki kez gonderdigi dosyayi ayirt etmeye yarar.
+  async function pilotDosyasi() {
+    const state = await getState(), W = window.TrainedModelWeights;
+    if (!state.pilotKimlik) {
+      const bayt = new Uint8Array(6); crypto.getRandomValues(bayt);
+      state.pilotKimlik = [...bayt].map(b => b.toString(16).padStart(2, "0")).join(""); await setState(state);
+    }
+    return {
+      bicim: "nsosyal-pilot-1", katilimci: state.pilotKimlik,
+      modeller: { spiral_surum: W?.spiral?.surum ?? null, psikolojik_kategoriler: W?.psikolojik?.kategoriler || [] },
+      ayarlar: { ...state.ayarlar }, dogrulama: await dogrulamaOzeti(), spiral_dogrulama: await spiralDogrulamaOzeti(),
+      kayitlar: state.pilotKayitlari || [],
     };
   }
   async function recordPostReaction(post, reaction, demo) {
@@ -241,31 +319,32 @@
     // local_dengeleme: dengeleme yuzunden kac sira asagi kaydirildigi (0 = etkilenmedi).
     return dozlu.map(({ kalem, skor }, i) => ({ ...kalem.post, local_skor: skor, local_ilgi: kalem.localInterest, local_dengeleme: aktif ? Math.max(0, i - serbestSira.get(kalem.post.id)) : 0, local_tepki_etkisi: kalem.reactionEffect, local_muaf: kalem.muaf, local_doz_taban: taban, local_doz_hedef: aktif ? hedef : taban }));
   }
-  async function rank(posts) {
-    const state = await getState(), events = await getEvents(), report = calculate(events, state);
+  async function rank(posts, secenek = {}) {
+    const state = await getState(), events = await getEvents(), report = calculate(events, state, secenek);
     const latestReaction = [...events].reverse().find(event => event.type === "post_reaction" && Date.now() - event.createdAt < 60 * 60 * 1000) || null;
     return siralaSaf(posts, { topicWeights: state.topicWeights || {}, intensity: report.intensity, enoughData: report.enoughData, dengelemeAcik: state.ayarlar.dengeleme && !_oturumdaKapali(), latestReaction });
   }
   // Jüri demosu yalnizca siralama profilini sifirlar. Ayarlar, uzun donem
-  // gunluk ozetleri ve kisisel model korunur; demo etkilesimleri gunluk
-  // ozetlere de yazilmaz (demo:true).
+  // gunluk ozetleri, kisisel modeller ve pilot kayitlari korunur; demo
+  // etkilesimleri gunluk ozetlere de yazilmaz (demo:true). Demo siralamasi
+  // kisisel spiral kalibrasyonunu kullanmaz, her cihazda ayni sonucu verir.
   async function _demoIcinSifirla() {
     const state = await getState();
     await clearStores();
-    await setState({ ...defaults(), ayarlar: state.ayarlar, onay: state.onay, gunluk: state.gunluk, kisiselModel: state.kisiselModel, dogrulama: state.dogrulama });
+    await setState({ ...defaults(), ...Object.fromEntries(KALICI_ALANLAR.map(alan => [alan, state[alan]])) });
   }
   async function runDemoScenario(pack) {
     const posts = pack?.gonderiler || pack?.posts || [], scenario = pack?.senaryo || pack?.scenario || [];
     if (!posts.length || !scenario.length) throw new Error("Demo paketi eksik.");
     await _demoIcinSifirla();
-    const before = await rank(posts), byId = new Map(posts.map(post => [Number(post.id), post]));
+    const before = await rank(posts, { kalibrasyonsuz: true }), byId = new Map(posts.map(post => [Number(post.id), post]));
     for (const signal of scenario) {
       const post = byId.get(Number(signal.post_id));
       if (!post) continue;
       await recordInteraction({ post, dwell: Number(signal.dwell || 0), click: !!signal.click, rocket: false, comment: false, exit: false, demo: true });
       if (signal.reaction) await recordPostReaction(post, signal.reaction, true);
     }
-    const after = await rank(posts), report = await summary(), beforeIndex = new Map(before.map((post, index) => [Number(post.id), index + 1]));
+    const after = await rank(posts, { kalibrasyonsuz: true }), report = calculate(await getEvents(), await getState(), { kalibrasyonsuz: true }), beforeIndex = new Map(before.map((post, index) => [Number(post.id), index + 1]));
     const compact = post => ({ id: post.id, metin: post.metin, konu: post.konu, duygu: safeTone(post.duygu), yazar: post.yazar, yazar_bilgi: post.yazar_bilgi });
     const trace = {
       version: pack.surum || pack.version || "jury-replay-v1", createdAt: Date.now(), demo: true, dengelemeAcik: report.ayarlar.dengeleme && !report.oturumdaKapali,
@@ -299,11 +378,16 @@
     if (!(anahtar in VARSAYILAN_AYARLAR)) throw new Error(`Bilinmeyen ayar: ${anahtar}`);
     const state = await getState(); state.ayarlar[anahtar] = !!deger; await setState(state); return { ...state.ayarlar };
   }
-  async function kisiselModelDurumu() { const state = await getState(); return { guncelleme: state.kisiselModel?.guncelleme || 0, aktif: state.ayarlar.kisiselUyarlama && !!state.kisiselModel }; }
+  async function kisiselModelDurumu() { const state = await getState(); return { guncelleme: state.kisiselModel?.guncelleme || 0, aktif: state.ayarlar.kisiselUyarlama && !!state.kisiselModel, spiralGuncelleme: state.spiralKalibrasyon?.guncelleme || 0, spiralEtkin: _spiralKalibrasyonEtkin(state), pilotKayit: (state.pilotKayitlari || []).length }; }
   // Icgoru grafiklerinde kullanilacak model: kisisel uyarlama aciksa ve en az
   // bir kez guncellendiyse kisisel model, degilse null (= varsayilan).
   async function etiketModeli() { const state = await getState(); return state.ayarlar.kisiselUyarlama && state.kisiselModel ? state.kisiselModel : null; }
-  async function kisiselModeliSifirla() { const state = await getState(); state.kisiselModel = null; await setState(state); return kisiselModelDurumu(); }
+  // Sifirlama spiral kalibrasyonunu da kaldirir; akisa baglanma kosulu bastan olculur.
+  async function kisiselModeliSifirla() {
+    const state = await getState(); state.kisiselModel = null; state.spiralKalibrasyon = null;
+    if (state.spiralDogrulama) Object.assign(state.spiralDogrulama, { kisiselToplam: 0, kisiselDogru: 0, kisiselBrier: 0, ayniVarsayilanBrier: 0 });
+    await setState(state); return kisiselModelDurumu();
+  }
   async function uzunDonemOzeti() {
     const state = await getState();
     const gunler = Object.entries(state.gunluk).sort((a, b) => a[0].localeCompare(b[0])).map(([tarih, gun]) => ({ tarih, ...gun }));
@@ -338,5 +422,5 @@
     Object.keys(state.gunluk).forEach(tarih => { if (state.gunluk[tarih].ornek) delete state.gunluk[tarih]; });
     await setState(state); return uzunDonemOzeti();
   }
-  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, siralaSaf, rankNews, runDemoScenario, getDecisionTrace, erase, getOnay, setOnay, getAyarlar, setAyar, kisiselModelDurumu, etiketModeli, kisiselModeliSifirla, uzunDonemOzeti, ornekGecmisYukle, ornekGecmisiKaldir };
+  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, spiralDogrulamaOzeti, pilotDosyasi, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, siralaSaf, rankNews, runDemoScenario, getDecisionTrace, erase, getOnay, setOnay, getAyarlar, setAyar, kisiselModelDurumu, etiketModeli, kisiselModeliSifirla, uzunDonemOzeti, ornekGecmisYukle, ornekGecmisiKaldir };
 })();

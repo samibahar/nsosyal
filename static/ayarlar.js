@@ -17,7 +17,24 @@ const topla=(hedef,kaynak={})=>Object.entries(kaynak).forEach(([k,v])=>{hedef[k]
 function gunAnahtari(zaman){const d=new Date(zaman);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
 
 function anahtarlariGoster(ayarlar){document.querySelectorAll("[data-ayar]").forEach(buton=>buton.setAttribute("aria-checked",String(!!ayarlar[buton.dataset.ayar])));}
-async function kisiselDurumGoster(){const durum=await ajan.kisiselModelDurumu();$("kisisel-durum").textContent=durum.guncelleme?`${durum.guncelleme} cevapla güncellendi`:"Henüz güncellenmedi";}
+async function kisiselDurumGoster(){
+  const durum=await ajan.kisiselModelDurumu();
+  const spiral=durum.spiralGuncelleme?` · spiral kalibrasyonu ${durum.spiralEtkin?"akışa bağlı":"henüz akışa bağlı değil"}`:"";
+  $("kisisel-durum").textContent=durum.guncelleme?`${durum.guncelleme} cevapla güncellendi${spiral}`:"Henüz güncellenmedi";
+}
+// Pilot dosyası: indirmeden önce içeriği sayfada gösterilir.
+async function pilotGoster(){
+  const dosya=await ajan.pilotDosyasi(),adet=dosya.kayitlar.length;
+  $("pilot-indir").textContent=`Pilot dosyasını indir (${adet} cevap)`;$("pilot-indir").disabled=!adet;
+  $("pilot-icerik").textContent=JSON.stringify(dosya,null,1);
+  return dosya;
+}
+$("pilot-indir").addEventListener("click",async()=>{
+  const dosya=await pilotGoster(),bag=document.createElement("a");
+  bag.href=URL.createObjectURL(new Blob([JSON.stringify(dosya)],{type:"application/json"}));
+  bag.download=`nsosyal-pilot-${dosya.katilimci}.json`;document.body.append(bag);bag.click();bag.remove();
+  setTimeout(()=>URL.revokeObjectURL(bag.href),1000);
+});
 
 // Son 4 hafta, bugünden geriye 7'şer günlük pencereler.
 function haftalar(gunler,adet=4){
@@ -60,12 +77,13 @@ async function veriGoster(ozet){
     `<li><b>${ozet.olaySayisi}</b> ham etkileşim kaydı<small>En fazla ${ozet.olaySiniri}; en eskiler kendiliğinden silinir.</small></li>`,
     `<li><b>${gercekGun}</b> günlük özet<small>Yalnızca gün başına toplam sayılar, ${Math.round(ozet.saklamaGun/7)} hafta saklanır.</small></li>`,
     `<li><b>${durum.guncelleme}</b> kişisel model güncellemesi<small>Kontrol sorusu cevaplarından, yalnızca bu cihazda.</small></li>`,
+    `<li><b>${durum.pilotKayit}</b> pilot kaydı<small>Her kontrol sorusu anı için cevap ve özet sayılar. Yalnızca sen indirip gönderirsen cihazdan çıkar.</small></li>`,
     `<li><b>Yok</b> sunucuya giden davranış kaydı<small>Sunucu yalnızca herkese açık aday gönderileri sağlar.</small></li>`,
   ].join("");
 }
 async function yenile(){
   const [ayarlar,ozet]=await Promise.all([ajan.getAyarlar(),ajan.uzunDonemOzeti()]);
-  anahtarlariGoster(ayarlar);uzunDonemGoster(ozet);await Promise.all([kisiselDurumGoster(),veriGoster(ozet)]);
+  anahtarlariGoster(ayarlar);uzunDonemGoster(ozet);await Promise.all([kisiselDurumGoster(),veriGoster(ozet),pilotGoster()]);
 }
 
 document.querySelectorAll("[data-ayar]").forEach(buton=>buton.addEventListener("click",async()=>{

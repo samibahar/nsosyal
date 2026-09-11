@@ -78,7 +78,17 @@ async function renderDogrulama(){
   target.innerHTML=`<div><b>${y(ozet.eslesmeOrani)}</b><span>tahmin eşleşti · ${ozet.toplam} cevap</span></div><div><b>${y(ozet.cogunlukOrani)}</b><span>"hep en sık cevap" tabanı</span></div><div><b>${y(ozet.rastgeleOrani)}</b><span>rastgele tahmin</span></div>`;
   const kiyas=ozet.toplam<5?`Henüz ${ozet.toplam} cevap var; karşılaştırma için en az 5 cevap gerekiyor.`:ozet.eslesmeOrani>ozet.cogunlukOrani?"Model şu an iki taban çizgisini de geçiyor.":"Model henüz \"hep en sık cevabı söyle\" tahmininden iyi değil; bu dürüstçe gösterilir.";
   const kisisel=ozet.kisiselOrani!==null&&ozet.kisiselOrani!==undefined?` Kişisel uyarlama: ${y(ozet.kisiselOrani)} (${ozet.kisiselSayisi} cevap; her cevap önce tahmin edildi, sonra öğrenildi). Varsayılan model: ${y(ozet.varsayilanOrani)}.`:"";
-  not.textContent=kiyas+kisisel;
+  not.textContent=kiyas+kisisel+await spiralDogrulamaMetni(agent,y);
+}
+// Spiral tahmini (sentetik veriyle eğitildi) ile öz-bildirimin uyumu ve
+// kişisel kalibrasyonun akışa bağlanıp bağlanmadığı.
+async function spiralDogrulamaMetni(agent,y){
+  const s=await agent.spiralDogrulamaOzeti();
+  if(!s.toplam)return "";
+  let metin=` Spiral tahmini ile cevapların uyumu: ${y(s.varsayilanUyum)} (${s.toplam} cevap; "hep en sık cevap" tabanı ${y(s.cogunlukUyum)}).`;
+  const b=x=>x.toFixed(2).replace(".",",");
+  if(s.kisiselSayisi)metin+=s.etkin?` Kişisel kalibrasyon aynı cevaplarda daha az hata yaptığı için dengelemeye bağlandı (uyum ${y(s.kisiselUyum)}; Brier hatası ${b(s.kisiselBrier)}, varsayılan ${b(s.ayniVarsayilanBrier)}).`:` Kişisel kalibrasyon henüz dengelemeye bağlı değil: en az ${s.esik} cevapta varsayılandan daha az hata yapması gerekiyor (şu an ${s.kisiselSayisi} cevap).`;
+  return metin;
 }
 function renderReactions(events){const target=$("reaction-chart"),values=countBy(events.filter(event=>event.type==="post_reaction"||event.type==="news_reaction"),event=>event.reaction);const rows=Object.entries(values);if(!rows.length){empty(target,"Bir gönderiye tepki verdiğinde seçimlerin burada toplanır.","tepki");return;}target.innerHTML=rows.map(([reaction,count])=>`<div class="reaction-row"><span>${reactionLabels[reaction]?.[0]||"☺"}</span><b>${reactionLabels[reaction]?.[1]||reaction}</b><i>${count}</i></div>`).join("");}
 function renderSummary(events){const interactions=events.filter(event=>event.type==="interaction"),reactions=events.filter(event=>event.type==="post_reaction"||event.type==="news_reaction");$("kpi-interactions").textContent=interactions.length;$("kpi-reactions").textContent=reactions.length;const hareket=trace?.movedCount;$("kpi-moved").textContent=hareket??"—";const hareketAlt=document.querySelector("#kpi-moved + span");if(hareketAlt)hareketAlt.textContent=hareket==null?"demo çalışmadı":"son demo";

@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css?v=40" />
   <link rel="stylesheet" href="/arayuz.css?v=14" />
-  <link rel="stylesheet" href="/tema.css?v=17" />
+  <link rel="stylesheet" href="/tema.css?v=18" />
 </head>
 <body class="insight-body ayarlar-body">
 <svg class="ikon-sprite" aria-hidden="true" focusable="false"><defs>
@@ -46,7 +46,7 @@
           <button class="anahtar" type="button" role="switch" aria-checked="true" data-ayar="kontrolSorulari" aria-labelledby="ayar-kontrol-ad" aria-describedby="ayar-kontrol-acik"><span></span></button>
         </div>
         <div class="ayar-satir">
-          <div><b id="ayar-kisisel-ad">Kişisel uyarlama</b><p id="ayar-kisisel-acik">Kontrol sorularına verdiğin cevaplarla tahmin modelini bu cihazda sana göre küçük adımlarla ayarlar. Akışın sıralamasını değiştirmez.</p><small id="kisisel-durum" class="ayar-alt">Henüz güncellenmedi</small></div>
+          <div><b id="ayar-kisisel-ad">Kişisel uyarlama</b><p id="ayar-kisisel-acik">Kontrol sorularına verdiğin cevaplarla tahmin modellerini bu cihazda sana göre küçük adımlarla ayarlar. Dengelemenin ne zaman devreye gireceğini ancak en az 6 cevapta varsayılan modelden daha iyi tuttuğu görülürse etkiler.</p><small id="kisisel-durum" class="ayar-alt">Henüz güncellenmedi</small></div>
           <button class="anahtar" type="button" role="switch" aria-checked="true" data-ayar="kisiselUyarlama" aria-labelledby="ayar-kisisel-ad" aria-describedby="ayar-kisisel-acik"><span></span></button>
         </div>
       </div>
@@ -76,13 +76,20 @@
       <p id="veri-bildirim" class="ayar-bildirim" role="status" aria-live="polite"></p>
     </section>
 
+    <section class="insight-chart-card" aria-labelledby="pilot-baslik">
+      <div class="chart-heading"><div><span>GÖNÜLLÜ PİLOT</span><h2 id="pilot-baslik">Pilot sonucunu paylaş</h2></div></div>
+      <p class="pilot-aciklama">Bir pilot çalışmasına gönüllü katıldıysan bu dosyayı indirip ekibe kendin gönderebilirsin. Dosyada yalnızca kontrol sorularına verdiğin cevaplar, o anki model tahminleri ve tahmine giren birkaç özet sayı bulunur (ör. son 30 dakikada yoğun tonlu içerikte geçen sürenin payı). Gönderi metni, konu, saat ya da kimlik bilgisi yoktur. Dosya otomatik gönderilmez.</p>
+      <div class="veri-eylemleri"><button id="pilot-indir" type="button" class="ikincil-buton">Pilot dosyasını indir</button></div>
+      <details class="pilot-onizleme"><summary>Dosyanın içeriğini göster</summary><pre id="pilot-icerik" tabindex="0"></pre></details>
+    </section>
+
     <section class="insight-data-note"><b><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kilit"/></svg> Kontrol sende</b><p>Bu seçimler yalnızca bu tarayıcıda saklanır ve sunucuya gönderilmez. Duygu katmanı bir teşhis aracı değildir; akışını nazikçe dengelemek için olası etkileşim örüntülerini kullanır.</p></section>
   </main>
   <nav class="bottom-nav insight-nav" aria-label="Alt menü"><a class="nav-item" href="/index.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-ev"/></svg></span><small>Ana Sayfa</small></a><a class="nav-item" href="/kesfet.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-kesfet"/></svg></span><small>Keşfet</small></a><a class="create-button" href="/index.html?compose=1" aria-label="Yeni gönderi"><svg class="ikon ikon-lg" aria-hidden="true"><use href="#i-arti"/></svg></a><a class="nav-item" href="/haberler.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-haber"/></svg></span><small>Haberler</small></a><a class="nav-item" href="/rapor.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-icgoru"/></svg></span><small>İçgörü</small></a></nav>
   <script src="/trained-weights.js?v=2"></script>
-  <script src="/trained-models.js?v=3"></script>
-  <script src="/local-agent.js?v=17"></script>
-  <script src="/ayarlar.js?v=2"></script>
+  <script src="/trained-models.js?v=4"></script>
+  <script src="/local-agent.js?v=18"></script>
+  <script src="/ayarlar.js?v=3"></script>
   <script src="/erisim.js?v=1"></script>
 </body>
 </html>

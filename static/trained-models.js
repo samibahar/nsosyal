@@ -95,5 +95,24 @@
     return { coef, intercept, guncelleme: (model.guncelleme || 0) + 1 };
   }
 
-  window.TrainedModels = { spiralOlasiligi, spiralOzellikleri, psikolojikTahmin, varsayilanPsikolojik, psikolojikGuncelle };
+  // Kisisel spiral kalibrasyonu (Platt olcekleme): p = sigmoid(egim x logit(p0) + kayma).
+  // Spiral modeli sentetik oturumlarla egitildi; taban duzeyi (sakin bir
+  // oturumda ~0,26) simulatorun varsayimidir. Kontrol sorusu cevaplari bu iki
+  // parametreyi kullanicinin kendi olcegine ceker. Ozellik katsayilarina
+  // dokunulmaz: egim >= 0,25 oldugu surece donusum monotondur, yani
+  // literature dayali isaret kisitlari (spiral_model.YONLER) hic tersine donmez.
+  const _logit = p => { const q = Math.min(1 - 1e-6, Math.max(1e-6, p)); return Math.log(q / (1 - q)); };
+  function varsayilanSpiralKalibrasyonu() { return { egim: 1, kayma: 0, guncelleme: 0 }; }
+  function spiralKalibre(p0, kal) { return kal ? sigmoid(kal.egim * _logit(p0) + kal.kayma) : p0; }
+  // Tek SGD adimi (log kaybi) + varsayilana (egim 1, kayma 0) dogru yakinsal duzenlilestirme.
+  function spiralKalibrasyonGuncelle(kal, p0, etiket, { eta = 0.3, lambda = 0.1 } = {}) {
+    const z = _logit(p0), fark = sigmoid(kal.egim * z + kal.kayma) - etiket;
+    return {
+      egim: Math.min(3, Math.max(0.25, kal.egim - eta * (fark * z + lambda * (kal.egim - 1)))),
+      kayma: Math.min(3, Math.max(-3, kal.kayma - eta * (fark + lambda * kal.kayma))),
+      guncelleme: (kal.guncelleme || 0) + 1,
+    };
+  }
+
+  window.TrainedModels = { spiralOlasiligi, spiralOzellikleri, psikolojikTahmin, varsayilanPsikolojik, psikolojikGuncelle, varsayilanSpiralKalibrasyonu, spiralKalibre, spiralKalibrasyonGuncelle };
 })();

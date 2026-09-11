@@ -1,5 +1,8 @@
 """Raporun 3.3 ve 6.2 bölümlerinde anlatılan kullanıcı akışlarının tarayıcıda doğrulanması."""
+import json
 import os
+
+import pytest
 
 ADRES = os.environ.get("NSOSYAL_URL", "http://localhost:8000")
 SAYFALAR = ["/index.html", "/rapor.html", "/ayarlar.html", "/haberler.html", "/kesfet.html", "/profil.html?u=emiryusuf", "/juri.html"]
@@ -153,3 +156,41 @@ def test_kontrol_sorusu_cevabi_kisisel_modeli_gunceller(masaustu):
     assert durum["guncelleme"] == 2
     masaustu.goto(f"{ADRES}/rapor.html")
     masaustu.wait_for_function("document.getElementById('dogrulama-chart').innerText.includes('tabanı')")
+
+
+def test_spiral_kalibrasyonu_ancak_cevaplarla_kanitlaninca_akisa_baglanir(masaustu):
+    """Sentetik eğitimli spiral modeli, kullanıcının 'sakinim' cevaplarıyla
+    kalibre olur; ama akışı ancak 6 cevapta varsayılandan iyi tuttuğu
+    görülünce etkiler. Jüri demosu kalibrasyondan etkilenmez."""
+    akisi_ac(masaustu)
+    once = juri_demosu(masaustu)["summary"]
+    for i in range(6):
+        ozet = masaustu.evaluate("async () => { await LocalPersonalization.recordCheckin('sakin'); return LocalPersonalization.spiralDogrulamaOzeti(); }")
+        assert ozet["toplam"] == i + 1 and ozet["etkin"] is (i == 5)
+    assert ozet["kisiselBrier"] < ozet["ayniVarsayilanBrier"] and ozet["kalibrasyon"]["egim"] >= 0.25
+    sonra = masaustu.evaluate("() => LocalPersonalization.summary()")
+    assert sonra["spiralKalibrasyonEtkin"] and sonra["intensity"] < once["intensity"] - 0.05
+    assert juri_demosu(masaustu)["summary"]["intensity"] == pytest.approx(once["intensity"], abs=0.02)
+
+    masaustu.goto(f"{ADRES}/rapor.html")
+    masaustu.wait_for_function("document.getElementById('dogrulama-not').textContent.includes('dengelemeye bağlandı')")
+
+
+def test_pilot_dosyasi_yalniz_cevap_ve_ozet_sayilari_icerir(masaustu):
+    akisi_ac(masaustu)
+    juri_demosu(masaustu)
+    masaustu.evaluate("async () => { for (const c of ['sakin', 'anksiyete', 'umut']) await LocalPersonalization.recordCheckin(c); }")
+    masaustu.goto(f"{ADRES}/ayarlar.html")
+    masaustu.wait_for_function("document.getElementById('pilot-indir').textContent.includes('3 cevap')")
+    with masaustu.expect_download() as bilgi:
+        masaustu.locator("#pilot-indir").click()
+    with open(bilgi.value.path(), encoding="utf-8") as f:
+        metin = f.read()
+    dosya = json.loads(metin)
+    assert dosya["bicim"] == "nsosyal-pilot-1" and len(dosya["katilimci"]) == 12
+    assert [k["cevap"] for k in dosya["kayitlar"]] == ["sakin", "anksiyete", "umut"]
+    assert all(k["demo"] for k in dosya["kayitlar"])  # jüri demosundan sonra verildi, analizde atılır
+    assert set(dosya["kayitlar"][0]["spiral"]["ozellik"]) == {"yogun_pay", "goreli_oyalanma", "yogun_fazla_kalma", "aktif_oran"}
+    for yasak in ["metin", "konu", "postId", "createdAt", "yazar", "topic"]:
+        assert f'"{yasak}"' not in metin, yasak
+    assert not masaustu.hatalar
