@@ -180,8 +180,11 @@ async function terapistOzetiOlustur(){
   const genel=ruhHaliDagilimi(seyirTum),konuSure={},konuOlumsuz={};
   seyirTum.forEach(({event,durum})=>{if(!durum)return;const s=sure(event);konuSure[event.topic]=(konuSure[event.topic]||0)+s;konuOlumsuz[event.topic]=(konuOlumsuz[event.topic]||0)+s*(durum.olasiliklar.sinirli+durum.olasiliklar.anksiyete);});
   const negatifKonular=Object.keys(konuSure).filter(topic=>konuSure[topic]>=60).map(topic=>[topic,konuOlumsuz[topic]/konuSure[topic]]).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([topic,pay])=>`${topicLabels[topic]||topic} ${yz(pay)}`).join(", ")||"karşılaştırma için yeterli süre yok";
-  const dogrulama=window.LocalPersonalization?await window.LocalPersonalization.dogrulamaOzeti():{toplam:0};
-  const dogrulamaSatiri=dogrulama.toplam?`  - Kullanıcı öz-bildirimiyle model tahmininin eşleşme oranı: %${Math.round(dogrulama.eslesmeOrani*100)} (${dogrulama.toplam} onay sorusu)`:"  - Henüz onay sorusu cevaplanmadı.";
+  // Eşleşme, özetin kapsadığı cevaplardan hesaplanır (her cevapta modelin önceden kaydettiği tahmin).
+  // Önceden cihazdaki toplam sayaç kullanılıyordu; jüri demosu olay kaydını sıfırladığı için
+  // "0 cevap" ile "6 onay sorusu" aynı özette yan yana çıkabiliyordu.
+  const olculen=checkins.filter(event=>typeof event.eslesme==="boolean");
+  const dogrulamaSatiri=olculen.length?`  - Kendi bildirimleriyle modelin önceden kaydedilen tahmininin eşleşme oranı: %${Math.round(olculen.filter(event=>event.eslesme).length/olculen.length*100)} (${olculen.length} cevap; rastgele tahmin %20)`:"  - Model tahmini ile kendi bildirimler henüz karşılaştırılmadı.";
   return [
     "VERİ ÖZETİ",
     `  - Kayıt aralığı: ${ilkTarih} - ${sonTarih} (bu cihaz en fazla 12 hafta saklar)`,

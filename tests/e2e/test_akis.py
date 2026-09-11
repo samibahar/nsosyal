@@ -246,5 +246,6 @@ def test_uzman_ozeti_haftalik_seyir_kendi_bildirimleri_ve_tepki_dengesi(masaustu
     for parca in ["KİŞİNİN KENDİ BİLDİRİMLERİ", "Sakin 1", "Yoğun 1", "Son 2 bildirim", "Kendi bildirimleri:",
                   "Olası ritim (süreye göre): sakin", "GÖNÜLLÜ TEPKİLER", "100 etkileşim başına", "yoğun tonlu içeriğe"]:
         assert parca in metin, parca
+    assert "(2 cevap; rastgele tahmin %20)" in metin  # eşleşme, özetteki cevaplarla aynı kaynaktan
     assert "Yoğun tonlu içeriğe verilen olumsuz tepki" in masaustu.locator("#reaction-chart").inner_text()
     assert not masaustu.hatalar
