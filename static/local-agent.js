@@ -190,35 +190,59 @@
       return { ...article, local_news_score: score, local_news_interest: interest, local_news_diversity: diversity };
     }).sort((a, b) => b.local_news_score - a.local_news_score);
   }
-  async function rank(posts) {
-    const state = await getState(), events = await getEvents(), report = calculate(events, state), maxWeight = Math.max(.25, ...Object.values(state.topicWeights || {}).map(Number)), seenTopics = {};
+  // SIRALAMA (etki_analizi.py'deki dozlu_sirala ile birebir; tests/e2e/test_parite.py).
+  // Acgozlu secim: cesitlilik bonusu SECILMIS listeye gore verilir (ayni
+  // konudan kacinci gonderi oldugu; ilk gonderi +.07, sonrakiler -.09 x n).
+  // Duygu dengelemesi DOZ tabanlidir: yogun tonlu gonderilerin sayfadaki payi
+  // akis yogunluguyla orantili bir hedefe indirilir, hedef = taban pay x
+  // (1 - 0,6 x yogunluk). Gonderi, o ana kadarki yogun sayisi kotanin
+  // altindaysa secilebilir; hicbir gonderi listeden cikmaz, yogunlar araliklanir.
+  // Onceki surum puandan ceza dusuyordu (|ton| x yogunluk x .62); olcum bunun
+  // fiilen filtre gibi calistigini gosterdi (ilk sayfadaki yogun pay %97 azaliyordu).
+  // Resmi/acil bilgi (resmi_veri.py) hic dozlanmaz ve "Gerildim" tepkisiyle itilmez.
+  // Ayarlar'da dengeleme kapaliysa yogunluk yine olculur ama siralamaya yansimaz.
+  const DOZ_ALFA = 0.6;
+  const _cesitlilikBonusu = n => n ? -.09 * n : .07;
+  function siralaSaf(posts, { topicWeights = {}, intensity = 0, enoughData = false, dengelemeAcik = true, latestReaction = null } = {}) {
+    const maxWeight = Math.max(.25, ...Object.values(topicWeights).map(Number));
     // A voluntary reaction is a short-lived, explainable input. It never removes content;
     // it only adjusts order within the user's current feed on this device.
-    const latestReaction = [...events].reverse().find(event => event.type === "post_reaction" && Date.now() - event.createdAt < 60 * 60 * 1000);
     const positiveReaction = ["begendim", "umutlandim", "dusundum"].includes(latestReaction?.reaction);
     const intenseReaction = ["kizdim", "gerildim"].includes(latestReaction?.reaction);
-    // Ayarlar'da "Duygu dengeleme" kapaliysa yogunluk yine olculur (durum
-    // kartinda gosterilir) ama siralamaya HIC yansimaz: akis yalnizca ilgi,
-    // cesitlilik ve kullanicinin kendi acik tepkisiyle siralanir.
-    const dengelemeAcik = state.ayarlar.dengeleme;
-    return posts.map((post, index) => {
-      const localInterest = Number(state.topicWeights[post.konu] || 0) / maxWeight, tone = safeTone(post.duygu);
-      // Resmi/acil bilgi (resmi_veri.py) olumsuz tonlu olsa da hayati olabilir:
-      // ne dengeleme cezasi ne de "Gerildim" tepkisinin itmesi uygulanir.
-      const muaf = !!post.resmi;
-      const balancing = !muaf && dengelemeAcik && report.enoughData && report.intensity > .28 && tone < -.15 ? Math.abs(tone) * report.intensity * .62 : 0;
-      const reactionEffect = latestReaction?.topic === post.konu
-        ? (positiveReaction ? .20 : intenseReaction && tone < -.15 && !muaf ? -.28 : 0)
-        : 0;
-      // Ceza -.045 iken en yuksek ilgili 1-2 konu ilk sayfanin tamamini
-      // kaplayabiliyordu (kullanici tarafindan tespit edildi, 21.08.2026) --
-      // güçlendirildi ki ayni konu art arda birkac gonderiden sonra dogal
-      // olarak geri cekilsin.
-      const diversity = seenTopics[post.konu] ? -.09 * seenTopics[post.konu] : .07;
-      seenTopics[post.konu] = (seenTopics[post.konu] || 0) + 1;
-      const base = Number(post.ilgi_skoru || post.final_skor || .5), localScore = base * .48 + localInterest * .34 + diversity - balancing + reactionEffect - index * .0005;
-      return { ...post, local_skor: localScore, local_ilgi: localInterest, local_dengeleme: balancing, local_tepki_etkisi: reactionEffect, local_muaf: muaf };
-    }).sort((a, b) => b.local_skor - a.local_skor);
+    const kalemler = posts.map((post, index) => {
+      const localInterest = Number(topicWeights[post.konu] || 0) / maxWeight, tone = safeTone(post.duygu), muaf = !!post.resmi;
+      const reactionEffect = latestReaction?.topic === post.konu ? (positiveReaction ? .20 : intenseReaction && tone < -.15 && !muaf ? -.28 : 0) : 0;
+      const base = Number(post.ilgi_skoru || post.final_skor || .5);
+      return { post, localInterest, reactionEffect, muaf, yogun: !muaf && tone < -.15, cekirdek: base * .48 + localInterest * .34 + reactionEffect - index * .0005 };
+    });
+    const aktif = dengelemeAcik && enoughData && intensity > .28;
+    const taban = kalemler.filter(k => k.yogun).length / Math.max(1, kalemler.length);
+    const hedef = aktif ? taban * (1 - DOZ_ALFA * intensity) : 1;
+    const sec = pay => {
+      const kalan = [...kalemler], sonuc = [], gorulen = {};
+      let yogunSayisi = 0;
+      while (kalan.length) {
+        const izin = Math.floor(pay * (sonuc.length + 1) + 0.5);
+        let uygun = kalan.filter(k => !k.yogun || yogunSayisi < izin);
+        if (!uygun.length) uygun = kalan;
+        let enIyi = uygun[0], enSkor = -Infinity;
+        uygun.forEach(k => { const skor = k.cekirdek + _cesitlilikBonusu(gorulen[k.post.konu] || 0); if (skor > enSkor) { enSkor = skor; enIyi = k; } });
+        sonuc.push({ kalem: enIyi, skor: enSkor });
+        gorulen[enIyi.post.konu] = (gorulen[enIyi.post.konu] || 0) + 1;
+        if (enIyi.yogun) yogunSayisi += 1;
+        kalan.splice(kalan.indexOf(enIyi), 1);
+      }
+      return sonuc;
+    };
+    const dozlu = sec(hedef);
+    const serbestSira = new Map((aktif ? sec(1) : dozlu).map((s, i) => [s.kalem.post.id, i]));
+    // local_dengeleme: dengeleme yuzunden kac sira asagi kaydirildigi (0 = etkilenmedi).
+    return dozlu.map(({ kalem, skor }, i) => ({ ...kalem.post, local_skor: skor, local_ilgi: kalem.localInterest, local_dengeleme: aktif ? Math.max(0, i - serbestSira.get(kalem.post.id)) : 0, local_tepki_etkisi: kalem.reactionEffect, local_muaf: kalem.muaf, local_doz_taban: taban, local_doz_hedef: aktif ? hedef : taban }));
+  }
+  async function rank(posts) {
+    const state = await getState(), events = await getEvents(), report = calculate(events, state);
+    const latestReaction = [...events].reverse().find(event => event.type === "post_reaction" && Date.now() - event.createdAt < 60 * 60 * 1000) || null;
+    return siralaSaf(posts, { topicWeights: state.topicWeights || {}, intensity: report.intensity, enoughData: report.enoughData, dengelemeAcik: state.ayarlar.dengeleme, latestReaction });
   }
   // Jüri demosu yalnizca siralama profilini sifirlar. Ayarlar, uzun donem
   // gunluk ozetleri ve kisisel model korunur; demo etkilesimleri gunluk
@@ -312,5 +336,5 @@
     Object.keys(state.gunluk).forEach(tarih => { if (state.gunluk[tarih].ornek) delete state.gunluk[tarih]; });
     await setState(state); return uzunDonemOzeti();
   }
-  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, rankNews, runDemoScenario, getDecisionTrace, erase, getOnay, setOnay, getAyarlar, setAyar, kisiselModelDurumu, etiketModeli, kisiselModeliSifirla, uzunDonemOzeti, ornekGecmisYukle, ornekGecmisiKaldir };
+  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, siralaSaf, rankNews, runDemoScenario, getDecisionTrace, erase, getOnay, setOnay, getAyarlar, setAyar, kisiselModelDurumu, etiketModeli, kisiselModeliSifirla, uzunDonemOzeti, ornekGecmisYukle, ornekGecmisiKaldir };
 })();

@@ -139,11 +139,13 @@ tarayıcıda çalışan `static/trained-weights.js` dosyasına yazar.
   (HuggingFace), eğitim verisi `winvoker/turkish-sentiment-analysis-dataset`.
   Temel modelin sayfasında lisans belirtilmemiştir; ince ayarlı model yalnızca
   araştırma ve yarışma amaçlıdır.
-- **Opsiyonel LLM API anahtarı**: haftalık öz-farkındalık raporundaki
-  gerçek zamanlı yapay zekâ yorumu bir API anahtarı gerektirir. Anahtar yoksa
-  bu bölüm sabit örnek metne düşer, uygulamanın geri kalanı normal çalışır.
-  Aktif etmek için proje klasöründe `.env` dosyası oluşturup içine
-  `GEMINI_API_KEY=...` satırını ekleyin.
+- **Üçüncü taraf servis yok:** Arayüz hiçbir davranış verisini dış bir yapay
+  zekâ servisine göndermez. Duygu modeli sunucuda yerel olarak çalışır ve
+  yalnızca herkese açık gönderi metnini skorlar; İçgörü'deki "uzmana
+  götürülebilir özet" tarayıcıda, dil modeli kullanılmadan üretilir.
+  `backend/main.py`'deki `/api/haftalik-rapor` ve `/api/terapist-raporu` uç
+  noktaları eski sunucu tarafı mimariden kalmadır ve arayüz tarafından
+  çağrılmaz.
 
 ## Proje Yapısı (özet)
 

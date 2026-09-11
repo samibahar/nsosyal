@@ -131,6 +131,15 @@ html, body { background: var(--canvas); }
 }
 /* arayuz.css bu etikete display:inline-flex veriyor; hidden ozniteligi ezilmesin */
 .softened-pill[hidden] { display: none; }
+.why-button { white-space: nowrap; }
+/* Dar telefonlarda "Tepki · Yorum · dengelendi · Neden bu?" tek satira sigsin:
+   375 px'te "Neden bu?" iki satira bolunuyor, satir 65 px'e uzuyordu. */
+@media (max-width: 420px) {
+  .post-actions { gap: 2px; padding-left: 8px; padding-right: 8px; }
+  .post-actions .action-button { min-width: 0; padding: 8px 7px; }
+  .post-actions .softened-pill { font-size: 11px; padding: 3px 7px; margin-right: 2px; }
+  .post-actions .why-button { padding: 7px 10px; }
+}
 
 /* --------------------------------------------------------------------------
    UST BAR / BASLIK

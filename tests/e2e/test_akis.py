@@ -97,9 +97,11 @@ def test_resmi_bilgi_yogun_akista_da_dengelenmez(masaustu):
         const p = await (await fetch('/api/demo-paketi')).json();
         const resmi = {...p.gonderiler[0], id: 99001, resmi: true};
         const sirali = await LocalPersonalization.rank([...p.gonderiler, resmi]);
-        return {resmi: sirali.find(g => g.id === 99001).local_dengeleme, normal: sirali.find(g => g.id === p.gonderiler[0].id).local_dengeleme};
+        return {resmi: sirali.find(g => g.id === 99001).local_dengeleme,
+                enFazla: Math.max(...sirali.filter(g => g.id !== 99001).map(g => g.local_dengeleme))};
     }""")
-    assert sonuc["normal"] > 0 and sonuc["resmi"] == 0
+    # local_dengeleme = dengeleme yüzünden kaç sıra aşağı kaydırıldığı
+    assert sonuc["enFazla"] > 0 and sonuc["resmi"] == 0
 
 
 def test_kontrol_sorusu_cevabi_kisisel_modeli_gunceller(masaustu):
