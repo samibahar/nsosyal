@@ -227,7 +227,12 @@ html, body { background: var(--canvas); }
   .insight-body { padding-bottom: 72px; }
 
   .nav-item { color: var(--muted); }
-  .nav-item small { display: none; }          /* etiketsiz, X gibi */
+  /* Etiketsiz gorunum (X gibi), ama etiket ekran okuyucuya acik kalir:
+     display:none baglantiyi adsiz birakiyordu (axe: link-name). */
+  .nav-item small {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
   .nav-item .ikon { width: 25px; height: 25px; }
   .bottom-nav .nav-item.active,
   .bottom-nav .nav-item.active small { color: var(--ink); }
@@ -613,6 +618,23 @@ body .balance-intervention #denge-kapat { background: transparent; color: #fff; 
 .explore-card, .profile-post, .news-card { border-radius: var(--radius); }
 .jury-body { background: var(--canvas); }
 .jury-intro { border-radius: var(--radius); background: var(--ink); }
+
+/* --------------------------------------------------------------------------
+   KONTRAST DUZELTMELERI (axe-core 4.9, WCAG 2.1 AA denetimi, 11.09.2026)
+   Eski paletten kalan soluk yesil-gri kucuk etiketler (8-9 px, 2,7-4,2:1)
+   ve aksan zemin uzerinde koyu metin (3,5:1) AA esigini gecmiyordu.
+   -------------------------------------------------------------------------- */
+.jury-topbar span, .jury-section-head span, .jury-receipt > div > span, .jury-empty > span,
+.jury-signal-list span, .jury-rank-list span, .jury-signal-list i,
+.chart-heading small, #rhythm-caption,
+.news-heading > div > span, .news-source i, .news-card-footer span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.jury-intro > span { color: #8fe0b5; font-size: 11px; }      /* koyu zeminde 10:1 */
+#news-private-badge { color: #fff; font-size: 11px; }        /* aksan zeminde 5,4:1 */
+.explore-chips button.active { color: #fff; }                /* aksan zeminde 5,4:1 */
+.explore-heading span { color: var(--muted); font-size: 11px; }
 .jury-section, .jury-summary article, .jury-empty {
   border: 1px solid var(--line);
   border-radius: var(--radius);
