@@ -1,6 +1,6 @@
 # Model Kartı — NSosyal Duygu Katmanı
 
-Son güncelleme: 11.09.2026. Bu belge sistemdeki üç modeli ve sıralama
+Son güncelleme: 12.09.2026. Bu belge sistemdeki üç modeli ve sıralama
 kuralını; veri kaynaklarını, ölçümleri, sınırlılıkları ve etik kararları
 özetler. Rakamların kaynağı depodaki `*_sonuc.txt` dosyalarıdır ve ilgili
 betikle yeniden üretilebilir.
@@ -9,7 +9,7 @@ betikle yeniden üretilebilir.
 |---|---|---|---|
 | Duygu modeli (BERT v3) | Sunucu, gönderi başına bir kez | Gönderi metninin tonu (−1…+1) | §1 |
 | Spiral modeli v2 | Kullanıcının tarayıcısı | Son 30 dk'da yoğun içerikte pasif oyalanma olasılığı | §2 |
-| Ruh hali modeli | Kullanıcının tarayıcısı | Tek etkileşim için 5 kategorili olası örüntü | §3 |
+| Ruh hali modeli | Kullanıcının tarayıcısı | Son 30 dk'daki etkileşimlerden 5 kategorili olası ruh hali | §3 |
 | Sıralama + doz dengelemesi | Kullanıcının tarayıcısı | Akışın sırası | §4 |
 
 ## 1. Duygu modeli (BERT v3)
@@ -118,8 +118,16 @@ aynıdır (otomatik eşitlik testi); 11 senaryo testi `tests/test_spiral_model.p
 
 ## 3. Ruh hali modeli
 
-**Amaç.** Tek bir etkileşim için beş olası örüntüden birini tahmin eder:
+**Amaç.** Son 30 dakikanın olası ruh halini beş kategoride tahmin eder:
 sakin, mutluluk, umut, sinirli, yoğun (anksiyete). Klinik bir ölçüm değildir.
+
+**Pencere (12.09.2026).** Ruh hali tek bir gönderiyle değişmez; tek gönderinin
+sinyali de zayıftır. Sınıflandırıcı her etkileşimi ayrı tahmin eder, sonra son
+30 dakikadaki tahminler zamanla azalan ağırlıkla (10 dk yarı ömür, spiral ile
+aynı) ortalanır. Ortalama alınır, çarpılmaz: ardışık gönderiler bağımsız kanıt
+değildir, çarpım modeli gereksiz yere kesinleştirirdi. En az 3 etkileşim yoksa
+tahmin yapılmaz. Raporlarda (İçgörü ısı haritası, uzman özeti) her an, o sırada
+geçen süreyle ağırlıklandırılır: gönderi sayısı değil süre sayılır.
 
 **Model.** Girdi: ton, durma süresi, tıklama, roket, yorum. Standart ölçekleme
 + lojistik kayıplı SGD (bire-karşı-diğerleri). Sentetik veri: kategori başına
@@ -129,7 +137,9 @@ kullanıldığı için 0,17'ye kadar sapıyordu; düzeltildi).
 
 **Cihazda kişisel uyarlama.** Kullanıcı "Şu an nasıl hissediyorsun?" sorusunu
 cevapladığında kişisel modelde tek küçük bir adım atılır (η 0,15; varsayılan
-modele doğru λ 0,05 düzenlileştirme). Önce tahmin edilir, sonra öğrenilir;
+modele doğru λ 0,05 düzenlileştirme). Cevap o anki pencereye aittir: adım
+penceredeki etkileşimlere ağırlıkları oranında paylaştırılır (pencerenin
+ortalama kaybı için bir SGD adımı). Önce tahmin edilir, sonra öğrenilir;
 eşleşme oranı hiç görülmemiş cevaplarla ölçülür. Kişisel model yalnızca
 etiketleri etkiler, sıralamayı kaydırmaz.
 
@@ -167,8 +177,8 @@ Bu bir maruziyet ölçümüdür, iyi-oluş etkisi değildir.
 
 - **Açık rıza:** ilk açılışta ne tutulduğu, nerede saklandığı ve teşhis
   olmadığı anlatılır; açık/kapalı iki eşit seçenek.
-- **Veri cihazda:** ham davranış yalnızca tarayıcıda (en fazla 240 olay; gün
-  başına toplamlar 12 hafta). Sunucu davranış verisi kabul eden hiçbir uç nokta
+- **Veri cihazda:** ham davranış ve gün başına toplamlar yalnızca tarayıcıda,
+  12 hafta; daha eskisi kendiliğinden silinir, kullanıcı tek tuşla hepsini siler. Sunucu davranış verisi kabul eden hiçbir uç nokta
   sunmaz; tarayıcı depolamaya izin vermezse kişiselleştirme yapılmaz.
 - **Dış servis yok:** hiçbir davranış verisi üçüncü taraf bir yapay zekâ
   servisine gönderilmez.

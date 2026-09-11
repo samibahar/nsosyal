@@ -47,8 +47,8 @@ Her kontrol sorusu anı için:
 - Spiral tahminine giren 4 özet sayı: son 30 dakikada yoğun tonlu içerikte
   geçen sürenin payı, bu içerikte diğerlerine göre oyalanma, okuma süresinin
   üstünde kalma, aktif katılım (roket/yorum) oranı.
-- Ruh hali tahminine giren 5 sayı: son gönderinin tonu, durma süresi,
-  tıklama/roket/yorum.
+- Ruh hali tahminine giren sayılar: son 30 dakikadaki her etkileşim için ton,
+  durma süresi, tıklama/roket/yorum ve o etkileşimin penceredeki ağırlığı.
 - Kaçıncı gün olduğu (tarih ya da saat değil).
 
 Gönderi metni, gönderi kimliği, konu, yazar, saat ve kimlik bilgisi **yoktur**

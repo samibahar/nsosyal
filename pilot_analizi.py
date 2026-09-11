@@ -65,6 +65,17 @@ def wilson(basari: int, n: int, z: float = 1.96) -> tuple[float, float]:
     return (max(0.0, merkez - yari), min(1.0, merkez + yari))
 
 
+def _psikolojik_ozellik(kayit) -> list[float]:
+    """Ruh hali girdisi: son 30 dakikanın penceresindeki etkileşimlerin ağırlıklı
+    ortalaması (oturum düzeyi). Eski biçimde (tek gönderi) o gönderinin sinyalleri."""
+    psi = kayit["psikolojik"]
+    if psi.get("pencere"):
+        agirlik = np.array([p["agirlik"] for p in psi["pencere"]])
+        X = np.array([[p["ozellik"][ad] for ad in PSIKOLOJIK_OZELLIKLER] for p in psi["pencere"]])
+        return list(agirlik @ X / agirlik.sum())
+    return [psi["ozellik"][ad] for ad in PSIKOLOJIK_OZELLIKLER]
+
+
 def _auc(y, p):
     return float(roc_auc_score(y, p)) if len(set(y)) == 2 else None
 
@@ -134,7 +145,7 @@ def yeniden_egitim(katilimcilar: list[dict]) -> dict:
         y_egitim = [k["cevap"] for k in egitim]
         if not deneme or len(set(y_egitim)) < 2:
             continue
-        X = lambda kayitlar: np.array([[k["psikolojik"]["ozellik"][ad] for ad in PSIKOLOJIK_OZELLIKLER] for k in kayitlar])
+        X = lambda kayitlar: np.array([_psikolojik_ozellik(k) for k in kayitlar])
         olcek = StandardScaler().fit(X(egitim))
         model = LogisticRegression(max_iter=1000).fit(olcek.transform(X(egitim)), y_egitim)
         gercek += [k["cevap"] for k in deneme]

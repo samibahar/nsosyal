@@ -191,6 +191,60 @@ def test_pilot_dosyasi_yalniz_cevap_ve_ozet_sayilari_icerir(masaustu):
     assert [k["cevap"] for k in dosya["kayitlar"]] == ["sakin", "anksiyete", "umut"]
     assert all(k["demo"] for k in dosya["kayitlar"])  # jüri demosundan sonra verildi, analizde atılır
     assert set(dosya["kayitlar"][0]["spiral"]["ozellik"]) == {"yogun_pay", "goreli_oyalanma", "yogun_fazla_kalma", "aktif_oran"}
+    pencere = dosya["kayitlar"][0]["psikolojik"]["pencere"]
+    assert len(pencere) >= 3 and abs(sum(p["agirlik"] for p in pencere) - 1) < 0.01
     for yasak in ["metin", "konu", "postId", "createdAt", "yazar", "topic"]:
         assert f'"{yasak}"' not in metin, yasak
+    assert not masaustu.hatalar
+
+
+def test_ruh_hali_tek_gonderiyle_degismez(masaustu):
+    """Olası ruh hali son 30 dakikanın birleşik tahminidir: sakin bir oturumda
+    tek bir 'sinirli' görünen etkileşim sonucu çevirmez; eski etkileşimler ve
+    3'ten az kanıt sonuç üretmez."""
+    akisi_ac(masaustu)
+    sonuc = masaustu.evaluate("""() => {
+        const T = TrainedModels, simdi = 100000;
+        const sakin = i => ({zaman: simdi - 300 + i * 40, ozellik: {duygu: 0.05, dwell_saniye: 1.2, tiklama: 0, roket: 0, yorum: 0}});
+        const olaylar = [0, 1, 2, 3, 4, 5].map(sakin);
+        const sinirli = {zaman: simdi, ozellik: {duygu: -0.8, dwell_saniye: 2.5, tiklama: 1, roket: 1, yorum: 1}};
+        return {tek: T.psikolojikTahmin(sinirli.ozellik).kategori, once: T.ruhHaliPenceresi(olaylar, simdi).kategori,
+                sonra: T.ruhHaliPenceresi([...olaylar, sinirli], simdi).kategori,
+                eski: T.ruhHaliPenceresi(olaylar, simdi + 3600), azKanit: T.ruhHaliPenceresi(olaylar.slice(0, 2), simdi)};
+    }""")
+    assert sonuc["tek"] == "sinirli" and sonuc["once"] == "sakin" and sonuc["sonra"] == "sakin"
+    assert sonuc["eski"] is None and sonuc["azKanit"] is None
+
+
+def test_ham_olaylar_12_hafta_saklanir(masaustu):
+    akisi_ac(masaustu)
+    gunler = masaustu.evaluate("""async () => {
+        const GUN = 86400000, db = await new Promise((ok, hata) => { const r = indexedDB.open('nsosyal-local-agent'); r.onsuccess = () => ok(r.result); r.onerror = hata; });
+        const olay = gun => ({type: 'interaction', createdAt: Date.now() - gun * GUN, postId: gun, topic: 'bilim', tone: 0.3, kelime: 10, dwell: 4, click: false, rocket: false, comment: false, exit: false, demo: false});
+        await new Promise(ok => { const tx = db.transaction('events', 'readwrite'); tx.objectStore('events').add(olay(40)); tx.objectStore('events').add(olay(90)); tx.oncomplete = ok; });
+        db.close();
+        const p = await (await fetch('/api/demo-paketi')).json();
+        await LocalPersonalization.recordInteraction({post: p.gonderiler[0], dwell: 3});
+        return (await LocalPersonalization.getLocalEvents()).map(o => Math.round((Date.now() - o.createdAt) / GUN));
+    }""")
+    assert 40 in gunler and 90 not in gunler
+
+
+def test_uzman_ozeti_haftalik_seyir_kendi_bildirimleri_ve_tepki_dengesi(masaustu):
+    akisi_ac(masaustu)
+    juri_demosu(masaustu)
+    masaustu.evaluate("""async () => {
+        const p = await (await fetch('/api/demo-paketi')).json();
+        await LocalPersonalization.recordCheckin('sakin'); await LocalPersonalization.recordCheckin('anksiyete');
+        await LocalPersonalization.recordPostReaction(p.gonderiler[0], 'gerildim');
+        await LocalPersonalization.recordPostReaction(p.gonderiler[1], 'begendim');
+    }""")
+    masaustu.goto(f"{ADRES}/rapor.html")
+    masaustu.locator("#terapist-ozet-buton").click()
+    masaustu.wait_for_function("document.getElementById('terapist-ozet-metin').textContent.includes('HAFTALIK SEYİR')")
+    metin = masaustu.locator("#terapist-ozet-metin").inner_text()
+    for parca in ["KİŞİNİN KENDİ BİLDİRİMLERİ", "Sakin 1", "Yoğun 1", "Son 2 bildirim", "Kendi bildirimleri:",
+                  "Olası ritim (süreye göre): sakin", "GÖNÜLLÜ TEPKİLER", "100 etkileşim başına", "yoğun tonlu içeriğe"]:
+        assert parca in metin, parca
+    assert "Yoğun tonlu içeriğe verilen olumsuz tepki" in masaustu.locator("#reaction-chart").inner_text()
     assert not masaustu.hatalar

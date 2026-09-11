@@ -1,12 +1,15 @@
 /* NSosyal Local Personalization Agent: raw behaviour stays in IndexedDB. */
 (function () {
-  const DB_NAME = "nsosyal-local-agent", DB_VERSION = 1, EVENT_LIMIT = 240, GUNLUK_SAKLAMA_GUN = 84, YOGUN_TON = -0.2;
+  // Ham olaylar gunluk ozetlerle ayni sure (12 hafta) saklanir; EVENT_LIMIT
+  // yalnizca asiri kullanima karsi emniyettir. Siralama ve anlik hesaplar
+  // yalnizca son 24 saatin olaylarini okur (YAKIN_MS).
+  const DB_NAME = "nsosyal-local-agent", DB_VERSION = 1, EVENT_LIMIT = 20000, GUNLUK_SAKLAMA_GUN = 84, YAKIN_MS = 24 * 3600 * 1000, YOGUN_TON = -0.2;
   // Ayarlar sekmesindeki anahtarlar. Hepsi varsayilan olarak acik; kullanicinin
   // secimi yalnizca bu cihazda saklanir ve "yerel verileri sil" ile kaybolmaz.
   const VARSAYILAN_AYARLAR = { dengeleme: true, doygunluk: true, kontrolSorulari: true, kisiselUyarlama: true };
   const KATEGORI_SAYISI = 5;
   let database;
-  const defaults = () => ({ version: 4, topicWeights: {}, postReactions: {}, newsCategoryWeights: {}, newsReactions: {}, lastCheckinAt: 0, checkins: 0, demoTrace: null, ayarlar: { ...VARSAYILAN_AYARLAR }, gunluk: {}, kisiselModel: null, dogrulama: null, onay: null, spiralKalibrasyon: null, spiralDogrulama: null, pilotKayitlari: [], pilotBaslangic: 0, pilotKimlik: null });
+  const defaults = () => ({ version: 4, topicWeights: {}, postReactions: {}, newsCategoryWeights: {}, newsReactions: {}, lastCheckinAt: 0, checkins: 0, demoTrace: null, ayarlar: { ...VARSAYILAN_AYARLAR }, gunluk: {}, kisiselModel: null, dogrulama: null, onay: null, spiralKalibrasyon: null, spiralDogrulama: null, pilotKayitlari: [], pilotBaslangic: 0, pilotKimlik: null, etkilesimSayisi: 0 });
   // Demo sifirlamasinda korunan, kullanicinin kendi cevaplarindan olusan alanlar.
   const KALICI_ALANLAR = ["ayarlar", "onay", "gunluk", "kisiselModel", "dogrulama", "spiralKalibrasyon", "spiralDogrulama", "pilotKayitlari", "pilotBaslangic", "pilotKimlik"];
   function _tamamla(kayit) { const state = { ...defaults(), ...(kayit || {}) }; state.ayarlar = { ...VARSAYILAN_AYARLAR, ...(state.ayarlar || {}) }; state.gunluk = state.gunluk || {}; return state; }
@@ -21,7 +24,19 @@
   }
   async function getState() { const db = await openDatabase(); return new Promise((resolve, reject) => { const request = db.transaction("state", "readonly").objectStore("state").get("profile"); request.onsuccess = () => resolve(_tamamla(request.result)); request.onerror = () => reject(request.error); }); }
   async function setState(state) { const db = await openDatabase(); return new Promise((resolve, reject) => { const tx = db.transaction("state", "readwrite"); tx.objectStore("state").put(state, "profile"); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
-  async function getEvents() { const db = await openDatabase(); return new Promise((resolve, reject) => { const request = db.transaction("events", "readonly").objectStore("events").getAll(); request.onsuccess = () => resolve((request.result || []).sort((a, b) => a.createdAt - b.createdAt)); request.onerror = () => reject(request.error); }); }
+  // since (ms) verilirse yalnizca o andan sonraki olaylar okunur (createdAt indeksi).
+  async function getEvents(since = 0) { const db = await openDatabase(); return new Promise((resolve, reject) => { const store = db.transaction("events", "readonly").objectStore("events"); const request = since > 0 ? store.index("createdAt").getAll(IDBKeyRange.lowerBound(since)) : store.getAll(); request.onsuccess = () => resolve((request.result || []).sort((a, b) => a.createdAt - b.createdAt)); request.onerror = () => reject(request.error); }); }
+  async function olaySayisi() { const db = await openDatabase(); return new Promise((resolve, reject) => { const request = db.transaction("events", "readonly").objectStore("events").count(); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); }); }
+  // En eskiden baslayarak, aralik icindeki (en fazla adet) olaylari siler.
+  async function _eskileriSil(aralik, adet = Infinity) {
+    const db = await openDatabase();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction("events", "readwrite");
+      let kalan = adet;
+      tx.objectStore("events").index("createdAt").openCursor(aralik).onsuccess = event => { const imlec = event.target.result; if (imlec && kalan-- > 0) { imlec.delete(); imlec.continue(); } };
+      tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+    });
+  }
   async function addEvent(event) { const db = await openDatabase(); return new Promise((resolve, reject) => { const tx = db.transaction("events", "readwrite"); tx.objectStore("events").add(event); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
   async function clearStores() { const db = await openDatabase(); await new Promise((resolve, reject) => { const tx = db.transaction(["events", "state"], "readwrite"); tx.objectStore("events").clear(); tx.objectStore("state").clear(); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); }); }
   const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -29,9 +44,9 @@
   // "Bu oturumda dengeleme yapma" secimi yalnizca bu sekme oturumu icin gecerli.
   const _oturumdaKapali = () => { try { return sessionStorage.getItem("nsosyal-denge-oturum-kapali") === "1"; } catch { return false; } };
 
-  // Uzun donem ozeti icin GUNLUK TOPLAMLAR. Ham olay kaydi 240 etkilesimle
-  // sinirli (veri minimizasyonu); haftalar arasi karsilastirma icin yalnizca
-  // gun basina sayilar tutulur -- hangi gonderiye bakildigi tutulmaz.
+  // Uzun donem ozeti icin GUNLUK TOPLAMLAR (Ayarlar'daki haftalik grafik).
+  // Ham olaylar da ayni sure (12 hafta) saklanir; Icgoru ve uzman ozeti
+  // haftalik seyri onlardan hesaplar. Hepsi yalnizca bu cihazda kalir.
   function gunAnahtari(zaman = Date.now()) { const d = new Date(zaman); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
   const _bosGun = () => ({ etkilesim: 0, dwell: 0, yogunDwell: 0, konular: {}, tepkiler: {}, kontroller: {} });
   function _gunlugeIsle(state, degistir) {
@@ -48,6 +63,7 @@
   // kayitlar icin varsayilan okuma suresi kullanilir.
   const _spiralOlaylari = meaningful => meaningful.map(event => ({ gonderi: event.postId, zaman: event.createdAt / 1000, dwell: event.dwell, ton: event.tone, kelime: event.kelime || 0, konu: event.topic, roket: !!event.rocket, yorum: !!event.comment }));
   const _psikolojikOzellik = event => ({ duygu: event.tone, dwell_saniye: event.dwell, tiklama: event.click ? 1 : 0, roket: event.rocket ? 1 : 0, yorum: event.comment ? 1 : 0 });
+  const _psikolojikOlaylari = meaningful => meaningful.map(event => ({ zaman: event.createdAt / 1000, ozellik: _psikolojikOzellik(event) }));
   // Egitilmis spiral (lojistik regresyon) + psikolojik durum (SGDClassifier)
   // modellerini, hicbir ham veri cihazdan cikmadan burada calistirir --
   // trained-models.js yuklu degilse (eski sayfa onbellegi vb.) eski basit
@@ -55,9 +71,12 @@
   // etiketlerini degistirir, siralamaya girmez. Spiral olasiligi ise kisisel
   // kalibrasyondan gecebilir, ama ANCAK _spiralKalibrasyonEtkin kosulu
   // saglandiginda (asagida): aksi halde akisi varsayilan model belirler.
+  // Olasi ruh hali son gonderiden degil, son 30 dakikanin penceresinden
+  // hesaplanir (trained-models.js ruhHaliPenceresi). Kanit azsa null.
   function _anlikKategoriTahmini(meaningful, model) {
-    if (!meaningful.length || typeof window.TrainedModels === "undefined") return null;
-    return window.TrainedModels.psikolojikTahmin(_psikolojikOzellik(meaningful[meaningful.length - 1]), model);
+    const T = window.TrainedModels;
+    if (!meaningful.length || typeof T === "undefined" || !T.ruhHaliPenceresi) return null;
+    return T.ruhHaliPenceresi(_psikolojikOlaylari(meaningful), Date.now() / 1000, model);
   }
   // Spiral icin zayif etiket: kontrol sorusunda "yogun" ya da "sinirli"
   // cevabi 1, "sakin/mutluluk/umut" 0. Klinik bir etiket degil, kullanicinin
@@ -84,7 +103,7 @@
     if (!ozellikler) return 0;
     const spiralOlasilik = T.spiralKalibre ? T.spiralKalibre(T.spiralOlasiligi(ozellikler), kalibrasyon) : T.spiralOlasiligi(ozellikler);
     const psikolojik = _anlikKategoriTahmini(meaningful);
-    const negatifRuhHaliKutlesi = (psikolojik.olasiliklar.sinirli || 0) + (psikolojik.olasiliklar.anksiyete || 0);
+    const negatifRuhHaliKutlesi = psikolojik ? (psikolojik.olasiliklar.sinirli || 0) + (psikolojik.olasiliklar.anksiyete || 0) : 0;
     return clamp(spiralOlasilik * 0.7 + negatifRuhHaliKutlesi * 0.3);
   }
   // kalibrasyonsuz: jüri demosu her cihazda aynı sonucu versin diye varsayılan modelle çalışır.
@@ -94,21 +113,28 @@
     const kalibrasyonEtkin = !kalibrasyonsuz && _spiralKalibrasyonEtkin(state);
     const egitilmisYogunluk = _egitilmisYogunluk(meaningful, kalibrasyonEtkin ? state.spiralKalibrasyon : null);
     const intensity = egitilmisYogunluk === null ? yedekYogunluk : egitilmisYogunluk;
-    const confidence = clamp(meaningful.length / 16), enoughData = meaningful.length >= 10;
+    // Toplam etkilesim sayaci state'te tutulur; events yalnizca son 24 saattir.
+    const toplamEtkilesim = Math.max(state.etkilesimSayisi || 0, meaningful.length);
+    const confidence = clamp(toplamEtkilesim / 16), enoughData = toplamEtkilesim >= 10;
     const preferred = Object.entries(state.topicWeights || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
     // Jüri demosunun betikli tepkileri (runDemoScenario) burada HARİÇ tutulur --
     // aksi halde "Son tepkin: ... sen belirttin" etiketi, kullanıcının hiç
     // tıklamadığı senaryo-içi bir tepkiyi kendisi vermiş gibi gösteriyordu
     // (kullanıcı tarafından tespit edildi, 21.08.2026).
     const latestExplicit = [...events].reverse().find(event => (event.type === "post_reaction" || event.type === "news_reaction") && !event.demo && Date.now() - event.createdAt < 30 * 60 * 1000);
-    return { mode: "local", eventCount: meaningful.length, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, oturumdaKapali: _oturumdaKapali(), kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, spiralKalibrasyonEtkin: kalibrasyonEtkin, shouldCheckin: state.ayarlar.kontrolSorulari && meaningful.length >= 12 && meaningful.length % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
+    return { mode: "local", eventCount: toplamEtkilesim, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, oturumdaKapali: _oturumdaKapali(), kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, spiralKalibrasyonEtkin: kalibrasyonEtkin, shouldCheckin: state.ayarlar.kontrolSorulari && toplamEtkilesim >= 12 && toplamEtkilesim % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
   }
-  async function trimEvents() { const events = await getEvents(); if (events.length <= EVENT_LIMIT) return; const db = await openDatabase(), tx = db.transaction("events", "readwrite"); events.slice(0, events.length - EVENT_LIMIT).forEach(event => tx.objectStore("events").delete(event.id)); }
-  async function summary() { return calculate(await getEvents(), await getState()); }
+  async function trimEvents() {
+    await _eskileriSil(IDBKeyRange.upperBound(Date.now() - GUNLUK_SAKLAMA_GUN * 86400000, true));
+    const fazla = (await olaySayisi()) - EVENT_LIMIT;
+    if (fazla > 0) await _eskileriSil(null, fazla);
+  }
+  async function summary() { return calculate(await getEvents(Date.now() - YAKIN_MS), await getState()); }
   async function recordInteraction({ post, dwell, click, rocket, comment, exit, demo }) {
     if (!post || dwell <= 0) return summary();
     const state = await getState(), topic = post.konu || "diger", tone = safeTone(post.duygu), reward = clamp((Math.min(dwell, 18) / 18) * .42 + (click ? .22 : 0) + (rocket ? .45 : 0) + (comment ? .32 : 0) - (exit ? .04 : 0), -.1, 1), previous = Number(state.topicWeights[topic] || 0);
     state.topicWeights[topic] = clamp(previous * .88 + reward * .12, 0, 1);
+    state.etkilesimSayisi = (state.etkilesimSayisi || 0) + 1;
     // Tek bir acik unutulmus sekme gunluk toplami domine etmesin diye sure 60 sn'de kesilir.
     if (!demo) _gunlugeIsle(state, gun => { const sure = Math.min(dwell, 60); gun.etkilesim += 1; gun.dwell += sure; if (tone < YOGUN_TON) gun.yogunDwell += sure; gun.konular[topic] = (gun.konular[topic] || 0) + 1; });
     const kelime = String(post.metin || "").split(/\s+/).filter(Boolean).length;
@@ -120,16 +146,19 @@
   // "Once tahmin et, sonra ogren": varsayilan ve kisisel modelin tahmini cevap
   // gelmeden hesaplanir, kisisel model ANCAK ondan sonra cevapla guncellenir.
   // Boylece kisisel modelin eslesme orani, hic gormedigi cevaplar uzerinden olculur.
-  // Sayaclar state'te tutulur; ham olay kaydi 240'ta kirpilsa da kaybolmaz.
+  // Sayaclar state'te tutulur; eski ham olaylar silinse de kaybolmaz.
+  // Tahmin son gonderiden degil, son 30 dakikanin penceresinden yapilir ve
+  // cevap o penceredeki etkilesimlere paylastirilarak ogrenilir.
   const _yuvarla = nesne => Object.fromEntries(Object.entries(nesne).map(([ad, deger]) => [ad, +Number(deger).toFixed(4)]));
   async function recordCheckin(value) {
-    const state = await getState(), T = window.TrainedModels;
-    const etkilesimler = (await getEvents()).filter(event => event.type === "interaction"), son = etkilesimler.at(-1);
-    const ozellik = son && T ? _psikolojikOzellik(son) : null;
-    const varsayilan = ozellik ? T.psikolojikTahmin(ozellik).kategori : null;
-    const kisisel = ozellik && state.kisiselModel ? T.psikolojikTahmin(ozellik, state.kisiselModel).kategori : null;
+    const state = await getState(), T = window.TrainedModels, simdi = Date.now() / 1000;
+    const etkilesimler = (await getEvents(Date.now() - YAKIN_MS)).filter(event => event.type === "interaction"), son = etkilesimler.at(-1);
+    const psiOlaylari = T && T.ruhHaliPenceresi ? _psikolojikOlaylari(etkilesimler) : [];
+    const varsayilanDurum = psiOlaylari.length ? T.ruhHaliPenceresi(psiOlaylari, simdi, null, 1) : null;
+    const kisiselDurum = varsayilanDurum && state.kisiselModel ? T.ruhHaliPenceresi(psiOlaylari, simdi, state.kisiselModel, 1) : null;
+    const varsayilan = varsayilanDurum?.kategori || null, kisisel = kisiselDurum?.kategori || null;
     const aktif = state.ayarlar.kisiselUyarlama && kisisel ? kisisel : varsayilan;
-    if (ozellik && state.ayarlar.kisiselUyarlama) state.kisiselModel = T.psikolojikGuncelle(state.kisiselModel || T.varsayilanPsikolojik(), ozellik, value);
+    if (varsayilanDurum && state.ayarlar.kisiselUyarlama) state.kisiselModel = T.psikolojikPencereGuncelle(state.kisiselModel || T.varsayilanPsikolojik(), psiOlaylari, simdi, value);
     if (aktif) {
       const d = state.dogrulama || { toplam: 0, eslesen: 0, varsayilanEslesen: 0, kisiselToplam: 0, kisiselEslesen: 0, cevaplar: {} };
       d.toplam += 1; d.eslesen += aktif === value ? 1 : 0; d.varsayilanEslesen += varsayilan === value ? 1 : 0;
@@ -160,7 +189,7 @@
     // gore kacinci gun oldugudur.
     if (!state.pilotBaslangic) state.pilotBaslangic = Date.now();
     const kayitlar = state.pilotKayitlari || [];
-    kayitlar.push({ sira: (kayitlar.at(-1)?.sira || 0) + 1, gun: Math.floor((Date.now() - state.pilotBaslangic) / 86400000), cevap: value, demo: !!son?.demo, psikolojik: ozellik ? { ozellik: _yuvarla(ozellik), varsayilan, kisisel } : null, spiral });
+    kayitlar.push({ sira: (kayitlar.at(-1)?.sira || 0) + 1, gun: Math.floor((Date.now() - state.pilotBaslangic) / 86400000), cevap: value, demo: !!son?.demo, psikolojik: varsayilanDurum ? { pencere: T.ruhHaliPenceresiSec(psiOlaylari, simdi).map(({ olay, agirlik }) => ({ ozellik: _yuvarla(olay.ozellik), agirlik: +agirlik.toFixed(4) })), varsayilan, kisisel } : null, spiral });
     state.pilotKayitlari = kayitlar.slice(-PILOT_SINIRI);
     state.lastCheckinAt = Date.now(); state.checkins += 1;
     _gunlugeIsle(state, gun => { gun.kontroller[value] = (gun.kontroller[value] || 0) + 1; });
@@ -320,7 +349,7 @@
     return dozlu.map(({ kalem, skor }, i) => ({ ...kalem.post, local_skor: skor, local_ilgi: kalem.localInterest, local_dengeleme: aktif ? Math.max(0, i - serbestSira.get(kalem.post.id)) : 0, local_tepki_etkisi: kalem.reactionEffect, local_muaf: kalem.muaf, local_doz_taban: taban, local_doz_hedef: aktif ? hedef : taban }));
   }
   async function rank(posts, secenek = {}) {
-    const state = await getState(), events = await getEvents(), report = calculate(events, state, secenek);
+    const state = await getState(), events = await getEvents(Date.now() - YAKIN_MS), report = calculate(events, state, secenek);
     const latestReaction = [...events].reverse().find(event => event.type === "post_reaction" && Date.now() - event.createdAt < 60 * 60 * 1000) || null;
     return siralaSaf(posts, { topicWeights: state.topicWeights || {}, intensity: report.intensity, enoughData: report.enoughData, dengelemeAcik: state.ayarlar.dengeleme && !_oturumdaKapali(), latestReaction });
   }
@@ -391,7 +420,7 @@
   async function uzunDonemOzeti() {
     const state = await getState();
     const gunler = Object.entries(state.gunluk).sort((a, b) => a[0].localeCompare(b[0])).map(([tarih, gun]) => ({ tarih, ...gun }));
-    return { gunler, ornekVar: gunler.some(gun => gun.ornek), saklamaGun: GUNLUK_SAKLAMA_GUN, olaySiniri: EVENT_LIMIT, olaySayisi: (await getEvents()).length };
+    return { gunler, ornekVar: gunler.some(gun => gun.ornek), saklamaGun: GUNLUK_SAKLAMA_GUN, olaySayisi: await olaySayisi() };
   }
   // Sunum icin ORNEK gecmis: son 4 haftanin gercek veri olmayan gunlerine
   // acikca "ornek" olarak isaretlenmis toplamlar yazar. Sabit tohumlu uretici

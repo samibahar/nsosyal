@@ -9,7 +9,7 @@ flowchart LR
     A["Aday seçimi<br/>48 aday, her konudan en az 2"]
   end
   subgraph Cihaz["Kullanıcının cihazı (tarayıcı)"]
-    I[("IndexedDB<br/>ham davranış, en fazla 240 olay<br/>günlük toplamlar, 12 hafta")]
+    I[("IndexedDB<br/>ham davranış ve günlük toplamlar<br/>12 hafta")]
     S["Spiral v2 + ruh hali modeli"]
     R["Sıralama: ilgi + çeşitlilik + doz"]
   end

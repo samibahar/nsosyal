@@ -77,6 +77,43 @@
     return { kategori: baskin, olasiliklar };
   }
 
+  // Ruh hali tek bir gonderiyle degismez, tek bir gonderinin sinyali de zayif
+  // ve gurultuludur. Bu yuzden olasi ruh hali bir PENCEREDEN hesaplanir: son
+  // 30 dakikadaki her etkilesim bir kanittir, 10 dakika onceki yarim agirlikta
+  // sayilir (spiral ile ayni pencere ve yari omur, trained-weights.js). Kanitlar
+  // olasilik vektorlerinin agirlikli ortalamasiyla birlestirilir; carpilmaz,
+  // cunku ardisik gonderiler bagimsiz kanit degildir ve carpim modeli
+  // gereksiz yere kesinlestirirdi. Olay: {zaman (sn), ozellik (5 sinyal)}.
+  function ruhHaliPenceresiSec(olaylar, simdi) {
+    const P = W.spiral.parametreler;
+    const secili = olaylar.filter(o => o.zaman <= simdi && simdi - o.zaman <= P.pencere_saniye)
+      .map(o => ({ olay: o, agirlik: Math.pow(0.5, (simdi - o.zaman) / P.yari_omur_saniye) }));
+    const toplam = secili.reduce((a, s) => a + s.agirlik, 0);
+    return secili.map(s => ({ ...s, agirlik: s.agirlik / toplam }));
+  }
+  // Yeterli kanit yoksa (varsayilan: spiral gibi en az 3 etkilesim) null.
+  function ruhHaliPenceresi(olaylar, simdi, model, enAz = W.spiral.parametreler.min_gonderi) {
+    const secili = ruhHaliPenceresiSec(olaylar, simdi);
+    if (!secili.length || secili.length < enAz) return null;
+    const { kategoriler } = W.psikolojik, olasiliklar = Object.fromEntries(kategoriler.map(k => [k, 0]));
+    secili.forEach(({ olay, agirlik }) => {
+      const tahmin = psikolojikTahmin(olay.ozellik, model);
+      kategoriler.forEach(k => { olasiliklar[k] += agirlik * tahmin.olasiliklar[k]; });
+    });
+    const kategori = kategoriler.reduce((en, k) => olasiliklar[k] > olasiliklar[en] ? k : en, kategoriler[0]);
+    return { kategori, olasiliklar, kanit: secili.length };
+  }
+  // Rapor icin: her etkilesim aninda, o ana kadarki pencereyle olasi ruh hali.
+  // olaylar zamana gore sirali olmali; kanit yetersizse durum null.
+  function ruhHaliSeyri(olaylar, model) {
+    const P = W.spiral.parametreler;
+    let bas = 0;
+    return olaylar.map((olay, i) => {
+      while (olay.zaman - olaylar[bas].zaman > P.pencere_saniye) bas++;
+      return { olay, durum: ruhHaliPenceresi(olaylar.slice(bas, i + 1), olay.zaman, model) };
+    });
+  }
+
   function varsayilanPsikolojik() {
     return { coef: W.psikolojik.coef.map(satir => satir.slice()), intercept: W.psikolojik.intercept.slice(), guncelleme: 0 };
   }
@@ -93,6 +130,17 @@
     const coef = model.coef.map((satir, k) => satir.map((w, i) => w - eta * ((s[k] - (k === hedef ? 1 : 0)) * x[i] + lambda * (w - P.coef[k][i]))));
     const intercept = model.intercept.map((b, k) => b - eta * ((s[k] - (k === hedef ? 1 : 0)) + lambda * (b - P.intercept[k])));
     return { coef, intercept, guncelleme: (model.guncelleme || 0) + 1 };
+  }
+  // Kontrol cevabi tek bir gonderiye degil, o anki pencereye aittir. Cevap
+  // penceredeki etkilesimlere agirliklari oraninda paylastirilir: toplam adim
+  // tek bir cevaplik adima esittir (penceredeki ortalama kayip icin bir SGD
+  // adimi). Guncelleme sayaci cevap basina bir artar.
+  function psikolojikPencereGuncelle(model, olaylar, simdi, gercekKategori, { eta = 0.15, lambda = 0.05 } = {}) {
+    const secili = ruhHaliPenceresiSec(olaylar, simdi);
+    if (!secili.length) return model;
+    let guncel = model;
+    secili.forEach(({ olay, agirlik }) => { guncel = psikolojikGuncelle(guncel, olay.ozellik, gercekKategori, { eta: eta * agirlik, lambda }); });
+    return { ...guncel, guncelleme: (model.guncelleme || 0) + 1 };
   }
 
   // Kisisel spiral kalibrasyonu (Platt olcekleme): p = sigmoid(egim x logit(p0) + kayma).
@@ -114,5 +162,5 @@
     };
   }
 
-  window.TrainedModels = { spiralOlasiligi, spiralOzellikleri, psikolojikTahmin, varsayilanPsikolojik, psikolojikGuncelle, varsayilanSpiralKalibrasyonu, spiralKalibre, spiralKalibrasyonGuncelle };
+  window.TrainedModels = { spiralOlasiligi, spiralOzellikleri, psikolojikTahmin, ruhHaliPenceresiSec, ruhHaliPenceresi, ruhHaliSeyri, varsayilanPsikolojik, psikolojikGuncelle, psikolojikPencereGuncelle, varsayilanSpiralKalibrasyonu, spiralKalibre, spiralKalibrasyonGuncelle };
 })();
