@@ -1,0 +1,14 @@
+{
+  "name": "NSosyal Duygu Katmanı",
+  "short_name": "NSosyal",
+  "description": "Duygu-duyarlı, açıklanabilir ve cihazda çalışan akış katmanı (prototip)",
+  "lang": "tr",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

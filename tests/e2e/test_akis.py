@@ -73,6 +73,13 @@ def test_dengeleme_bildirimi_oturum_icin_kapatilabilir(masaustu):
     assert masaustu.evaluate("() => LocalPersonalization.getAyarlar()")["dengeleme"] is True  # kalıcı ayar değişmedi
 
 
+def test_pwa_manifesti_gecerli_ve_bagli(masaustu):
+    """'Neden mobil uygulama değil?' sorusu: site telefona uygulama gibi kurulabilir."""
+    masaustu.goto(f"{ADRES}/index.html")
+    manifest = masaustu.evaluate("async () => { const bag = document.querySelector('link[rel=manifest]'); return bag ? (await fetch(bag.href)).json() : null; }")
+    assert manifest and manifest["display"] == "standalone" and manifest["start_url"] == "/index.html" and manifest["icons"]
+
+
 def test_sunucu_davranis_verisi_kabul_etmez(masaustu):
     """Eski sunucu tarafı öğrenme uç noktaları varsayılan olarak kapalıdır."""
     masaustu.goto(f"{ADRES}/index.html")
