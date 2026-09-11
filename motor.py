@@ -3,15 +3,15 @@
 gerçek bileşenlerle (duygu_modeli.py: BERT, spiral_model.py: eğitilmiş
 sınıflandırıcı) birleştiren üretim modülü. FastAPI backend'i bunu kullanır.
 """
-import numpy as np
+import time
 
+import spiral_model
+import spiral_ozellik
 from duygu_modeli import duygu_skoru
-from spiral_model import egit_ve_degerlendir
 
 # Spiral sınıflandırıcı, süreç başlarken bir kere eğitilir ve bellekte tutulur
 # (gerçek üretimde bu, önceden eğitilip diske kaydedilmiş bir model dosyası olurdu).
-_egitim_sonuclari, _ = egit_ve_degerlendir()
-_SPIRAL_MODEL = _egitim_sonuclari["Lojistik Regresyon"]["model"]
+spiral_model.egitilmis()
 
 
 def gonderileri_puanla(gonderiler: list[dict]) -> list[dict]:
@@ -22,45 +22,29 @@ def gonderileri_puanla(gonderiler: list[dict]) -> list[dict]:
     return gonderiler
 
 
-def _ozellik_cikar(log: list[dict], gonderiler: list[dict]) -> np.ndarray:
-    """Ham davranış günlüğünü (gonderi_id, dwell_saniye, tiklama), spiral
-    sınıflandırıcının beklediği 6 özniteliğe indirger."""
-    if not log:
-        return np.zeros((1, 6))
-
+def _olaylara_cevir(log: list[dict], gonderiler: list[dict], simdi: float) -> list[dict]:
+    """Sunucudaki davranış günlüğünü (gonderi_id, dwell_saniye, tiklama, roket,
+    yorum, zaman) spiral_ozellik.py'nin olay biçimine çevirir."""
     id_to_gonderi = {g["id"]: g for g in gonderiler}
-    dwell = np.array([k["dwell_saniye"] for k in log], dtype=float)
-    duygular = np.array([id_to_gonderi[k["gonderi_id"]]["duygu"] for k in log])
-    tiklamalar = np.array([1.0 if k.get("tiklama") else 0.0 for k in log])
-
-    negatif_maske = duygular < -0.2
-    toplam_dwell = dwell.sum() or 1e-9
-
-    negatif_dwell_toplam = dwell[negatif_maske].sum()
-    negatif_dwell_orani = negatif_dwell_toplam / toplam_dwell
-
-    # NOT: backend artık gönderi başına en fazla 1 kayıt tuttuğu için (spam
-    # tıklamanın günlüğü domine etmesini önlemek amacıyla) bu her zaman 0
-    # çıkar -- bilinen bir sınırlılık, spiral_model.py'nin bu özelliği
-    # yeniden anlamlandırılmadan (örn. "farklı oturumda tekrar ziyaret")
-    # etkisiz kalıyor.
-    negatif_id_listesi = [k["gonderi_id"] for i, k in enumerate(log) if negatif_maske[i]]
-    negatif_tekrar_sayisi = len(negatif_id_listesi) - len(set(negatif_id_listesi))
-
-    ortalama_duygu = duygular.mean()
-    tiklama_orani = tiklamalar.mean()
-    kaydirma_hizi = len(log) / max(toplam_dwell / 60.0, 0.1)
-
-    return np.array([[
-        negatif_dwell_toplam, negatif_dwell_orani, negatif_tekrar_sayisi,
-        ortalama_duygu, tiklama_orani, kaydirma_hizi,
-    ]])
+    olaylar = []
+    for kayit in log:
+        gonderi = id_to_gonderi.get(kayit["gonderi_id"])
+        if not gonderi:
+            continue
+        olaylar.append({
+            "gonderi": kayit["gonderi_id"], "zaman": kayit.get("zaman", simdi), "dwell": kayit["dwell_saniye"],
+            "ton": gonderi["duygu"], "kelime": len(gonderi.get("metin", "").split()), "konu": gonderi.get("konu"),
+            "roket": bool(kayit.get("roket")), "yorum": bool(kayit.get("yorum")),
+        })
+    return olaylar
 
 
 def spiral_olasiligi(log: list[dict], gonderiler: list[dict]) -> float:
-    """Eğitilmiş sınıflandırıcıdan 0-1 arası spiral olasılığı döndürür."""
-    X = _ozellik_cikar(log, gonderiler)
-    return float(_SPIRAL_MODEL.predict_proba(X)[0][1])
+    """Eğitilmiş sınıflandırıcıdan 0-1 arası spiral olasılığı döndürür.
+    Son 30 dakikada yeterli gönderi yoksa 0 döner (boş günlük ceza üretmez)."""
+    simdi = time.time()
+    ozellik = spiral_ozellik.ozellikler(_olaylara_cevir(log, gonderiler, simdi), simdi)
+    return spiral_model.olasilik(ozellik)
 
 
 def sirala(gonderiler: list[dict], ilgi: dict, spiral_seviyesi: float) -> list[dict]:

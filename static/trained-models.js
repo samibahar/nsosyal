@@ -8,10 +8,48 @@
   function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
 
   function spiralOlasiligi(ozellikler) {
-    const { coef, intercept, ozellik_sirasi } = W.spiral;
+    const { coef, intercept, ozellik_sirasi, olcekleyici_ortalama: ort, olcekleyici_olcek: olcek } = W.spiral;
     let z = intercept;
-    ozellik_sirasi.forEach((ad, i) => { z += coef[i] * (ozellikler[ad] || 0); });
+    ozellik_sirasi.forEach((ad, i) => { const x = Number(ozellikler[ad]) || 0; z += coef[i] * (ort ? (x - ort[i]) / olcek[i] : x); });
     return sigmoid(z);
+  }
+
+  // spiral_ozellik.py'nin satir satir karsiligi; sabitler trained-weights.js'e
+  // Python'dan yazilir (tek kaynak). Olay: {gonderi, zaman (sn), dwell, ton,
+  // kelime, konu, roket, yorum}. Yeterli guncel gonderi yoksa null.
+  function spiralOzellikleri(olaylar, simdi) {
+    const P = W.spiral.parametreler;
+    const okuma = kelime => P.okuma_taban + Math.max(1, kelime || P.varsayilan_kelime) / P.kelime_hizi;
+    const kayitlar = new Map();
+    olaylar.forEach(olay => {
+      if (simdi - olay.zaman > P.pencere_saniye || olay.dwell <= 0) return;
+      const onceki = kayitlar.get(olay.gonderi);
+      if (!onceki) { kayitlar.set(olay.gonderi, { ...olay }); return; }
+      onceki.dwell = Math.max(onceki.dwell, olay.dwell); onceki.roket = !!(onceki.roket || olay.roket);
+      onceki.yorum = !!(onceki.yorum || olay.yorum); onceki.zaman = Math.max(onceki.zaman, olay.zaman);
+    });
+    const gunluk = [...kayitlar.values()].sort((a, b) => a.zaman - b.zaman).slice(-P.maks_gonderi);
+    if (gunluk.length < P.min_gonderi) return null;
+    let agirlikTop = 0, oranTop = 0, aktifTop = 0, yogunOran = 0, yogunAgirlik = 0, fazlaTop = 0;
+    gunluk.forEach(kayit => {
+      const agirlik = Math.pow(0.5, (simdi - kayit.zaman) / P.yari_omur_saniye);
+      const oran = Math.min(kayit.dwell / okuma(kayit.kelime), P.oran_ust);
+      agirlikTop += agirlik; oranTop += agirlik * oran;
+      aktifTop += agirlik * (kayit.roket || kayit.yorum ? 1 : 0);
+      if (kayit.ton < P.yogun_ton) { yogunOran += agirlik * oran; yogunAgirlik += agirlik; fazlaTop += agirlik * Math.min(Math.max(0, oran - 1), P.fazla_ust); }
+    });
+    const digerAgirlik = agirlikTop - yogunAgirlik;
+    let goreli = 0;
+    if (yogunAgirlik > 0) {
+      const yogunOrt = yogunOran / yogunAgirlik, digerOrt = digerAgirlik > 1e-9 ? (oranTop - yogunOran) / digerAgirlik : 1;
+      goreli = Math.max(-P.goreli_ust, Math.min(P.goreli_ust, Math.log((yogunOrt + P.goreli_pay) / (digerOrt + P.goreli_pay))));
+    }
+    return {
+      yogun_pay: oranTop > 0 ? yogunOran / oranTop : 0,
+      goreli_oyalanma: goreli,
+      yogun_fazla_kalma: yogunAgirlik > 0 ? fazlaTop / yogunAgirlik : 0,
+      aktif_oran: aktifTop / agirlikTop,
+    };
   }
 
   function _olcekle(ozellikler) {
@@ -57,5 +95,5 @@
     return { coef, intercept, guncelleme: (model.guncelleme || 0) + 1 };
   }
 
-  window.TrainedModels = { spiralOlasiligi, psikolojikTahmin, varsayilanPsikolojik, psikolojikGuncelle };
+  window.TrainedModels = { spiralOlasiligi, spiralOzellikleri, psikolojikTahmin, varsayilanPsikolojik, psikolojikGuncelle };
 })();

@@ -1,0 +1,34 @@
+SPİRAL MODELİ v2 · değerlendirme (python spiral_model.py)
+========================================================================
+Simüle oturum: 4000 (eğitim 3000, test 1000), spiral payı %35, etiket gürültüsü %8
+
+Test oturumlarında (aynı simülatör, ayrılmış %25):
+  v2: doğruluk 0.838 · F1 0.744 · ROC-AUC 0.857 · Brier 0.130 · kalibrasyon hatası (ECE) 0.046
+  v1: doğruluk 0.563 · F1 0.517 · ROC-AUC 0.632 · Brier 0.339 · kalibrasyon hatası (ECE) 0.299
+  DİKKAT: iki model de yeni simülatörde ölçülüyor; bu karşılaştırma v2'nin
+  lehine. Gösterdiği şey, eski özelliklerin bu ayrımları (okuma süresi,
+  aktif/pasif, zaman) TEMSİL EDEMEDİĞİ; gerçek dünya doğruluğu değil.
+
+Türe göre 'spiral' deme oranı (eşik 0,5; ilk dört satır aslında spiral DEĞİL):
+  uzun_okuyan     n= 125 · v2 %  0.8 · v1 % 61.6
+  aktif_tartisan  n= 137 · v2 % 10.9 · v1 % 59.1
+  hizli_gozatan   n=  80 · v2 %  0.0 · v1 % 28.7
+  eski_oturum     n=  48 · v2 %  0.0 · v1 % 56.2
+  olagan          n= 283 · v2 %  1.8 · v1 % 41.3
+  spiral          n= 227 · v2 % 89.4 · v1 % 70.9
+  spirale_gecis   n= 100 · v2 % 56.0 · v1 % 65.0
+
+Standartlaştırılmış katsayılar (pozitif = riski artırır):
+  goreli_oyalanma    +1.59
+  aktif_oran         -0.84
+  yogun_pay          +0.00
+  yogun_fazla_kalma  +0.00
+
+Elle kurulmuş örnek günlükler (v1 → v2):
+  0.45 → 0.26  Olağan karışık akış: 20 gönderi, 5'i yoğun tonlu, hepsine okuma süresi kadar
+  0.98 → 0.03  Yoğun haberlere hızlı göz atma: 20 gönderi, 2'şer sn
+  0.99 → 0.92  Yoğun içerikte pasif oyalanma: 8 yoğun gönderide 12'şer sn, diğerleri 3 sn
+  0.99 → 0.36  Aynısı, ama yoğun gönderilere yorum yazılıyor (aktif katılım)
+  0.04 → 0.26  Uzun metinleri okuyan, hep olumlu içerik
+  1.00 → 0.26  3 saat önce yoğun oturum, şimdi 10 sakin gönderi
+  0.09 → 0.00  Boş günlük

@@ -38,28 +38,11 @@
     Object.keys(state.gunluk).forEach(tarih => { if (tarih < sinir) delete state.gunluk[tarih]; });
   }
 
-  // spiral_model.py'nin _ozellik_cikar'iyla AYNI tanim: gonderi basina tek
-  // kayit (en son gorulme), en fazla 20 farkli gonderi -- eski DAVRANIS_GUNLUGU
-  // penceresinin ayni matematigi, sadece IndexedDB uzerinde.
-  function _dedupluGunluk(meaningful) {
-    const sonKayit = new Map();
-    meaningful.forEach(event => sonKayit.set(event.postId, event));
-    return [...sonKayit.values()].slice(-20);
-  }
-  function _spiralOzellikleri(log) {
-    if (!log.length) return null;
-    const toplamDwell = log.reduce((t, e) => t + e.dwell, 0) || 1e-9;
-    const negatifler = log.filter(e => e.tone < YOGUN_TON);
-    const negatifDwellToplam = negatifler.reduce((t, e) => t + e.dwell, 0);
-    return {
-      negatif_dwell_toplam: negatifDwellToplam,
-      negatif_dwell_orani: negatifDwellToplam / toplamDwell,
-      negatif_tekrar_sayisi: 0, // sunucudaki bilinen sinirlilikla tutarli (bkz. motor.py)
-      ortalama_duygu: log.reduce((t, e) => t + e.tone, 0) / log.length,
-      tiklama_orani: log.reduce((t, e) => t + (e.click ? 1 : 0), 0) / log.length,
-      kaydirma_hizi: log.length / Math.max(toplamDwell / 60, 0.1),
-    };
-  }
+  // Spiral ozellikleri spiral_ozellik.py ile ayni tanimla (trained-models.js)
+  // hesaplanir: son 30 dakika, gonderi basina birlestirilmis kayit, okuma
+  // suresine gore normalize edilmis durma. Kelime sayisi olmayan eski
+  // kayitlar icin varsayilan okuma suresi kullanilir.
+  const _spiralOlaylari = meaningful => meaningful.map(event => ({ gonderi: event.postId, zaman: event.createdAt / 1000, dwell: event.dwell, ton: event.tone, kelime: event.kelime || 0, konu: event.topic, roket: !!event.rocket, yorum: !!event.comment }));
   const _psikolojikOzellik = event => ({ duygu: event.tone, dwell_saniye: event.dwell, tiklama: event.click ? 1 : 0, roket: event.rocket ? 1 : 0, yorum: event.comment ? 1 : 0 });
   // Egitilmis spiral (lojistik regresyon) + psikolojik durum (SGDClassifier)
   // modellerini, hicbir ham veri cihazdan cikmadan burada calistirir --
@@ -71,11 +54,14 @@
     if (!meaningful.length || typeof window.TrainedModels === "undefined") return null;
     return window.TrainedModels.psikolojikTahmin(_psikolojikOzellik(meaningful[meaningful.length - 1]), model);
   }
+  // Son 30 dakikada yeterli gonderi yoksa yogunluk 0'dir: dunku oturum bugunun
+  // akisini dengelemez.
   function _egitilmisYogunluk(meaningful) {
-    const log = _dedupluGunluk(meaningful);
-    const ozellikler = _spiralOzellikleri(log);
-    if (!ozellikler || typeof window.TrainedModels === "undefined") return null;
-    const spiralOlasilik = window.TrainedModels.spiralOlasiligi(ozellikler);
+    const T = window.TrainedModels;
+    if (typeof T === "undefined" || !T.spiralOzellikleri) return null;
+    const ozellikler = T.spiralOzellikleri(_spiralOlaylari(meaningful), Date.now() / 1000);
+    if (!ozellikler) return 0;
+    const spiralOlasilik = T.spiralOlasiligi(ozellikler);
     const psikolojik = _anlikKategoriTahmini(meaningful);
     const negatifRuhHaliKutlesi = (psikolojik.olasiliklar.sinirli || 0) + (psikolojik.olasiliklar.anksiyete || 0);
     return clamp(spiralOlasilik * 0.7 + negatifRuhHaliKutlesi * 0.3);
@@ -102,7 +88,8 @@
     state.topicWeights[topic] = clamp(previous * .88 + reward * .12, 0, 1);
     // Tek bir acik unutulmus sekme gunluk toplami domine etmesin diye sure 60 sn'de kesilir.
     if (!demo) _gunlugeIsle(state, gun => { const sure = Math.min(dwell, 60); gun.etkilesim += 1; gun.dwell += sure; if (tone < YOGUN_TON) gun.yogunDwell += sure; gun.konular[topic] = (gun.konular[topic] || 0) + 1; });
-    await Promise.all([addEvent({ type: "interaction", createdAt: Date.now(), postId: post.id, topic, tone, dwell: Number(dwell.toFixed(2)), click: !!click, rocket: !!rocket, comment: !!comment, exit: !!exit, demo: !!demo }), setState(state)]);
+    const kelime = String(post.metin || "").split(/\s+/).filter(Boolean).length;
+    await Promise.all([addEvent({ type: "interaction", createdAt: Date.now(), postId: post.id, topic, tone, kelime, dwell: Number(dwell.toFixed(2)), click: !!click, rocket: !!rocket, comment: !!comment, exit: !!exit, demo: !!demo }), setState(state)]);
     await trimEvents(); return summary();
   }
   // Kendi kendini dogrulama (EMA) dongusu: kullaniciya soru sorulmadan ONCE

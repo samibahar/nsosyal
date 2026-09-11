@@ -3,23 +3,46 @@
 // düzenleme yerine kaynak modeli değiştirip scripti yeniden çalıştırın.
 window.TrainedModelWeights = {
   "spiral": {
+    "surum": 2,
     "ozellik_sirasi": [
-      "negatif_dwell_toplam",
-      "negatif_dwell_orani",
-      "negatif_tekrar_sayisi",
-      "ortalama_duygu",
-      "tiklama_orani",
-      "kaydirma_hizi"
+      "yogun_pay",
+      "goreli_oyalanma",
+      "yogun_fazla_kalma",
+      "aktif_oran"
     ],
     "coef": [
-      0.06139637663074263,
-      1.4671250165533487,
-      0.4208366556148355,
-      -1.3549354148796051,
-      -0.47872683228998936,
-      0.03314590920360334
+      0.0,
+      1.5853973995738553,
+      0.0,
+      -0.8381892851139956
     ],
-    "intercept": -2.3386569330114555
+    "intercept": -0.8500482885126062,
+    "olcekleyici_ortalama": [
+      0.38310258943355613,
+      0.3847559623937675,
+      0.5870955900367274,
+      0.11098042253720718
+    ],
+    "olcekleyici_olcek": [
+      0.2786068659701715,
+      0.5747171900099434,
+      0.637781790466962,
+      0.11064383354402015
+    ],
+    "parametreler": {
+      "pencere_saniye": 1800,
+      "yari_omur_saniye": 600,
+      "maks_gonderi": 20,
+      "min_gonderi": 3,
+      "yogun_ton": -0.2,
+      "okuma_taban": 1.5,
+      "kelime_hizi": 3.5,
+      "varsayilan_kelime": 12,
+      "oran_ust": 4.0,
+      "fazla_ust": 3.0,
+      "goreli_pay": 0.1,
+      "goreli_ust": 2.0
+    }
   },
   "psikolojik": {
     "ozellik_sirasi": [
