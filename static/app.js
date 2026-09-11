@@ -6,7 +6,7 @@ let currentSpiral = 0;
 let loading = false;
 let exhausted = false;
 const postCache = new Map();
-const localAgent = window.LocalPersonalization;
+let localAgent = window.LocalPersonalization; // yerel depolama acilamazsa baslat() null yapar
 let localSummary = { eventCount: 0, enoughData: false, intensity: 0, currentMood: null, confidence: 0 };
 let localPostReactions = {};
 let juryDemoActive = false;
@@ -97,8 +97,9 @@ function openLocalSheet(post){
   const dengelemeAcik=localSummary.ayarlar?.dengeleme!==false;
   if(post){
     const secim=post.aday_toplami?`Cihazına gelen ${post.aday_toplami} aday arasından ${post.aday_sirasi}. sırada seçildi. `:"";
-    summary.textContent=`${secim}Sıralama, cihazındaki ilgi profili ve akış çeşitliliğiyle yerelde yapıldı.`;
-    scores.innerHTML=scoreBox("İlgi eşleşmesi",`${Math.round((post.local_ilgi||0)*100)}%`)+scoreBox("Akış ayarı",!dengelemeAcik?"Kapalı":post.local_dengeleme?`−${Math.round(post.local_dengeleme*100)} puan`:"Yok")+scoreBox("Yerel sonuç",`${Math.round((post.local_skor||0)*100)}%`);
+    const muafMetin=post.resmi?"Resmi/acil bilgilendirme hesabından; bu tür gönderiler akış yoğunluğu ne olursa olsun duygu dengelemesiyle aşağı itilmez. ":"";
+    summary.textContent=`${muafMetin}${secim}Sıralama, cihazındaki ilgi profili ve akış çeşitliliğiyle yerelde yapıldı.`;
+    scores.innerHTML=scoreBox("İlgi eşleşmesi",`${Math.round((post.local_ilgi||0)*100)}%`)+scoreBox("Akış ayarı",post.resmi?"Muaf":!dengelemeAcik?"Kapalı":post.local_dengeleme?`−${Math.round(post.local_dengeleme*100)} puan`:"Yok")+scoreBox("Yerel sonuç",`${Math.round((post.local_skor||0)*100)}%`);
     technical.innerHTML=`<p><b>Yerel çevrim içi sıralama</b><br>${post.aday_toplami?`Aday sırası: <b>${post.aday_sirasi} / ${post.aday_toplami}</b><br>`:""}İlgi ağırlığı: <b>${(post.local_ilgi||0).toFixed(2)}</b><br>Akış dengeleme: <b>${dengelemeAcik?(post.local_dengeleme||0).toFixed(2):"kapalı"}</b><br>Açık tepki etkisi: <b>${(post.local_tepki_etkisi||0).toFixed(2)}</b><br>Yerel sıralama skoru: <b>${(post.local_skor||0).toFixed(2)}</b><br><br>Ham tıklama ve durma süresi bu hesap için sunucuya gönderilmez.</p>`;
   }else{
     summary.textContent="Kişiselleştirme profili ve ham etkileşim geçmişi bu tarayıcının IndexedDB alanında tutulur. Sunucu yalnızca herkese açık aday gönderileri sağlar.";
@@ -145,9 +146,9 @@ function createCard(post){
   postCache.set(post.id,post);
   const topic=topicFor(post.konu);incrementTopic(post.konu);
   const author=post.yazar_bilgi?{id:post.yazar_bilgi.id,name:post.yazar_bilgi.name,handle:post.yazar_bilgi.handle,initials:post.yazar_bilgi.initials,color:post.yazar_bilgi.color}:authorForPost(post);
-  const card=document.createElement("article");card.className="post-card"+(post.refah_cezasi>0?" yumusatildi":"");card.dataset.id=post.id;
+  const card=document.createElement("article");card.className="post-card"+((post.local_dengeleme||post.refah_cezasi)>0?" yumusatildi":"");card.dataset.id=post.id;
   const selectedReaction=localPostReactions[post.id];
-  card.innerHTML=`<div class="post-body"><div class="post-meta"><span class="avatar" style="background:${topic.bg}">${topic.glyph}</span><div><div class="author">${escapeText(topic.author)}</div><div class="handle">${escapeText(topic.handle)} · şimdi</div></div><button class="post-menu" aria-label="Gönderi seçenekleri"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-daha"/></svg></button></div><p class="post-text"></p></div><div class="post-visual" style="--visual-bg:${topic.bg};--visual-shape:${topic.shape}"><span class="visual-glyph">${topic.glyph}</span><span class="visual-caption">${escapeText(topic.name)} · Senin için seçildi</span></div><div class="post-actions"><div class="action-group"><div class="post-reaction-wrap"><button class="action-button post-reaction-trigger" type="button" aria-label="Duygu tepkisi ver" aria-expanded="false">${selectedReaction?"":'<svg class="ikon ikon-sm tepki-ikon" aria-hidden="true"><use href="#i-tepki"/></svg>'}<span>${selectedReaction?POST_REACTION_LABELS[selectedReaction]:"Tepki"}</span></button></div><button class="action-button comment" type="button" aria-label="Yorum"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-yorum"/></svg> <span>Yorum</span></button></div>${post.refah_cezasi>0?'<span class="softened-pill"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> dengelendi</span>':'<button class="why-button" type="button"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Neden bu?</button>'}</div>`;
+  card.innerHTML=`<div class="post-body"><div class="post-meta"><span class="avatar" style="background:${topic.bg}">${topic.glyph}</span><div><div class="author">${escapeText(topic.author)}</div><div class="handle">${escapeText(topic.handle)} · şimdi</div></div><button class="post-menu" aria-label="Gönderi seçenekleri"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-daha"/></svg></button></div><p class="post-text"></p></div><div class="post-visual" style="--visual-bg:${topic.bg};--visual-shape:${topic.shape}"><span class="visual-glyph">${topic.glyph}</span><span class="visual-caption">${escapeText(topic.name)} · Senin için seçildi</span></div><div class="post-actions"><div class="action-group"><div class="post-reaction-wrap"><button class="action-button post-reaction-trigger" type="button" aria-label="Duygu tepkisi ver" aria-expanded="false">${selectedReaction?"":'<svg class="ikon ikon-sm tepki-ikon" aria-hidden="true"><use href="#i-tepki"/></svg>'}<span>${selectedReaction?POST_REACTION_LABELS[selectedReaction]:"Tepki"}</span></button></div><button class="action-button comment" type="button" aria-label="Yorum"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-yorum"/></svg> <span>Yorum</span></button></div><span class="softened-pill" title="Akış yoğunlaştığı için bu gönderi biraz aşağı alındı"${(post.local_dengeleme||post.refah_cezasi)>0?"":" hidden"}>dengelendi</span><button class="why-button" type="button"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Neden bu?</button></div>`;
   card.querySelector(".post-text").textContent=post.metin;
   // Her gonderiye zorla foto eklemek yerine (20 sabit stok fotografin 150+
   // gonderide asiri tekrar etmesine yol aciyordu), yaklasik 2/3'une foto
@@ -166,6 +167,7 @@ function createCard(post){
   // (hem stok-gorsel damgasi gibi duruyor hem de her fotografta okunakli
   // olmasi garanti degildi). Artik baslik satirinda, sade metin olarak.
   card.querySelector(".post-meta .handle").textContent=`${author.handle} · şimdi · ${topic.name}`;
+  if(post.resmi){const rozet=document.createElement("span");rozet.className="resmi-rozet";rozet.innerHTML='<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kilit"/></svg> Resmi bilgi · dengelenmez';card.querySelector(".post-body").insertBefore(rozet,card.querySelector(".post-text"));}
   avatar.addEventListener("click",event=>{event.stopPropagation();location.href=`/profil.html?u=${encodeURIComponent(author.id)}`;});
   const why=card.querySelector(".why-button");if(why)why.addEventListener("click",event=>{event.stopPropagation();openSheet(postCache.get(post.id)||post);});
   card.querySelector(".comment").addEventListener("click",event=>{event.stopPropagation();sendInteraction(post.id,dwellFor(post.id),false,false,true);openComments(post);});
@@ -208,7 +210,9 @@ async function rerankVisibleFeed(reaction=null){
   const ranked=await localAgent.rank(cards.map(card=>postCache.get(Number(card.dataset.id))).filter(Boolean));
   ranked.forEach(post=>postCache.set(post.id,post));
   const moved=ranked.filter((post,index)=>before.get(String(post.id))?.index!==index).length;
-  ranked.forEach(post=>{const card=cards.find(item=>Number(item.dataset.id)===post.id);if(card){card.dataset.localScore=String(post.local_skor);feed.insertBefore(card,sentinel);}});
+  // "dengelendi" etiketi yeni skorlarla guncellenir: kullanici hangi
+  // gonderinin neden asagi indigini karti acmadan da gorebilsin.
+  ranked.forEach(post=>{const card=cards.find(item=>Number(item.dataset.id)===post.id);if(card){card.dataset.localScore=String(post.local_skor);const etiket=card.querySelector(".softened-pill");if(etiket)etiket.hidden=!(post.local_dengeleme>0);card.classList.toggle("yumusatildi",post.local_dengeleme>0);feed.insertBefore(card,sentinel);}});
   cards.forEach(card=>{const previous=before.get(card.dataset.id),next=card.getBoundingClientRect().top,delta=previous?previous.top-next:0;if(Math.abs(delta)>1)card.animate([{transform:`translateY(${delta}px)`},{transform:"translateY(0)"}],{duration:340,easing:"cubic-bezier(.2,.8,.2,1)"});});
   if(moved)showRankingNotice(moved,reaction);
 }
@@ -277,16 +281,33 @@ async function setupStories(){try{stories=(await (await fetch("/api/hikayeler"))
 document.getElementById("story-close").addEventListener("click",closeStory);document.getElementById("story-previous").addEventListener("click",()=>openStory(Math.max(0,activeStoryIndex-1)));document.getElementById("story-next").addEventListener("click",()=>activeStoryIndex>=stories.length-1?closeStory():openStory(activeStoryIndex+1));document.getElementById("story-viewer").addEventListener("click",event=>{if(event.target.id==="story-viewer")closeStory();});
 const intervention=document.createElement("aside");intervention.id="balance-intervention";intervention.className="balance-intervention";intervention.hidden=true;intervention.innerHTML='<span><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> AKIŞ DENGESİ</span><h2>Akış biraz yoğunlaştı.</h2><p>Benzer yoğun içeriklerde daha uzun kaldığını fark ettik. İstersen akışına daha çeşitli postlar ekleyelim.</p><div><button id="balance-feed" type="button">Akışı dengele</button><button id="dismiss-intervention" type="button">Boşver</button></div>';document.body.appendChild(intervention);
 const rankingNotice=document.createElement("div");rankingNotice.id="ranking-notice";rankingNotice.className="ranking-notice";rankingNotice.setAttribute("role","status");rankingNotice.setAttribute("aria-live","polite");document.body.appendChild(rankingNotice);
-if(localAgent){const privacyButton=document.createElement("button");privacyButton.id="local-privacy-button";privacyButton.type="button";privacyButton.innerHTML='<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Bu cihazda kişiselleştiriliyor';privacyButton.title="Yerel kişiselleştirme ayrıntıları";privacyButton.addEventListener("click",()=>openSheet());document.querySelector("#flow-status>div").appendChild(privacyButton);const localStyle=document.createElement("style");localStyle.textContent='.flow-status .local-privacy-button{display:block;width:auto;height:auto;border:0;background:transparent;color:#5d7350;font-size:10px;font-weight:800;line-height:1.25;padding:4px 0 0;text-decoration:underline;text-underline-offset:3px}.flow-status .local-privacy-button:focus-visible{outline:2px solid #719740;outline-offset:3px;border-radius:3px}';document.head.appendChild(localStyle);}
+function yerelArayuzuKur(){const privacyButton=document.createElement("button");privacyButton.id="local-privacy-button";privacyButton.type="button";privacyButton.innerHTML='<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Bu cihazda kişiselleştiriliyor';privacyButton.title="Yerel kişiselleştirme ayrıntıları";privacyButton.addEventListener("click",()=>openSheet());document.querySelector("#flow-status>div").appendChild(privacyButton);const localStyle=document.createElement("style");localStyle.textContent='.flow-status .local-privacy-button{display:block;width:auto;height:auto;border:0;background:transparent;color:#5d7350;font-size:10px;font-weight:800;line-height:1.25;padding:4px 0 0;text-decoration:underline;text-underline-offset:3px}.flow-status .local-privacy-button:focus-visible{outline:2px solid #719740;outline-offset:3px;border-radius:3px}';document.head.appendChild(localStyle);}
 document.getElementById("jury-demo-button").addEventListener("click",startJuryDemo);
 document.getElementById("jury-demo-rail").addEventListener("click",event=>{event.preventDefault();startJuryDemo();});
 const demoStyle=document.createElement("style");demoStyle.textContent='.demo-scenario{display:block;margin-top:8px;border:0;background:transparent;color:#56674a;padding:0;font-size:10px;font-weight:800;text-decoration:underline}.balance-intervention{position:fixed;z-index:60;left:50%;bottom:84px;width:min(560px,calc(100% - 28px));transform:translateX(-50%);border-radius:26px;background:#1a2019;color:white;padding:18px 19px;box-shadow:0 20px 60px rgba(0,0,0,.26)}.balance-intervention[hidden]{display:none}.balance-intervention>span{color:#c9ff62;font-size:9px;font-weight:850;letter-spacing:.1em}.balance-intervention h2{margin:7px 0 5px;font-size:19px}.balance-intervention p{margin:0;color:#c9d1c5;font-size:12px;line-height:1.45}.balance-intervention div{display:flex;gap:8px;margin-top:15px}.balance-intervention button{border:0;border-radius:999px;padding:9px 12px;font-size:11px;font-weight:800}.balance-intervention #balance-feed{background:#c9ff62;color:#121314}.balance-intervention #dismiss-intervention{background:transparent;color:white}.ranking-notice{position:fixed;z-index:70;left:50%;bottom:92px;width:min(560px,calc(100% - 28px));transform:translate(-50%,18px);opacity:0;pointer-events:none;border-radius:16px;background:#1a2019;color:#fff;padding:12px 15px;box-shadow:0 16px 40px rgba(0,0,0,.2);font-size:11px;font-weight:750;line-height:1.35;transition:opacity .2s,transform .2s}.ranking-notice.show{opacity:1;transform:translate(-50%,0)}@media(min-width:681px){.ranking-notice{bottom:24px;left:calc(50% + 110px)}}@media(prefers-reduced-motion:reduce){.ranking-notice{transition:none}}';document.head.appendChild(demoStyle);
 const originalUpdateStatus=updateStatus;updateStatus=function(level){originalUpdateStatus(level);};
 document.getElementById("dismiss-intervention").addEventListener("click",async()=>{intervention.hidden=true;await fetch("/api/mudahale/ertele",{method:"POST"});});document.getElementById("balance-feed").addEventListener("click",async()=>{intervention.hidden=true;await firstLoad();});
 setupStories();
-if(localAgent){document.getElementById("sifirla-buton").textContent="Yerel verileri sil";document.querySelector(".flow-eyebrow").textContent="DUYGU KATMANI · YEREL";localAgent.init().then(localAgent.summary).then(updateLocalAgent).catch(error=>console.warn("Local agent unavailable",error));}
-firstLoad();
-if(new URLSearchParams(location.search).has("demo"))setTimeout(startJuryDemo,550);
+// Ilk acilis: acik riza. Iki secenek esit agirlikta sunulur; secim cihazda
+// saklanir ve Ayarlar'dan her an degistirilebilir.
+async function ilkBilgilendirme(){
+  if(!localAgent||await localAgent.getOnay())return;
+  const arka=document.createElement("div");arka.className="onay-arka";
+  arka.innerHTML=`<section class="onay-kutu" role="dialog" aria-modal="true" aria-labelledby="onay-baslik" aria-describedby="onay-aciklama"><span class="eyebrow"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kilit"/></svg> DUYGU KATMANI</span><h2 id="onay-baslik">Başlamadan önce</h2><ul id="onay-aciklama"><li><b>Bu cihazda kalır.</b> Hangi gönderide ne kadar durduğun ve verdiğin tepkiler yalnızca bu tarayıcıda tutulur, sunucuya gönderilmez.</li><li><b>Teşhis değildir.</b> Bu sinyallerden akışın olası yoğunluğu tahmin edilir; yoğunlaşınca benzer içerikler biraz aşağı alınır, hiçbir şey silinmez.</li><li><b>Kontrol sende.</b> Ayarlar'dan istediğin an kapatabilir, verilerini silebilirsin. Kapalı başlatırsan akış yalnızca ilgi alanlarına göre kişiselleşir.</li></ul><div class="onay-secenek"><button type="button" id="onay-acik" data-onay="acik">Açık başlat</button><button type="button" id="onay-kapali" data-onay="kapali">Kapalı başlat</button></div><a class="onay-ayrinti" href="/ayarlar.html">Ayrıntılar ve ayarlar</a></section>`;
+  document.body.appendChild(arka);arka.querySelector("#onay-acik").focus();
+  arka.querySelectorAll("[data-onay]").forEach(buton=>buton.addEventListener("click",async()=>{await localAgent.setOnay(buton.dataset.onay);arka.remove();updateLocalAgent(await localAgent.summary());if(buton.dataset.onay==="kapali")await rerankVisibleFeed();}));
+}
+// Acilis. Yerel depolama (IndexedDB) acilamazsa -- bazi gizli modlar, "site
+// verilerini engelle" ayari -- akis bos kalmasin diye sunucu siralamasina
+// gecilir; duygu katmani o durumda sunucudaki referans yolu kullanir.
+async function baslat(){
+  if(localAgent){try{await localAgent.init();}catch(error){console.warn("Yerel depolama kullanılamıyor; sunucu sıralamasına geçildi",error);localAgent=null;}}
+  if(localAgent){yerelArayuzuKur();document.getElementById("sifirla-buton").textContent="Yerel verileri sil";document.querySelector(".flow-eyebrow").textContent="DUYGU KATMANI · YEREL";try{updateLocalAgent(await localAgent.summary());}catch(error){console.warn("Local agent unavailable",error);}}
+  await firstLoad();
+  if(localAgent)ilkBilgilendirme().catch(error=>console.warn("Bilgilendirme gösterilemedi",error));
+  if(new URLSearchParams(location.search).has("demo"))setTimeout(startJuryDemo,550);
+}
+baslat();
 if(new URLSearchParams(location.search).has("compose"))setTimeout(()=>openPanel("composer"),450);
 
 // Masaustunde (sag panel gorunurken) duygu katmani durum karti akistan sag

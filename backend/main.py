@@ -4,7 +4,6 @@ eğitilmiş spiral sınıflandırıcı) ve psikolojik_durum.py'deki çok kategor
 anlık yorum sınıflandırıcısını bir web arayüzüne bağlar. Tek demo kullanıcı
 için bellek-içi durum tutar (gerçek üretimde bu veritabanına/oturuma taşınır).
 """
-import random
 import sys
 import time
 from collections import Counter
@@ -19,11 +18,13 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from aday_secimi import aday_listesi, dogal_cesitlilik_ekle
 from motor import gonderileri_puanla, sirala, spiral_olasiligi
 from ornek_veri import ORNEK_GONDERILER, ORNEK_KULLANICI_ILGI
 from topluluk_veri import TOPLULUK_GONDERILERI
 from haber_veri import HABERLER
 from demo_paketi import DEMO_POSTS, DEMO_SCENARIO, DEMO_PROFILE_POSTS
+from resmi_veri import RESMI_GONDERILER, RESMI_HESAPLAR
 from sosyal_veri import SosyalDepo
 from duygu_katmani import analiz_et
 from psikolojik_durum import (
@@ -51,7 +52,7 @@ async def onbellek_dogrula(request: Request, call_next):
 
 
 DEPO = SosyalDepo(BASE_DIR / "data" / "nsosyal_demo.sqlite3")
-DEPO.hazirla([*ORNEK_GONDERILER, *TOPLULUK_GONDERILERI])
+DEPO.hazirla([*ORNEK_GONDERILER, *TOPLULUK_GONDERILERI, *RESMI_GONDERILER])
 GONDERILER = DEPO.gonderileri_yukle()
 gonderileri_puanla(GONDERILER)
 GONDERI_BY_ID = {g["id"]: g for g in GONDERILER}
@@ -195,58 +196,6 @@ def _guven_carpani(ornek_sayisi: int) -> float:
     return min(1.0, ornek_sayisi / TAM_GUVEN_ESIGI)
 
 
-def _dogal_cesitlilik_ekle(siralanmis: list[dict], genlik: float = 0.08) -> list[dict]:
-    """Aynı ilgi skoruna sahip gönderiler (örn. hepsi 'spor') her sayfa
-    yüklemesinde birebir aynı sırada gelmesin diye final_skor'a küçük bir
-    rastgele gürültü ekleyip yeniden sıralar. motor.py'nin kendisi kasıtlı
-    olarak deterministik bırakıldı (spike_poc.py'deki örnek çıktı tekrar
-    üretilebilir kalsın diye) -- gürültü sadece burada, sunum katmanında."""
-    gurultulu = [(g, g["final_skor"] + random.uniform(-genlik, genlik)) for g in siralanmis]
-    gurultulu.sort(key=lambda cift: -cift[1])
-    return [g for g, _ in gurultulu]
-
-
-def _sayfa_sec(siralanmis: list[dict], gosterilmis: set, sayfa_boyu: int, konu_basina_ust_sinir: int = 3,
-               konu_basina_taban: int = 0) -> list[dict]:
-    """Skor sırasından sayfa_boyu kadar gönderi seçer, ama aynı konudan
-    art arda konu_basina_ust_sinir'den fazlasını ALMAZ -- salt ilgi-skoru
-    farkına (ve rastgele gürültüye) güvenmek, en yüksek 1-2 ilgi alanının
-    tüm sayfayı kaplamasına yol açıyordu (kullanıcı tarafından tespit
-    edildi, 21.08.2026): 25 gönderilik iki güçlü konu, aralarındaki
-    gürültüyle rekabet edemeyen zayıf konuları pratikte hiç göstermiyordu.
-    Bu, ilgiye göre öne çıkarmayı korurken (üst sınıra takılmayan en
-    yüksek skorlu gönderiler yine önce gelir) görünür çeşitliliği garanti
-    eder -- gerçek sosyal medya akışlarının da yaptığı gibi.
-
-    konu_basina_taban > 0 ise önce her konudan o kadar gönderi ayrılır
-    (keşif payı), kalan yer skora göre doldurulur. Sunucunun ilgi profili
-    sabit olduğu için bu pay olmadan düşük skorlu konular aday listesine hiç
-    girmiyor, telefon kullanıcının gerçekten sevdiği bir konuyu öne alamıyordu."""
-    kalanlar = [g for g in siralanmis if g["id"] not in gosterilmis]
-    sayfa, konu_sayaci, ertelenmis = [], {}, []
-    if konu_basina_taban:
-        for g in kalanlar:
-            if len(sayfa) >= sayfa_boyu:
-                break
-            if konu_sayaci.get(g["konu"], 0) < konu_basina_taban:
-                sayfa.append(g)
-                konu_sayaci[g["konu"]] = konu_sayaci.get(g["konu"], 0) + 1
-        secilen = {g["id"] for g in sayfa}
-        kalanlar = [g for g in kalanlar if g["id"] not in secilen]
-    for g in kalanlar:
-        if len(sayfa) >= sayfa_boyu:
-            break
-        konu = g["konu"]
-        if konu_sayaci.get(konu, 0) >= konu_basina_ust_sinir:
-            ertelenmis.append(g)
-            continue
-        sayfa.append(g)
-        konu_sayaci[konu] = konu_sayaci.get(konu, 0) + 1
-    if len(sayfa) < sayfa_boyu:
-        sayfa.extend(ertelenmis[: sayfa_boyu - len(sayfa)])
-    return sayfa
-
-
 def _sosyal_ile_zenginlestir(gonderiler: list[dict]) -> list[dict]:
     """Sıralama motorunun çıktısını kalıcı sosyal durumla birleştirir.
     Model skoru ve sosyal sayaçlar birbirinden bağımsız kalır."""
@@ -256,6 +205,8 @@ def _sosyal_ile_zenginlestir(gonderiler: list[dict]) -> list[dict]:
         sonuc.append({
             **gonderi,
             "yazar_bilgi": yazar,
+            # Resmi/acil bilgi hesapları duygu dengelemesinden muaftır (resmi_veri.py).
+            "resmi": gonderi.get("yazar") in RESMI_HESAPLAR,
             **DEPO.post_ozellikleri(gonderi["id"]),
         })
     return sonuc
@@ -298,15 +249,10 @@ def api_gonderiler(sifirdan: bool = False, aday: int = SAYFA_BOYU):
 
     spiral = spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER)
     siralanmis = sirala(GONDERILER, KULLANICI_ILGI, spiral)
-    siralanmis = _dogal_cesitlilik_ekle(siralanmis)
+    siralanmis = dogal_cesitlilik_ekle(siralanmis)
 
     kalanlar = [g for g in siralanmis if g["id"] not in GOSTERILEN_ID_SETI]
-    # 12'lik klasik sayfa eskisi gibi kalır. Geniş aday listesinde her konudan
-    # en az 2 gönderi keşif payı olarak ayrılır, bir konu en fazla 8 yer alır.
-    genis = aday > SAYFA_BOYU
-    sayfa = _sayfa_sec(siralanmis, GOSTERILEN_ID_SETI, aday,
-                       konu_basina_ust_sinir=max(3, aday // 6) if genis else 3,
-                       konu_basina_taban=2 if genis else 0)
+    sayfa = aday_listesi(siralanmis, GOSTERILEN_ID_SETI, aday, SAYFA_BOYU)
     for g in sayfa:
         GOSTERILEN_ID_SETI.add(g["id"])
 

@@ -18,6 +18,7 @@ DEMO_KULLANICILAR = {
     "selinkaya": {"ad": "Selin Kaya", "handle": "@selinkaya", "bas_harf": "SK", "bio": "Kampüs hayatı ve iyi yaşam üzerine.", "renk": "#527e6f"},
     "mertdemir": {"ad": "Mert Demir", "handle": "@mertdemir", "bas_harf": "MD", "bio": "Şehir, ekonomi ve gündelik notlar.", "renk": "#966d47"},
     "emiryusuf": {"ad": "Emir Yusuf", "handle": "@emiryusuf", "bas_harf": "EU", "bio": "NSosyal'de yeni fikirleri takip ediyor.", "renk": "#1f2720"},
+    "kentkoordinasyon": {"ad": "Kent Afet Koordinasyon", "handle": "@kentafet", "bas_harf": "KA", "bio": "Örnek resmi duyuru hesabı: afet ve acil durum bilgilendirmeleri.", "renk": "#8a3b2e"},
 }
 
 KONU_YAZARLARI = {
@@ -81,12 +82,14 @@ class SosyalDepo:
             """)
             for user_id, user in DEMO_KULLANICILAR.items():
                 con.execute("INSERT OR IGNORE INTO users VALUES (?, ?, ?, ?, ?, ?)", (user_id, user["ad"], user["handle"], user["bas_harf"], user["bio"], user["renk"]))
-            if con.execute("SELECT COUNT(*) FROM posts").fetchone()[0] == 0:
-                now = _simdi()
-                con.executemany(
-                    "INSERT INTO posts(id, topic, text, author_id, created_at) VALUES (?, ?, ?, ?, ?)",
-                    [(post["id"], post["konu"], post["metin"], post.get("yazar") or KONU_YAZARLARI.get(post["konu"], "emiryusuf"), now) for post in kaynak_gonderiler],
-                )
+            # Kaynakta olup veritabanında olmayan gönderiler eklenir (sonradan
+            # eklenen örnek içerik mevcut demo veritabanına da girsin diye);
+            # var olanlara ve kullanıcının kendi gönderilerine dokunulmaz.
+            now = _simdi()
+            con.executemany(
+                "INSERT OR IGNORE INTO posts(id, topic, text, author_id, created_at) VALUES (?, ?, ?, ?, ?)",
+                [(post["id"], post["konu"], post["metin"], post.get("yazar") or KONU_YAZARLARI.get(post["konu"], "emiryusuf"), now) for post in kaynak_gonderiler],
+            )
             if con.execute("SELECT COUNT(*) FROM stories").fetchone()[0] == 0:
                 con.executemany("INSERT INTO stories(user_id, media_path, caption, position) VALUES (?, ?, ?, ?)", [(user, media, caption, position) for position, (user, media, caption) in enumerate(HIKAYELER)])
             elif not con.execute("SELECT 1 FROM stories WHERE user_id = 'emiryusuf'").fetchone():

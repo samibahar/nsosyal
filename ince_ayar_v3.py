@@ -24,9 +24,7 @@ VERİ:
   - Pozitifler kaynaklara göre dengelenir (winvoker pozitiflerinin çoğu ürün
     yorumu; tek bir alanın baskın olmaması için).
   - zayif_uslup_veri.jsonl (kısa/resmi/haber bülteni tarzı, v2'nin eğitim
-    verisi) de eklenir. Aksi halde winvoker'ın nötr örnekleri Vikipedi
-    cümleleri olduğu için model "resmi/olgusal üslup = nötr" kısayolunu
-    öğrenip haber tarzı olumsuz metinleri nötre çekebilirdi.
+    verisi) de eklenir.
 
 İKİNCİ DENEME (11.09.2026): ilk v3 ölçümde sayısal olarak v2'yi geçti ama
 elle kontrolde "Aşı karşıtlığı salgın riskini artırıyor" gibi açıkça olumsuz
@@ -38,14 +36,22 @@ Düzeltme:
   - Vikipedi nötrlerinden değerlik kelimesi (öldür, savaş, kaza, başarı,
     ödül vb.) içerenler çıkarılır (17 bin örneğin ~2 bini).
   - haber_uslubu_uc_sinif.jsonl: haber ve gündelik paylaşım üslubunda,
-    üç sınıflı, bu amaçla yazılmış hedefli veri (3 kez eklenir). Nötr cümleler
+    üç sınıflı, bu amaçla yazılmış hedefli veri. Nötr cümleler
     duyuru/takvim/prosedür bilgisidir; böylece model üslubu değil içeriği
     öğrenir.
   - Uygulamadaki gönderiler ve haberler eğitimden açıkça hariç tutulur.
 
+ÜÇÜNCÜ AŞAMA (11.09.2026 akşam): kısa, duygu kelimesi içermeyen başlıklar
+("işten çıkardı", "iptal edildi") nötr okunuyordu. Hedefli veriye bu tür
+başlıklar eklendi; öğrenme oranı, epoch ve hedefli veri ağırlığı
+ince_ayar_v3_arama.py ile GPU'da arandı. Seçim yalnızca DOĞRULAMA setiyle
+yapıldı (winvoker'dan ayrı 1500 örnek + haber_uslubu_dogrulama.jsonl);
+dogrulama_v3.py'nin test setleri seçimde hiç kullanılmadı. Aşağıdaki
+varsayılanlar aramanın seçtiği değerlerdir.
+
 SINIRLILIK (raporda/sunumda söylenmeli): winvoker'daki nötr örneklerin
 neredeyse tamamı Vikipedi cümleleri; hedefli veri bunu dengelemek için
-eklendi ama küçük (≈300 cümle).
+eklendi ama küçük (≈380 cümle).
 
 Sonuç ayrı klasöre (bert-turkish-sentiment-ince-ayarli-v3) kaydedilir; v2'nin
 üzerine yazılmaz. dogrulama_v3.py ile ölçülmeden duygu_modeli.py onu
@@ -73,8 +79,14 @@ TABAN_MODEL_DIZINI = KOK / "models" / "bert-turkish-sentiment-ince-ayarli-v2"
 ZAYIF_USLUP = KOK / "zayif_uslup_veri.jsonl"
 ZAYIF_TEST = KOK / "zayif_uslup_dogrulama_etiketli.py"
 HABER_USLUBU = KOK / "haber_uslubu_uc_sinif.jsonl"
+HABER_DOGRULAMA = KOK / "haber_uslubu_dogrulama.jsonl"
 CIKTI_DIZINI = KOK / "models" / "bert-turkish-sentiment-ince-ayarli-v3"
 RASTGELE_TOHUM = 42
+
+# ince_ayar_v3_arama.py'nin doğrulama setinde seçtiği değerler
+OGRENME_ORANI = 3e-5
+EPOCH = 2
+HEDEFLI_KAT = 5
 
 # Vikipedi "nötr"lerinde olumsuz/olumlu olay anlatan cümleleri ayıklamak için.
 DEGERLIK = re.compile(
@@ -93,12 +105,36 @@ NOTR_SAYISI = 6000
 POZITIF_SAYISI = 6000
 
 
-def _degerlendirme_metinleri() -> set[str]:
-    """dogrulama.py / dogrulama_v2.py'nin kullandığı 1000 örneğin metinleri."""
-    veri = load_dataset("winvoker/turkish-sentiment-analysis-dataset", split="train")
+def _test_indeksleri(veri) -> set[int]:
+    """dogrulama.py / dogrulama_v3.py'nin 1000 test örneği (split=train, seed=42)."""
     random.seed(RASTGELE_TOHUM)
-    indeksler = random.sample(range(len(veri)), 1000)
-    return {str(veri[i]["text"]).strip() for i in indeksler}
+    return set(random.sample(range(len(veri)), 1000))
+
+
+def _degerlendirme_metinleri() -> set[str]:
+    veri = load_dataset("winvoker/turkish-sentiment-analysis-dataset", split="train")
+    return {str(veri[i]["text"]).strip() for i in _test_indeksleri(veri)}
+
+
+def winvoker_dogrulama(adet: int = 1500) -> list[tuple[str, str]]:
+    """Model SEÇİMİ için winvoker split=train'den 1500 örnek (tohum 7).
+    Test için ayrılan 1000 örnekle kesişmez."""
+    veri = load_dataset("winvoker/turkish-sentiment-analysis-dataset", split="train")
+    test = _test_indeksleri(veri)
+    secilen = []
+    for i in random.Random(7).sample(range(len(veri)), 6000):
+        etiket = WINVOKER_ETIKET.get(str(veri[i]["label"]).strip().lower())
+        if i in test or not etiket:
+            continue
+        secilen.append((str(veri[i]["text"]).strip()[:512], etiket))
+        if len(secilen) >= adet:
+            break
+    return secilen
+
+
+def haber_dogrulama() -> list[tuple[str, str]]:
+    with open(HABER_DOGRULAMA, encoding="utf-8") as f:
+        return [(k["text"].strip(), k["label"]) for k in map(json.loads, filter(str.strip, f))]
 
 
 def _zayif_test_metinleri() -> set[str]:
@@ -122,9 +158,10 @@ def _uygulama_metinleri() -> set[str]:
     return metinler
 
 
-def veri_hazirla():
+def veri_hazirla(hedefli_kat: int = HEDEFLI_KAT) -> Dataset:
     rng = random.Random(RASTGELE_TOHUM)
-    haric = _degerlendirme_metinleri() | _zayif_test_metinleri() | _uygulama_metinleri()
+    dogrulama = {m for m, _ in winvoker_dogrulama()} | {m for m, _ in haber_dogrulama()}
+    haric = _degerlendirme_metinleri() | _zayif_test_metinleri() | _uygulama_metinleri() | dogrulama
 
     test = load_dataset("winvoker/turkish-sentiment-analysis-dataset", split="test")
     gruplar: dict[str, dict[str, list[str]]] = {"negative": {}, "neutral": {}, "positive": {}}
@@ -184,8 +221,8 @@ def veri_hazirla():
                 kayit = json.loads(satir)
                 if kayit["text"].strip() not in haric:
                     hedefli.append({"text": kayit["text"].strip(), "label": LABEL2ID[kayit["label"]]})
-    print(f"  haber_uslubu_uc_sinif (x3): {len(hedefli)}")
-    kayitlar += hedefli * 3
+    print(f"  haber_uslubu_uc_sinif (x{hedefli_kat}): {len(hedefli)}")
+    kayitlar += hedefli * hedefli_kat
 
     rng.shuffle(kayitlar)
     return Dataset.from_list(kayitlar)
@@ -216,23 +253,13 @@ def model_hazirla():
     return model
 
 
-def main():
-    if not TABAN_MODEL_DIZINI.exists():
-        print(f"HATA: {TABAN_MODEL_DIZINI} bulunamadı.")
-        return
+def egit(veri: Dataset, tokenizer, ogrenme_orani: float = OGRENME_ORANI, epoch: int = EPOCH,
+         gecici_dizin: Path = CIKTI_DIZINI / "_checkpoint_gecici"):
+    """Veriyi %92/%8 böler, v2'den başlayarak eğitir ve modeli döndürür."""
     torch.manual_seed(RASTGELE_TOHUM)
-    print("Veri hazırlanıyor...")
-    veri = veri_hazirla()
-    print(f"Toplam örnek: {len(veri)}")
-    veri = veri.train_test_split(test_size=0.08, seed=RASTGELE_TOHUM)
-
-    tokenizer = AutoTokenizer.from_pretrained(str(TABAN_MODEL_DIZINI))
+    bolum = veri.train_test_split(test_size=0.08, seed=RASTGELE_TOHUM)
+    bolum = bolum.map(lambda o: tokenizer(o["text"], truncation=True, max_length=128), batched=True, remove_columns=["text"])
     model = model_hazirla()
-
-    def tokenize(ornek):
-        return tokenizer(ornek["text"], truncation=True, max_length=128)
-
-    veri = veri.map(tokenize, batched=True, remove_columns=["text"])
 
     def compute_metrics(eval_pred):
         from sklearn.metrics import accuracy_score, f1_score
@@ -240,15 +267,14 @@ def main():
         tahmin = np.argmax(logits, axis=-1)
         return {"dogruluk": accuracy_score(labels, tahmin), "f1_makro": f1_score(labels, tahmin, average="macro")}
 
-    print("Etiketler:", model.config.id2label)
-    epoch, parti = 2, 32
-    toplam_adim = -(-len(veri["train"]) // parti) * epoch
+    parti = 32
+    toplam_adim = -(-len(bolum["train"]) // parti) * epoch
     args = TrainingArguments(
-        output_dir=str(CIKTI_DIZINI / "_checkpoint_gecici"),
+        output_dir=str(gecici_dizin),
         num_train_epochs=epoch,
         per_device_train_batch_size=parti,
         per_device_eval_batch_size=64,
-        learning_rate=2e-5,
+        learning_rate=ogrenme_orani,
         warmup_steps=int(toplam_adim * 0.06),
         weight_decay=0.01,
         fp16=torch.cuda.is_available(),
@@ -261,15 +287,27 @@ def main():
     egitici = Trainer(
         model=model,
         args=args,
-        train_dataset=veri["train"],
-        eval_dataset=veri["test"],
+        train_dataset=bolum["train"],
+        eval_dataset=bolum["test"],
         compute_metrics=compute_metrics,
         data_collator=DataCollatorWithPadding(tokenizer),
     )
-    print(f"\nÜçüncü tur ince ayar başlıyor (cihaz: {'GPU' if torch.cuda.is_available() else 'CPU'})...\n")
     egitici.train()
     print("Ayrılmış %8'lik bölümde sonuç:", egitici.evaluate())
+    return model
 
+
+def main():
+    if not TABAN_MODEL_DIZINI.exists():
+        print(f"HATA: {TABAN_MODEL_DIZINI} bulunamadı.")
+        return
+    print("Veri hazırlanıyor...")
+    veri = veri_hazirla()
+    print(f"Toplam örnek: {len(veri)}")
+    tokenizer = AutoTokenizer.from_pretrained(str(TABAN_MODEL_DIZINI))
+    print(f"\nÜçüncü tur ince ayar başlıyor (cihaz: {'GPU' if torch.cuda.is_available() else 'CPU'}, "
+          f"öğrenme oranı {OGRENME_ORANI}, {EPOCH} epoch, hedefli veri x{HEDEFLI_KAT})...\n")
+    model = egit(veri, tokenizer)
     CIKTI_DIZINI.mkdir(parents=True, exist_ok=True)
     model.save_pretrained(CIKTI_DIZINI)
     tokenizer.save_pretrained(CIKTI_DIZINI)

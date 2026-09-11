@@ -1,0 +1,16 @@
+ÖLÇEK VE MALİYET ÖLÇÜMÜ (python olcek_olcumu.py)
+========================================================================
+Makine: AMD64 Family 25 Model 116 Stepping 1, AuthenticAMD · 8 iş parçacığı · GPU NVIDIA GeForce RTX 4060 Laptop GPU
+
+1) Duygu modeli (v3), 1000 gönderi, 32'lik partiler:
+  CPU : saniyede      60 gönderi → günde    5.2 milyon gönderi (tek cihaz)
+  CUDA: saniyede    1619 gönderi → günde  139.9 milyon gönderi (tek cihaz)
+  Ton gönderi yayımlanırken bir kez hesaplanır; okuyan kullanıcı sayısı bu maliyeti artırmaz.
+
+2) Davranış modelleri (Python referansı, tek çağrı):
+  Spiral (20 gönderilik pencere): 1.667 ms · psikolojik durum: 0.318 ms
+  Uygulamada ikisi de kullanıcının tarayıcısında çalışır; sunucuya yük bindirmez.
+
+3) Aday listesi (48 gönderi, metin + meta veri):
+  ham 18.7 KB · gzip 2.0 KB
+  Fotoğraflar ayrıca ve yalnızca gösterilen gönderiler için iner.

@@ -28,6 +28,13 @@ _pipeline = None
 _kullanilan_model = None
 
 
+def _gecerli(dizin: Path) -> bool:
+    """Repo Git LFS kurulmadan klonlanırsa model.safetensors gerçek dosya değil,
+    birkaç yüz baytlık bir işaretçi olur; o durumda bir sonraki modele düşülür."""
+    agirlik = dizin / "model.safetensors"
+    return agirlik.exists() and agirlik.stat().st_size > 10_000_000
+
+
 def _yukle():
     global _pipeline, _kullanilan_model
     if _pipeline is None:
@@ -43,11 +50,11 @@ def _yukle():
         # tahminin ~22'si, v1'in "negatif haberi pozitif sanma" hatasını düzeltti).
         # NSosyal içeriği winvoker'ın genel dağılımından çok bu alt-türe yakın
         # olduğundan v2 tercih edilir.
-        if _INCE_AYARLI_V3_DIZIN.exists():
+        if _gecerli(_INCE_AYARLI_V3_DIZIN):
             kaynak = str(_INCE_AYARLI_V3_DIZIN)
-        elif _INCE_AYARLI_V2_DIZIN.exists():
+        elif _gecerli(_INCE_AYARLI_V2_DIZIN):
             kaynak = str(_INCE_AYARLI_V2_DIZIN)
-        elif _INCE_AYARLI_DIZIN.exists():
+        elif _gecerli(_INCE_AYARLI_DIZIN):
             kaynak = str(_INCE_AYARLI_DIZIN)
         else:
             kaynak = _MODEL_ADI_ORIJINAL

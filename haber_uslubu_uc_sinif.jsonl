@@ -257,3 +257,81 @@
 {"text": "Gençlik orkestrası ilk yurt dışı konserinde büyük beğeni topladı.", "label": "positive"}
 {"text": "Mahalle bostanı sayesinde komşular hem ürün hem dostluk paylaşıyor.", "label": "positive"}
 {"text": "Emekli öğretmenin kurduğu okuma grubu köyde büyük ilgi gördü.", "label": "positive"}
+{"text": "Tekstil fabrikası iki yüz çalışanını işten çıkardı.", "label": "negative"}
+{"text": "Belediye kentin en eski otobüs hattını kaldırdı.", "label": "negative"}
+{"text": "Hastane acil servisini tadilat gerekçesiyle geçici olarak kapattı.", "label": "negative"}
+{"text": "Açık hava konseri kötü hava nedeniyle iptal edildi.", "label": "negative"}
+{"text": "Alışveriş sitesinde kullanıcıların kart bilgileri ele geçirildi.", "label": "negative"}
+{"text": "Kargo şirketi yoğunluk nedeniyle yeni gönderi kabulünü durdurdu.", "label": "negative"}
+{"text": "Teknik direktör üst üste gelen yenilgilerin ardından görevden alındı.", "label": "negative"}
+{"text": "Bakanlık bazı ilaçların satışını güvenlik şüphesiyle durdurdu.", "label": "negative"}
+{"text": "Ekmeğin fiyatı bu yıl üçüncü kez arttı.", "label": "negative"}
+{"text": "Kentteki tek sinema salonu kapılarını kapattı.", "label": "negative"}
+{"text": "Yeni köprünün açılışı bir yıl daha ertelendi.", "label": "negative"}
+{"text": "Uygulama mağazasında dolandırıcılık amaçlı sahte oyunlar bulundu.", "label": "negative"}
+{"text": "Kulüp maaşları ödeyemediği için transfer yasağı aldı.", "label": "negative"}
+{"text": "Proje, yetersiz kaynak nedeniyle yarıda kaldı.", "label": "negative"}
+{"text": "Yeni diyet akımı sağlık uzmanlarından sert eleştiri aldı.", "label": "negative"}
+{"text": "Çiftçiler dolu yağışı sonrası ürünlerinin yarısını kaybetti.", "label": "negative"}
+{"text": "Bir oyun stüdyosu çalışanlarının üçte birinin işine son verdi.", "label": "negative"}
+{"text": "Liseler arası turnuva, sponsor bulunamadığı için bu yıl yapılmayacak.", "label": "negative"}
+{"text": "Yolcu gemisindeki arıza yüzünden seferler iki gün aksadı.", "label": "negative"}
+{"text": "Şehir hastanesinde randevu sistemi saatlerce çalışmadı.", "label": "negative"}
+{"text": "Yağışların azalmasıyla bazı ilçelerde su kısıtlaması başladı.", "label": "negative"}
+{"text": "Şirketin hisseleri açıklanan zarar sonrası sert düştü.", "label": "negative"}
+{"text": "Köy yolu kışın yine ulaşıma kapandı, hastalar ilçeye ulaşamadı.", "label": "negative"}
+{"text": "Yeni telefon modelinde aşırı ısınma şikayetleri yoğunlaştı.", "label": "negative"}
+{"text": "Müzede sergilenen tarihi eserlerden biri kayboldu.", "label": "negative"}
+{"text": "Tiyatro topluluğu salon bulamadığı için oyunlarını iptal etti.", "label": "negative"}
+{"text": "Toplu sözleşme görüşmeleri anlaşma sağlanamadan sona erdi.", "label": "negative"}
+{"text": "Dağıtım merkezindeki grev nedeniyle marketlerde raflar boş kaldı.", "label": "negative"}
+{"text": "Hayvanat bahçesindeki bakımsızlık ziyaretçilerin şikayetlerine konu oldu.", "label": "negative"}
+{"text": "Belediye park alanını otopark yapmak için ağaçları kesti.", "label": "negative"}
+{"text": "Espor takımı dünya şampiyonasında finale yükseldi.", "label": "positive"}
+{"text": "Kentin yeni kütüphanesi hizmete açıldı.", "label": "positive"}
+{"text": "Tarihi hamamın onarımı tamamlandı, yapı yeniden ziyarete açıldı.", "label": "positive"}
+{"text": "Genç satranççı uluslararası usta unvanını aldı.", "label": "positive"}
+{"text": "Sürdürülebilir tarım projesi Avrupa'dan ödül aldı.", "label": "positive"}
+{"text": "Üniversite ücretsiz yaz kursları açtı, başvurular doldu.", "label": "positive"}
+{"text": "Belediye toplu taşımayı hafta sonu öğrencilere ücretsiz yaptı.", "label": "positive"}
+{"text": "Kapanma riski taşıyan köy okulu yeni öğrencilerle yeniden canlandı.", "label": "positive"}
+{"text": "Bağış kampanyasıyla çocuk hastanesine yeni cihazlar alındı.", "label": "positive"}
+{"text": "Yeni sezon programı festivale on yeni etkinlik ekledi.", "label": "positive"}
+{"text": "Yerli firmanın geliştirdiği tarım dronu ihracat anlaşması imzaladı.", "label": "positive"}
+{"text": "Tıp öğrencileri köylerde ücretsiz sağlık taraması yaptı.", "label": "positive"}
+{"text": "Yeni güncelleme uygulamanın hızını iki katına çıkardı.", "label": "positive"}
+{"text": "Madenden kurtarılan işçiler sağlıklarına kavuştu.", "label": "positive"}
+{"text": "Mahalle bisiklet atölyesi çocuklara yüzlerce bisiklet onardı.", "label": "positive"}
+{"text": "Kadın futbol takımı ligdeki ilk galibiyetini aldı.", "label": "positive"}
+{"text": "Yenilenen hastane binası depreme dayanıklılık belgesi aldı.", "label": "positive"}
+{"text": "Yardım tırları sel bölgesine ulaştı, aileler ihtiyaçlarını karşıladı.", "label": "positive"}
+{"text": "Genç mucidin geliştirdiği protez el ücretsiz dağıtılmaya başlandı.", "label": "positive"}
+{"text": "Kentin hava kalitesi elektrikli otobüslerle iyileşti.", "label": "positive"}
+{"text": "Belgesel ekibi nesli tükenmekte olan leoparı ilk kez görüntüledi.", "label": "positive"}
+{"text": "Emekli ikramiyeleri erken yatırıldı.", "label": "positive"}
+{"text": "Köyün ilk üniversiteli kızı tıp fakültesini kazandı.", "label": "positive"}
+{"text": "Barınaktaki bütün köpekler yeni yuvalarına kavuştu.", "label": "positive"}
+{"text": "Ulusal parktaki kurt nüfusu koruma çalışmalarıyla arttı.", "label": "positive"}
+{"text": "Şehir tiyatrosunun yeni oyunu tüm gösterimlerde kapalı gişe oynadı.", "label": "positive"}
+{"text": "Kaybedilen cüzdan içindekilerle birlikte sahibine teslim edildi.", "label": "positive"}
+{"text": "Firmanın yeni tesisi bölgeye beş yüz istihdam getirdi.", "label": "positive"}
+{"text": "Yeni bir akıllı saat modeli bugün tanıtıldı.", "label": "neutral"}
+{"text": "Seçim sonuçları gece yarısına doğru kesinleşti.", "label": "neutral"}
+{"text": "Belediye yeni otobüs güzergahını sitesinde paylaştı.", "label": "neutral"}
+{"text": "Festivalin programı önümüzdeki hafta açıklanacak.", "label": "neutral"}
+{"text": "Oyunun bir sonraki güncellemesi aralık ayında yayımlanacak.", "label": "neutral"}
+{"text": "Bakanlık yeni müfredat taslağını görüşe açtı.", "label": "neutral"}
+{"text": "Kulüp yeni sezon formalarını tanıttı.", "label": "neutral"}
+{"text": "Yazılım firması merkezini başka bir binaya taşıdı.", "label": "neutral"}
+{"text": "Sınav sonuçları bugün saat 10.00'da ilan edilecek.", "label": "neutral"}
+{"text": "Müze yeni sergisinin tarihini duyurdu.", "label": "neutral"}
+{"text": "Araştırmanın ikinci aşaması gelecek yıl başlayacak.", "label": "neutral"}
+{"text": "Kentin yeni kültür merkezi projesi ihaleye çıktı.", "label": "neutral"}
+{"text": "Uzay ajansı bir sonraki fırlatma tarihini açıkladı.", "label": "neutral"}
+{"text": "Borsa haftaya yatay bir başlangıç yaptı.", "label": "neutral"}
+{"text": "Mahalle muhtarlığı çalışma saatlerini güncelledi.", "label": "neutral"}
+{"text": "Bugün iki derse girdim, akşam da ödev için kütüphanedeydim.", "label": "neutral"}
+{"text": "Hafta sonu için oyun listemi güncelledim.", "label": "neutral"}
+{"text": "Trenle gidip otobüsle dönmeyi planlıyorum.", "label": "neutral"}
+{"text": "Yeni aldığım kitabın ilk bölümünü okudum.", "label": "neutral"}
+{"text": "Öğle yemeğinden sonra toplantıya geçtik.", "label": "neutral"}

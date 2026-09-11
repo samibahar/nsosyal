@@ -54,8 +54,9 @@ function uzunDonemGoster(ozet){
   $("kontrol-dagilimi").innerHTML=satirlar.length?`<b>Son 4 haftada kontrol sorularına cevapların</b><div>${satirlar.map(([k,v])=>`<span>${KONTROL_ADLARI[k]||k} <i>${v}</i></span>`).join("")}</div>`:"";
 }
 async function veriGoster(ozet){
-  const durum=await ajan.kisiselModelDurumu(),gercekGun=ozet.gunler.filter(gun=>!gun.ornek).length;
+  const [durum,onay]=await Promise.all([ajan.kisiselModelDurumu(),ajan.getOnay()]),gercekGun=ozet.gunler.filter(gun=>!gun.ornek).length;
   $("veri-listesi").innerHTML=[
+    `<li><b>${onay?(onay.secim==="acik"?"Açık":"Kapalı"):"—"}</b> ilk açılış tercihin<small>${onay?`${new Date(onay.tarih).toLocaleDateString("tr-TR")} tarihinde seçildi; yukarıdaki anahtarlarla istediğin an değiştirebilirsin.`:"Henüz seçim yapılmadı."}</small></li>`,
     `<li><b>${ozet.olaySayisi}</b> ham etkileşim kaydı<small>En fazla ${ozet.olaySiniri}; en eskiler kendiliğinden silinir.</small></li>`,
     `<li><b>${gercekGun}</b> günlük özet<small>Yalnızca gün başına toplam sayılar, ${Math.round(ozet.saklamaGun/7)} hafta saklanır.</small></li>`,
     `<li><b>${durum.guncelleme}</b> kişisel model güncellemesi<small>Kontrol sorusu cevaplarından, yalnızca bu cihazda.</small></li>`,

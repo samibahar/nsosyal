@@ -6,7 +6,7 @@
   const VARSAYILAN_AYARLAR = { dengeleme: true, doygunluk: true, kontrolSorulari: true, kisiselUyarlama: true };
   const KATEGORI_SAYISI = 5;
   let database;
-  const defaults = () => ({ version: 4, topicWeights: {}, postReactions: {}, newsCategoryWeights: {}, newsReactions: {}, lastCheckinAt: 0, checkins: 0, demoTrace: null, ayarlar: { ...VARSAYILAN_AYARLAR }, gunluk: {}, kisiselModel: null, dogrulama: null });
+  const defaults = () => ({ version: 4, topicWeights: {}, postReactions: {}, newsCategoryWeights: {}, newsReactions: {}, lastCheckinAt: 0, checkins: 0, demoTrace: null, ayarlar: { ...VARSAYILAN_AYARLAR }, gunluk: {}, kisiselModel: null, dogrulama: null, onay: null });
   function _tamamla(kayit) { const state = { ...defaults(), ...(kayit || {}) }; state.ayarlar = { ...VARSAYILAN_AYARLAR, ...(state.ayarlar || {}) }; state.gunluk = state.gunluk || {}; return state; }
   function openDatabase() {
     if (database) return Promise.resolve(database);
@@ -78,7 +78,7 @@
     // tıklamadığı senaryo-içi bir tepkiyi kendisi vermiş gibi gösteriyordu
     // (kullanıcı tarafından tespit edildi, 21.08.2026).
     const latestExplicit = [...events].reverse().find(event => (event.type === "post_reaction" || event.type === "news_reaction") && !event.demo && Date.now() - event.createdAt < 30 * 60 * 1000);
-    return { mode: "local", eventCount: meaningful.length, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, shouldCheckin: state.ayarlar.kontrolSorulari && meaningful.length >= 12 && meaningful.length % 10 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
+    return { mode: "local", eventCount: meaningful.length, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, shouldCheckin: state.ayarlar.kontrolSorulari && meaningful.length >= 12 && meaningful.length % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
   }
   async function trimEvents() { const events = await getEvents(); if (events.length <= EVENT_LIMIT) return; const db = await openDatabase(), tx = db.transaction("events", "readwrite"); events.slice(0, events.length - EVENT_LIMIT).forEach(event => tx.objectStore("events").delete(event.id)); }
   async function summary() { return calculate(await getEvents(), await getState()); }
@@ -203,9 +203,12 @@
     const dengelemeAcik = state.ayarlar.dengeleme;
     return posts.map((post, index) => {
       const localInterest = Number(state.topicWeights[post.konu] || 0) / maxWeight, tone = safeTone(post.duygu);
-      const balancing = dengelemeAcik && report.enoughData && report.intensity > .28 && tone < -.15 ? Math.abs(tone) * report.intensity * .62 : 0;
+      // Resmi/acil bilgi (resmi_veri.py) olumsuz tonlu olsa da hayati olabilir:
+      // ne dengeleme cezasi ne de "Gerildim" tepkisinin itmesi uygulanir.
+      const muaf = !!post.resmi;
+      const balancing = !muaf && dengelemeAcik && report.enoughData && report.intensity > .28 && tone < -.15 ? Math.abs(tone) * report.intensity * .62 : 0;
       const reactionEffect = latestReaction?.topic === post.konu
-        ? (positiveReaction ? .20 : intenseReaction && tone < -.15 ? -.28 : 0)
+        ? (positiveReaction ? .20 : intenseReaction && tone < -.15 && !muaf ? -.28 : 0)
         : 0;
       // Ceza -.045 iken en yuksek ilgili 1-2 konu ilk sayfanin tamamini
       // kaplayabiliyordu (kullanici tarafindan tespit edildi, 21.08.2026) --
@@ -214,7 +217,7 @@
       const diversity = seenTopics[post.konu] ? -.09 * seenTopics[post.konu] : .07;
       seenTopics[post.konu] = (seenTopics[post.konu] || 0) + 1;
       const base = Number(post.ilgi_skoru || post.final_skor || .5), localScore = base * .48 + localInterest * .34 + diversity - balancing + reactionEffect - index * .0005;
-      return { ...post, local_skor: localScore, local_ilgi: localInterest, local_dengeleme: balancing, local_tepki_etkisi: reactionEffect };
+      return { ...post, local_skor: localScore, local_ilgi: localInterest, local_dengeleme: balancing, local_tepki_etkisi: reactionEffect, local_muaf: muaf };
     }).sort((a, b) => b.local_skor - a.local_skor);
   }
   // Jüri demosu yalnizca siralama profilini sifirlar. Ayarlar, uzun donem
@@ -223,7 +226,7 @@
   async function _demoIcinSifirla() {
     const state = await getState();
     await clearStores();
-    await setState({ ...defaults(), ayarlar: state.ayarlar, gunluk: state.gunluk, kisiselModel: state.kisiselModel, dogrulama: state.dogrulama });
+    await setState({ ...defaults(), ayarlar: state.ayarlar, onay: state.onay, gunluk: state.gunluk, kisiselModel: state.kisiselModel, dogrulama: state.dogrulama });
   }
   async function runDemoScenario(pack) {
     const posts = pack?.gonderiler || pack?.posts || [], scenario = pack?.senaryo || pack?.scenario || [];
@@ -251,7 +254,19 @@
   // "Yerel verileri sil": olaylar, profil, gunluk ozetler ve kisisel model
   // silinir. Yalnizca Ayarlar'daki secimler korunur -- dengelemeyi kapatmis
   // bir kullanici veri sildi diye dengeleme sessizce geri acilmasin.
-  async function erase() { const state = await getState(); await clearStores(); await setState({ ...defaults(), ayarlar: state.ayarlar }); return summary(); }
+  async function erase() { const state = await getState(); await clearStores(); await setState({ ...defaults(), ayarlar: state.ayarlar, onay: state.onay }); return summary(); }
+
+  // Ilk acilistaki acik riza secimi. "kapali" secilirse duygu katmaninin tum
+  // anahtarlari kapanir; akis yalnizca ilgi alanlarina gore kisisellesir.
+  // Secim ve tarihi yalnizca bu cihazda saklanir, Ayarlar'dan degistirilebilir.
+  async function getOnay() { return (await getState()).onay; }
+  async function setOnay(secim) {
+    if (!["acik", "kapali"].includes(secim)) throw new Error(`Bilinmeyen onay: ${secim}`);
+    const state = await getState();
+    state.onay = { secim, tarih: Date.now() };
+    if (secim === "kapali") Object.keys(VARSAYILAN_AYARLAR).forEach(anahtar => { state.ayarlar[anahtar] = false; });
+    await setState(state); return state.onay;
+  }
 
   async function getAyarlar() { return { ...(await getState()).ayarlar }; }
   async function setAyar(anahtar, deger) {
@@ -297,5 +312,5 @@
     Object.keys(state.gunluk).forEach(tarih => { if (state.gunluk[tarih].ornek) delete state.gunluk[tarih]; });
     await setState(state); return uzunDonemOzeti();
   }
-  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, rankNews, runDemoScenario, getDecisionTrace, erase, getAyarlar, setAyar, kisiselModelDurumu, etiketModeli, kisiselModeliSifirla, uzunDonemOzeti, ornekGecmisYukle, ornekGecmisiKaldir };
+  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, rankNews, runDemoScenario, getDecisionTrace, erase, getOnay, setOnay, getAyarlar, setAyar, kisiselModelDurumu, etiketModeli, kisiselModeliSifirla, uzunDonemOzeti, ornekGecmisYukle, ornekGecmisiKaldir };
 })();
