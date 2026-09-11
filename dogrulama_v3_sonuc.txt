@@ -1,0 +1,68 @@
+========================================================================
+TEST 1 · winvoker bağımsız 1000 örnek (split=train, seed=42)
+========================================================================
+v2 ikili doğruluk (630 örnek): 0.9333 · F1: 0.9583
+v3 ikili doğruluk (630 örnek): 0.9270 · F1: 0.9544
+Nötr etiketli 370 örnekte ortalama |ton| · v2: 0.961 · v3: 0.003
+v3 üç sınıf doğruluğu: 0.9500 · F1 makro: 0.9205
+
+========================================================================
+TEST 2 · elle etiketlenmiş 40 haber üslubu örnek
+========================================================================
+v2 doğruluk: 0.925 · ortalama |ton|: 0.995 · yanlış: 3
+    [gerçek positive, ton -1.00] Turizm danışma ofislerinin çalışma saatleri, ziyaretçi talebiyle uzatıldı.
+    [gerçek positive, ton -0.98] İlçedeki çocuk oyun alanlarının bakım periyodu yeni ekiple kısaltıldı.
+    [gerçek positive, ton -0.99] Belediye fen işlerinin yol yama talebine yanıt süresi bu yıl kısaldı.
+v3 doğruluk: 0.925 · ortalama |ton|: 0.924 · yanlış: 3
+    [gerçek positive, ton -0.99] Gece otobüs seferlerinin sıklığı, artan talep üzerine yükseltildi.
+    [gerçek positive, ton -0.99] Turizm danışma ofislerinin çalışma saatleri, ziyaretçi talebiyle uzatıldı.
+    [gerçek positive, ton -0.00] Şehir içi tramvay hattının bakımı planlanandan erken tamamlandı.
+
+========================================================================
+TEST 3 · uygulamadaki gönderilerin ton dağılımı (aşırı kesinlik)
+========================================================================
+250 gönderi
+v2: |ton|>0,9: %94.4 · |ton|≤0,3: %0.0 · ton<−0,15 (dengelemeye aday): %30.8 · ortalama |ton|: 0.979
+v3: |ton|>0,9: %44.8 · |ton|≤0,3: %40.4 · ton<−0,15 (dengelemeye aday): %21.6 · ortalama |ton|: 0.555
+v2 ile v3'ün yön (işaret) uyumu: %95.2
+
+Tonu en çok değişen 15 gönderi (elle kontrol için):
+  v2 +0.81 → v3 -0.99  Vize başvurularındaki artış bekleme sürelerini uzattı.
+  v2 +0.81 → v3 -0.88  Bilim insanları küresel ısınmanın hızlandığı konusunda uyardı.
+  v2 -0.98 → v3 +0.59  Dün akşam arkadaşlarla eski bir oyuna döndük. Grafikler yaşlanmış, rekabet hiç yaşlanmamış.
+  v2 -0.58 → v3 +0.65  Yağmurdan sonra kaldırımda oluşan küçük göletler çocuklar için ayrı bir gündemmiş.
+  v2 -1.00 → v3 +0.00  Bir müzik grubunun konseri son anda iptal edildi.
+  v2 -1.00 → v3 -0.00  Yeni bir diyet trendi uzmanlar tarafından eleştirildi.
+  v2 -1.00 → v3 -0.00  Bir oyun stüdyosu büyük bir işten çıkarma dalgası yaşadı.
+  v2 -1.00 → v3 -0.00  Uygulama mağazasında sahte uygulamalar tespit edildi.
+  v2 -1.00 → v3 -0.00  Trende cam kenarı boştu. Yolculuğun yarısını dışarıyı izleyerek geçirdim.
+  v2 +1.00 → v3 +0.00  Bir otel zinciri sürdürülebilirlik sertifikası aldı.
+  v2 +1.00 → v3 +0.00  Espor takımı şampiyonluk için finale yükseldi.
+  v2 +1.00 → v3 +0.00  Bir üniversite, ücretsiz çevrim içi dersler sunmaya başladı.
+  v2 +1.00 → v3 +0.00  Festival programı bu yıl daha da genişledi.
+  v2 +1.00 → v3 +0.00  Yeni güncelleme oynanışı baştan sona değiştirdi.
+  v2 +1.00 → v3 +0.00  Ünlü bir eserin restorasyonu tamamlandı.
+
+v3'e göre en olumsuz 5 ve nötre en yakın 5 gönderi:
+  -1.00  Okul servislerindeki aksaklıklar veli tepkisine yol açtı.
+  -1.00  Öğretmen açığı bazı bölgelerde derslerin aksamasına yol açtı.
+  -1.00  Sunucu sorunları oyuncuları çileden çıkardı.
+  -1.00  Hastanelerde yoğun bakım doluluk oranı endişe yaratıyor.
+  -1.00  İlaç fiyatlarındaki artış hastaları zor durumda bıraktı.
+  +0.00  Bir müzik grubunun konseri son anda iptal edildi.
+  +0.00  Şirketin yeni telefonu bugün tanıtıldı.
+  +0.00  Yeni güncelleme oynanışı baştan sona değiştirdi.
+  +0.00  Seçim sonuçları geç saatlerde belli oldu.
+  -0.00  Hafta sonu için oyun listesi yaparken yarısını nostalji seçti.
+
+========================================================================
+TEST 4 · haber_veri.py: aynı olayın iki anlatımı (ekip tarafından önceden elle puanlanmış)
+========================================================================
+v2: yapıcı anlatımı yoğun anlatımdan daha olumlu bulma 11/11 · el puanıyla yön uyumu %77 · Spearman ρ = 0.69
+v3: yapıcı anlatımı yoğun anlatımdan daha olumlu bulma 11/11 · el puanıyla yön uyumu %95 · Spearman ρ = 0.72
+
+========================================================================
+TEST 5 · demo_paketi.py: jüri demosundaki 14 gönderi (elle puanlanmış)
+========================================================================
+v2: el puanıyla yön uyumu %93 · Spearman ρ = 0.52 · ortalama |ton| 0.99 (el puanı ort. |ton| 0.50)
+v3: el puanıyla yön uyumu %100 · Spearman ρ = 0.48 · ortalama |ton| 0.72 (el puanı ort. |ton| 0.50)

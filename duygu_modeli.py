@@ -23,6 +23,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipe
 _MODEL_ADI_ORIJINAL = "savasy/bert-base-turkish-sentiment-cased"
 _INCE_AYARLI_DIZIN = Path(__file__).resolve().parent / "models" / "bert-turkish-sentiment-ince-ayarli"
 _INCE_AYARLI_V2_DIZIN = Path(__file__).resolve().parent / "models" / "bert-turkish-sentiment-ince-ayarli-v2"
+_INCE_AYARLI_V3_DIZIN = Path(__file__).resolve().parent / "models" / "bert-turkish-sentiment-ince-ayarli-v3"
 _pipeline = None
 _kullanilan_model = None
 
@@ -30,6 +31,11 @@ _kullanilan_model = None
 def _yukle():
     global _pipeline, _kullanilan_model
     if _pipeline is None:
+        # v3 (ince_ayar_v3.py, 11.09.2026): nötr sınıfı eklenmiş üç sınıflı
+        # model. İkili modelde ton = işaret × güven olduğu için gönderilerin
+        # %94'ü |ton| > 0,9 çıkıyordu (aşırı kesinlik). v3'te ton =
+        # P(pozitif) − P(negatif); bağımsız ölçüm dogrulama_v3_sonuc.txt'te.
+        # v3 yoksa sırayla v2, v1 ve HF Hub'daki orijinal modele düşülür.
         # v2 (ince_ayar_v2.py), zayıf alt-türe (kısa/resmi/haber-bülteni) hedefli
         # ikinci tur ince ayarın çıktısı -- bağımsız doğrulamada (dogrulama_v2.py,
         # 20.08.2026) winvoker genel test setinde küçük bir gerileme (%94,3->%93,3)
@@ -37,7 +43,9 @@ def _yukle():
         # tahminin ~22'si, v1'in "negatif haberi pozitif sanma" hatasını düzeltti).
         # NSosyal içeriği winvoker'ın genel dağılımından çok bu alt-türe yakın
         # olduğundan v2 tercih edilir.
-        if _INCE_AYARLI_V2_DIZIN.exists():
+        if _INCE_AYARLI_V3_DIZIN.exists():
+            kaynak = str(_INCE_AYARLI_V3_DIZIN)
+        elif _INCE_AYARLI_V2_DIZIN.exists():
             kaynak = str(_INCE_AYARLI_V2_DIZIN)
         elif _INCE_AYARLI_DIZIN.exists():
             kaynak = str(_INCE_AYARLI_DIZIN)
@@ -52,13 +60,29 @@ def _yukle():
 
 def duygu_skoru(metin: str) -> float:
     """-1 (çok negatif) ile +1 (çok pozitif) arasında bir skor döndürür.
-    Etiket adı transformers sürümüne göre "positive"/"LABEL_1" gibi değişebildiği
-    için içeriğe göre (alt string eşleşmesi) esnek biçimde yorumlanır."""
+
+    Üç sınıflı modelde (v3) ton = P(pozitif) − P(negatif): nötr bir metinde
+    iki olasılık da küçük kalır, ton sıfıra yaklaşır. İkili modellerde eski
+    formül korunur: işaret × en yüksek olasılık. Etiket adı transformers
+    sürümüne göre "positive"/"LABEL_1" gibi değişebildiği için alt dizgi
+    eşleşmesiyle yorumlanır."""
     sa = _yukle()
-    sonuc = sa(metin, truncation=True)[0]
-    etiket = sonuc["label"].lower()
-    isaret = 1.0 if ("pos" in etiket or etiket in ("1", "label_1")) else -1.0
-    return isaret * sonuc["score"]
+    sonuc = sa(metin, truncation=True, top_k=None)
+    if sonuc and isinstance(sonuc[0], list):
+        sonuc = sonuc[0]
+    pozitif = negatif = 0.0
+    uc_sinif = len(sonuc) > 2
+    for kayit in sonuc:
+        etiket = kayit["label"].lower()
+        if "neu" in etiket or "notr" in etiket:
+            uc_sinif = True
+        elif "pos" in etiket or etiket in ("1", "label_1"):
+            pozitif = kayit["score"]
+        else:
+            negatif = kayit["score"]
+    if uc_sinif:
+        return float(pozitif - negatif)
+    return float(pozitif if pozitif >= negatif else -negatif)
 
 
 if __name__ == "__main__":

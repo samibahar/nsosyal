@@ -15,6 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))  # motor.py, duygu_modeli.py, spiral_model.py kök dizinde
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -31,6 +32,10 @@ from psikolojik_durum import (
 import haftalik_rapor
 
 app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Prototip")
+
+# Aday listesi (48 gönderi) ve statik dosyalar sıkıştırılmadan gidiyordu.
+# 1 KB altındaki yanıtlar sıkıştırılmaz; orada kazanç CPU maliyetine değmez.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 # Statik yanitlarda Cache-Control yoktu; tarayici HTML'i kendi tahminiyle
@@ -201,7 +206,8 @@ def _dogal_cesitlilik_ekle(siralanmis: list[dict], genlik: float = 0.08) -> list
     return [g for g, _ in gurultulu]
 
 
-def _sayfa_sec(siralanmis: list[dict], gosterilmis: set, sayfa_boyu: int, konu_basina_ust_sinir: int = 3) -> list[dict]:
+def _sayfa_sec(siralanmis: list[dict], gosterilmis: set, sayfa_boyu: int, konu_basina_ust_sinir: int = 3,
+               konu_basina_taban: int = 0) -> list[dict]:
     """Skor sırasından sayfa_boyu kadar gönderi seçer, ama aynı konudan
     art arda konu_basina_ust_sinir'den fazlasını ALMAZ -- salt ilgi-skoru
     farkına (ve rastgele gürültüye) güvenmek, en yüksek 1-2 ilgi alanının
@@ -210,9 +216,23 @@ def _sayfa_sec(siralanmis: list[dict], gosterilmis: set, sayfa_boyu: int, konu_b
     gürültüyle rekabet edemeyen zayıf konuları pratikte hiç göstermiyordu.
     Bu, ilgiye göre öne çıkarmayı korurken (üst sınıra takılmayan en
     yüksek skorlu gönderiler yine önce gelir) görünür çeşitliliği garanti
-    eder -- gerçek sosyal medya akışlarının da yaptığı gibi."""
+    eder -- gerçek sosyal medya akışlarının da yaptığı gibi.
+
+    konu_basina_taban > 0 ise önce her konudan o kadar gönderi ayrılır
+    (keşif payı), kalan yer skora göre doldurulur. Sunucunun ilgi profili
+    sabit olduğu için bu pay olmadan düşük skorlu konular aday listesine hiç
+    girmiyor, telefon kullanıcının gerçekten sevdiği bir konuyu öne alamıyordu."""
     kalanlar = [g for g in siralanmis if g["id"] not in gosterilmis]
     sayfa, konu_sayaci, ertelenmis = [], {}, []
+    if konu_basina_taban:
+        for g in kalanlar:
+            if len(sayfa) >= sayfa_boyu:
+                break
+            if konu_sayaci.get(g["konu"], 0) < konu_basina_taban:
+                sayfa.append(g)
+                konu_sayaci[g["konu"]] = konu_sayaci.get(g["konu"], 0) + 1
+        secilen = {g["id"] for g in sayfa}
+        kalanlar = [g for g in kalanlar if g["id"] not in secilen]
     for g in kalanlar:
         if len(sayfa) >= sayfa_boyu:
             break
@@ -262,7 +282,17 @@ def _duygu_durumu() -> dict:
 
 
 @app.get("/api/gonderiler")
-def api_gonderiler(sifirdan: bool = False):
+def api_gonderiler(sifirdan: bool = False, aday: int = SAYFA_BOYU):
+    """Sayfa başına aday gönderi listesi.
+
+    Cihaz-içi sıralama yapan istemci `aday=48` ister: telefon 48 adayın
+    tamamını kendi (sunucuya hiç gitmeyen) profiline göre sıralar ve yalnızca
+    ilk 12'sini gösterir. Önceden telefon sadece sunucunun seçtiği 12
+    gönderiyi kendi arasında yeniden dizebiliyordu; alakasız aday gelirse
+    yerine daha iyisini koyamıyordu. Aday yalnızca metin ve meta veridir,
+    fotoğraflar yalnızca gösterilen gönderiler için iner.
+    """
+    aday = max(1, min(aday, 60))
     if sifirdan:
         GOSTERILEN_ID_SETI.clear()
 
@@ -271,14 +301,19 @@ def api_gonderiler(sifirdan: bool = False):
     siralanmis = _dogal_cesitlilik_ekle(siralanmis)
 
     kalanlar = [g for g in siralanmis if g["id"] not in GOSTERILEN_ID_SETI]
-    sayfa = _sayfa_sec(siralanmis, GOSTERILEN_ID_SETI, SAYFA_BOYU)
+    # 12'lik klasik sayfa eskisi gibi kalır. Geniş aday listesinde her konudan
+    # en az 2 gönderi keşif payı olarak ayrılır, bir konu en fazla 8 yer alır.
+    genis = aday > SAYFA_BOYU
+    sayfa = _sayfa_sec(siralanmis, GOSTERILEN_ID_SETI, aday,
+                       konu_basina_ust_sinir=max(3, aday // 6) if genis else 3,
+                       konu_basina_taban=2 if genis else 0)
     for g in sayfa:
         GOSTERILEN_ID_SETI.add(g["id"])
 
     return {
         "spiral_seviyesi": round(spiral, 3),
         "gonderiler": _sosyal_ile_zenginlestir(sayfa),
-        "tukendi": len(kalanlar) <= SAYFA_BOYU,
+        "tukendi": len(kalanlar) <= aday,
     }
 
 

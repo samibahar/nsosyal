@@ -1,0 +1,89 @@
+// Ayarlar: tüm seçimler ve özetler bu tarayıcının IndexedDB alanından okunur,
+// hiçbiri sunucuya gönderilmez.
+const ajan=window.LocalPersonalization;
+const $=id=>document.getElementById(id);
+const GUN_MS=86400000;
+const KONU_ADLARI={gundem:"Gündem",teknoloji:"Teknoloji",bilim:"Bilim",spor:"Spor",sanat:"Kültür",saglik:"Yaşam",yasam:"Yaşam",ekonomi:"Ekonomi",egitim:"Eğitim",oyun:"Oyun",seyahat:"Keşif"};
+const KONTROL_ADLARI={sakin:"Sakin",mutluluk:"Mutluluk",umut:"Umut",sinirli:"Sinirli",anksiyete:"Yoğun"};
+const HAFTA_ADI=["Bu hafta","Geçen hafta","2 hafta önce","3 hafta önce"];
+const AYAR_MESAJ={
+  dengeleme:["Duygu dengeleme açıldı.","Duygu dengeleme kapatıldı. Akış artık yalnızca ilgi alanlarına göre sıralanıyor."],
+  doygunluk:["Renk yumuşatma açıldı.","Renk yumuşatma kapatıldı."],
+  kontrolSorulari:["Kontrol soruları açıldı.","Kontrol soruları kapatıldı."],
+  kisiselUyarlama:["Kişisel uyarlama açıldı.","Kişisel uyarlama kapatıldı. Kişisel model silinmedi; yeniden açınca kaldığı yerden devam eder."],
+};
+const yuzde=x=>`%${Math.round(x*100)}`;
+const topla=(hedef,kaynak={})=>Object.entries(kaynak).forEach(([k,v])=>{hedef[k]=(hedef[k]||0)+v;});
+function gunAnahtari(zaman){const d=new Date(zaman);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+
+function anahtarlariGoster(ayarlar){document.querySelectorAll("[data-ayar]").forEach(buton=>buton.setAttribute("aria-checked",String(!!ayarlar[buton.dataset.ayar])));}
+async function kisiselDurumGoster(){const durum=await ajan.kisiselModelDurumu();$("kisisel-durum").textContent=durum.guncelleme?`${durum.guncelleme} cevapla güncellendi`:"Henüz güncellenmedi";}
+
+// Son 4 hafta, bugünden geriye 7'şer günlük pencereler.
+function haftalar(gunler,adet=4){
+  const harita=new Map(gunler.map(gun=>[gun.tarih,gun]));
+  return Array.from({length:adet},(_,h)=>{
+    const t={etkilesim:0,dwell:0,yogunDwell:0,konular:{},kontroller:{},gunSayisi:0,ornek:false};
+    for(let i=0;i<7;i++){
+      const gun=harita.get(gunAnahtari(Date.now()-(h*7+i)*GUN_MS));if(!gun)continue;
+      t.gunSayisi++;t.ornek=t.ornek||!!gun.ornek;t.etkilesim+=gun.etkilesim||0;t.dwell+=gun.dwell||0;t.yogunDwell+=gun.yogunDwell||0;
+      topla(t.konular,gun.konular);topla(t.kontroller,gun.kontroller);
+    }
+    t.pay=t.dwell?t.yogunDwell/t.dwell:null;
+    t.enKonu=Object.entries(t.konular).sort((a,b)=>b[1]-a[1])[0]?.[0]||null;
+    return t;
+  });
+}
+function uzunDonemGoster(ozet){
+  const h=haftalar(ozet.gunler),[bu,gecen]=h;
+  $("ornek-rozet").hidden=!ozet.ornekVar;$("ornek-yukle").hidden=ozet.ornekVar;$("ornek-kaldir").hidden=!ozet.ornekVar;
+  let cumle;
+  if(bu.pay!==null&&gecen.pay!==null){const fark=Math.round((bu.pay-gecen.pay)*100);cumle=`Bu hafta yoğun tonlu içerikte geçen sürenin payı ${yuzde(bu.pay)}; geçen hafta ${yuzde(gecen.pay)} idi${fark===0?" (değişmedi)":` (${Math.abs(fark)} puan ${fark<0?"azaldı":"arttı"})`}.`;}
+  else if(bu.pay!==null)cumle=`Bu hafta yoğun tonlu içerikte geçen sürenin payı ${yuzde(bu.pay)}. Karşılaştırma için geçen haftadan da veri gerekiyor.`;
+  else if(gecen.pay!==null)cumle=`Bu hafta henüz etkileşim yok. Geçen hafta yoğun tonlu içerikte geçen sürenin payı ${yuzde(gecen.pay)} idi.`;
+  else cumle="Henüz günlük özet yok. Akışta gezindikçe her gün için yalnızca toplam sayılar tutulur; hangi gönderiye baktığın tutulmaz.";
+  $("uzun-karsilastirma").textContent=cumle;
+  const enCok=Math.max(1,...h.map(t=>t.etkilesim));
+  $("hafta-grafik").innerHTML=h.map((t,i)=>{
+    const etiket=`${HAFTA_ADI[i]}: ${t.etkilesim} etkileşim${t.pay!==null?`, yoğun tonlu içerik payı ${yuzde(t.pay)}`:""}`;
+    const alt=t.pay!==null?`yoğun ${yuzde(t.pay)}${t.enKonu?` · en çok ${KONU_ADLARI[t.enKonu]||t.enKonu}`:""}`:"veri yok";
+    return `<div class="hafta-satir"><span class="hafta-ad">${HAFTA_ADI[i]}${t.ornek?' <i class="ornek-isaret">örnek</i>':""}</span><div class="hafta-cubuk" role="img" aria-label="${etiket}"><i style="width:${t.etkilesim/enCok*100}%"><em style="width:${(t.pay||0)*100}%"></em></i></div><b>${t.etkilesim}</b><small>${alt}</small></div>`;
+  }).join("");
+  const kontroller={};h.forEach(t=>topla(kontroller,t.kontroller));
+  const satirlar=Object.entries(kontroller).sort((a,b)=>b[1]-a[1]);
+  $("kontrol-dagilimi").innerHTML=satirlar.length?`<b>Son 4 haftada kontrol sorularına cevapların</b><div>${satirlar.map(([k,v])=>`<span>${KONTROL_ADLARI[k]||k} <i>${v}</i></span>`).join("")}</div>`:"";
+}
+async function veriGoster(ozet){
+  const durum=await ajan.kisiselModelDurumu(),gercekGun=ozet.gunler.filter(gun=>!gun.ornek).length;
+  $("veri-listesi").innerHTML=[
+    `<li><b>${ozet.olaySayisi}</b> ham etkileşim kaydı<small>En fazla ${ozet.olaySiniri}; en eskiler kendiliğinden silinir.</small></li>`,
+    `<li><b>${gercekGun}</b> günlük özet<small>Yalnızca gün başına toplam sayılar, ${Math.round(ozet.saklamaGun/7)} hafta saklanır.</small></li>`,
+    `<li><b>${durum.guncelleme}</b> kişisel model güncellemesi<small>Kontrol sorusu cevaplarından, yalnızca bu cihazda.</small></li>`,
+    `<li><b>Yok</b> sunucuya giden davranış kaydı<small>Sunucu yalnızca herkese açık aday gönderileri sağlar.</small></li>`,
+  ].join("");
+}
+async function yenile(){
+  const [ayarlar,ozet]=await Promise.all([ajan.getAyarlar(),ajan.uzunDonemOzeti()]);
+  anahtarlariGoster(ayarlar);uzunDonemGoster(ozet);await Promise.all([kisiselDurumGoster(),veriGoster(ozet)]);
+}
+
+document.querySelectorAll("[data-ayar]").forEach(buton=>buton.addEventListener("click",async()=>{
+  const anahtar=buton.dataset.ayar,yeni=buton.getAttribute("aria-checked")!=="true";
+  buton.setAttribute("aria-checked",String(yeni));
+  try{anahtarlariGoster(await ajan.setAyar(anahtar,yeni));$("ayar-bildirim").textContent=AYAR_MESAJ[anahtar][yeni?0:1];}
+  catch{buton.setAttribute("aria-checked",String(!yeni));$("ayar-bildirim").textContent="Ayar kaydedilemedi, lütfen tekrar dene.";}
+}));
+$("ornek-yukle").addEventListener("click",async()=>{const ozet=await ajan.ornekGecmisYukle();uzunDonemGoster(ozet);veriGoster(ozet);});
+$("ornek-kaldir").addEventListener("click",async()=>{const ozet=await ajan.ornekGecmisiKaldir();uzunDonemGoster(ozet);veriGoster(ozet);});
+$("kisisel-sifirla").addEventListener("click",async()=>{await ajan.kisiselModeliSifirla();await yenile();$("veri-bildirim").textContent="Kişisel model sıfırlandı; tahminler varsayılan modelle yapılacak.";});
+// Silme geri alınamaz: ilk dokunuş yalnızca onay ister, 4 saniye içinde
+// ikinci dokunuş siler.
+let silmeOnayi=null;
+$("tumunu-sil").addEventListener("click",async event=>{
+  const buton=event.currentTarget,metin=buton.lastChild;
+  if(!silmeOnayi){buton.classList.add("onay");metin.textContent=" Emin misin? Silmek için tekrar dokun";silmeOnayi=setTimeout(()=>{silmeOnayi=null;buton.classList.remove("onay");metin.textContent=" Tüm yerel verileri sil";},4000);return;}
+  clearTimeout(silmeOnayi);silmeOnayi=null;buton.classList.remove("onay");metin.textContent=" Tüm yerel verileri sil";
+  await ajan.erase();await yenile();$("veri-bildirim").textContent="Yerel veriler silindi. Ayar seçimlerin korundu.";
+});
+
+if(ajan){ajan.init().then(yenile).catch(error=>{console.warn("Ayarlar yüklenemedi",error);$("ayar-bildirim").textContent="Yerel depolama bu tarayıcıda kullanılamıyor.";});}

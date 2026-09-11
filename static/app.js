@@ -39,7 +39,7 @@ function updateStatus(level){
   document.getElementById("flow-status-text").textContent=copy.text;
   document.getElementById("desktop-status-title").textContent=copy.title;
   document.getElementById("desktop-status-text").textContent=copy.text;
-  feed.style.filter=`saturate(${Math.round(100-Math.pow(level,.7)*32)}%)`;
+  feed.style.filter=localSummary.ayarlar?.doygunluk===false?"none":`saturate(${Math.round(100-Math.pow(level,.7)*32)}%)`;
 }
 function updateMood(psikolojikDurum){
   const etiketler={mutluluk:"Keyifli",umut:"Umutlu",sakin:"Sakin",sinirli:"Yoğun",anksiyete:"Yoğun"};
@@ -62,8 +62,12 @@ function updateTopics(){
 function updateLocalAgent(summary){
   localSummary=summary;
   const title=document.getElementById("flow-status-title"),text=document.getElementById("flow-status-text"),desktopTitle=document.getElementById("desktop-status-title"),desktopText=document.getElementById("desktop-status-text");
-  if(!summary.enoughData){title.textContent="Bu cihazda öğreniyor";text.textContent=`${summary.eventCount}/10 anlamlı etkileşim · ham davranış verisi cihazında kalır`;desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;if(summary.lastExplicitReaction){const mood=`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`;document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;}else updateMood(null);return;}
-  updateStatus(summary.intensity);
+  const dengelemeKapali=summary.ayarlar?.dengeleme===false;
+  if(!summary.enoughData){title.textContent="Bu cihazda öğreniyor";text.textContent=`${summary.eventCount}/10 anlamlı etkileşim · ${dengelemeKapali?"dengeleme kapalı":"ham davranış verisi cihazında kalır"}`;desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;if(summary.lastExplicitReaction){const mood=`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`;document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;}else updateMood(null);return;}
+  // Dengeleme Ayarlar'dan kapatildiysa yogunluk yine olculur ama akisa
+  // yansimaz; kart bunu acikca soyler (rapor 5.1: "istedigi an kapatabilir").
+  if(dengelemeKapali){currentSpiral=summary.intensity;title.textContent="Dengeleme kapalı";text.textContent="Akış yalnızca ilgi alanlarına göre sıralanıyor. Ayarlar'dan yeniden açabilirsin.";desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;feed.style.filter="none";}
+  else updateStatus(summary.intensity);
   const mood=summary.lastExplicitReaction?`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`:`Olası anlık ritim: ${summary.currentMood} · kullanıcı tarafından doğrulanmadı`;
   document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;
 }
@@ -90,14 +94,16 @@ const dwellObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
 function scoreBox(label,value){return `<div class="score-box"><small>${label}</small><b>${value}</b></div>`;}
 function openLocalSheet(post){
   const sheet=document.getElementById("explanation-sheet"),summary=document.getElementById("sheet-summary"),scores=document.getElementById("sheet-score-grid"),technical=document.getElementById("technical-details-content");
+  const dengelemeAcik=localSummary.ayarlar?.dengeleme!==false;
   if(post){
-    summary.textContent="Bu post, cihazındaki ilgi profili ve akış çeşitliliği sinyalleriyle yerelde sıralandı.";
-    scores.innerHTML=scoreBox("İlgi eşleşmesi",`${Math.round((post.local_ilgi||0)*100)}%`)+scoreBox("Akış ayarı",post.local_dengeleme?`−${Math.round(post.local_dengeleme*100)} puan`:"Yok")+scoreBox("Yerel sonuç",`${Math.round((post.local_skor||0)*100)}%`);
-    technical.innerHTML=`<p><b>Yerel çevrim içi sıralama</b><br>İlgi ağırlığı: <b>${(post.local_ilgi||0).toFixed(2)}</b><br>Akış dengeleme: <b>${(post.local_dengeleme||0).toFixed(2)}</b><br>Açık tepki etkisi: <b>${(post.local_tepki_etkisi||0).toFixed(2)}</b><br>Yerel sıralama skoru: <b>${(post.local_skor||0).toFixed(2)}</b><br><br>Ham tıklama ve durma süresi bu hesap için sunucuya gönderilmez.</p>`;
+    const secim=post.aday_toplami?`Cihazına gelen ${post.aday_toplami} aday arasından ${post.aday_sirasi}. sırada seçildi. `:"";
+    summary.textContent=`${secim}Sıralama, cihazındaki ilgi profili ve akış çeşitliliğiyle yerelde yapıldı.`;
+    scores.innerHTML=scoreBox("İlgi eşleşmesi",`${Math.round((post.local_ilgi||0)*100)}%`)+scoreBox("Akış ayarı",!dengelemeAcik?"Kapalı":post.local_dengeleme?`−${Math.round(post.local_dengeleme*100)} puan`:"Yok")+scoreBox("Yerel sonuç",`${Math.round((post.local_skor||0)*100)}%`);
+    technical.innerHTML=`<p><b>Yerel çevrim içi sıralama</b><br>${post.aday_toplami?`Aday sırası: <b>${post.aday_sirasi} / ${post.aday_toplami}</b><br>`:""}İlgi ağırlığı: <b>${(post.local_ilgi||0).toFixed(2)}</b><br>Akış dengeleme: <b>${dengelemeAcik?(post.local_dengeleme||0).toFixed(2):"kapalı"}</b><br>Açık tepki etkisi: <b>${(post.local_tepki_etkisi||0).toFixed(2)}</b><br>Yerel sıralama skoru: <b>${(post.local_skor||0).toFixed(2)}</b><br><br>Ham tıklama ve durma süresi bu hesap için sunucuya gönderilmez.</p>`;
   }else{
-    summary.textContent="Kişiselleştirme profili ve ham etkileşim geçmişi bu tarayıcının IndexedDB alanında tutulur. Sunucu yalnızca herkese açık aday postları sağlar.";
-    scores.innerHTML=scoreBox("Yerel sinyal",`${localSummary.eventCount} etkileşim`)+scoreBox("Güven",`${Math.round((localSummary.confidence||0)*100)}%`)+scoreBox("Kontrol","Sende");
-    technical.innerHTML=`<p><b>Yerel çevrim içi öğrenme</b><br>Tercih profili: <b>${localSummary.preferredTopic||"henüz oluşmadı"}</b><br>Akış yoğunluğu: <b>${Math.round((localSummary.intensity||0)*100)}%</b><br><br><button type="button" id="erase-local-profile" class="text-button">Yerel verileri sil</button></p>`;
+    summary.textContent="Kişiselleştirme profili ve ham etkileşim geçmişi bu tarayıcının IndexedDB alanında tutulur. Sunucu yalnızca herkese açık aday gönderileri sağlar.";
+    scores.innerHTML=scoreBox("Yerel sinyal",`${localSummary.eventCount} etkileşim`)+scoreBox("Güven",`${Math.round((localSummary.confidence||0)*100)}%`)+scoreBox("Dengeleme",dengelemeAcik?"Açık":"Kapalı");
+    technical.innerHTML=`<p><b>Yerel çevrim içi öğrenme</b><br>Tercih profili: <b>${localSummary.preferredTopic||"henüz oluşmadı"}</b><br>Akış yoğunluğu: <b>${Math.round((localSummary.intensity||0)*100)}%</b><br><br><a class="text-button" href="/ayarlar.html">Ayarları aç</a> · <button type="button" id="erase-local-profile" class="text-button">Yerel verileri sil</button></p>`;
   }
   sheet.classList.add("open");sheet.setAttribute("aria-hidden","false");
   setTimeout(()=>{const erase=document.getElementById("erase-local-profile");if(erase)erase.addEventListener("click",eraseLocalProfile);},0);
@@ -172,7 +178,22 @@ function createCard(post){
 
 const sentinel=document.createElement("div");sentinel.className="loading-state";sentinel.id="feed-sentinel";
 const pageObserver=new IntersectionObserver(entries=>{if(entries[0].isIntersecting)loadMore();},{rootMargin:"420px"});
-async function getPage(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();if(!localAgent)updateStatus(data.spiral_seviyesi);exhausted=data.tukendi;return localAgent?await localAgent.rank(data.gonderiler):data.gonderiler;}
+// Cihaz-ici modda sunucudan sayfa basina 48 aday gelir; telefon hepsini kendi
+// profiline gore siralar ve yalnizca ilk 12'sini karta donusturur. Kalanlar
+// havuzda bekler ve bir sonraki sayfada EN GUNCEL profille yeniden siralanir.
+// Fotograflar yalnizca karta donusen (gosterilen) gonderiler icin iner.
+const SAYFA_BOYU=12,ADAY_SAYISI=48;
+let adayHavuzu=[],sunucuTukendi=false;
+async function adaylariGetir(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}&aday=${ADAY_SAYISI}`);const data=await response.json();sunucuTukendi=data.tukendi;return data.gonderiler||[];}
+async function getPage(reset){
+  if(!localAgent){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();updateStatus(data.spiral_seviyesi);exhausted=data.tukendi;return data.gonderiler;}
+  if(reset){adayHavuzu=[];sunucuTukendi=false;}
+  if(adayHavuzu.length<SAYFA_BOYU&&!sunucuTukendi)adayHavuzu=adayHavuzu.concat(await adaylariGetir(reset));
+  const siralanmis=await localAgent.rank(adayHavuzu),toplam=siralanmis.length;
+  adayHavuzu=siralanmis.slice(SAYFA_BOYU);
+  exhausted=sunucuTukendi&&!adayHavuzu.length;
+  return siralanmis.slice(0,SAYFA_BOYU).map((post,index)=>({...post,aday_sirasi:index+1,aday_toplami:toplam}));
+}
 async function firstLoad(){
   juryDemoActive=false;loading=true;exhausted=false;feed.innerHTML="";feed.removeAttribute("aria-busy");resetTopics();if(localAgent)localPostReactions=(await localAgent.postReactionState()).reactions;const posts=await getPage(true);
   if(!posts.length){feed.removeAttribute("aria-busy");feed.innerHTML='<div class="bos-durum"><svg class="ikon" aria-hidden="true"><use href="#i-icgoru"/></svg><b>Akışta gösterilecek gönderi yok</b><p>Akışı yenileyip tekrar deneyebilirsin.</p></div>';loading=false;return;}
@@ -191,10 +212,10 @@ async function rerankVisibleFeed(reaction=null){
   cards.forEach(card=>{const previous=before.get(card.dataset.id),next=card.getBoundingClientRect().top,delta=previous?previous.top-next:0;if(Math.abs(delta)>1)card.animate([{transform:`translateY(${delta}px)`},{transform:"translateY(0)"}],{duration:340,easing:"cubic-bezier(.2,.8,.2,1)"});});
   if(moved)showRankingNotice(moved,reaction);
 }
-function showRankingNotice(moved,reaction){
+function showRankingNotice(moved,reaction,ek=""){
   const labels={begendim:"beğeni",umutlandim:"umut",dusundum:"düşünce",kizdim:"gerginlik",gerildim:"yoğunluk"};
   const notice=document.getElementById("ranking-notice");
-  notice.innerHTML=`<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Akış güncellendi · ${moved} gönderi yer değiştirdi${reaction?` · ${labels[reaction]||"tepki"} sinyali yerelde işlendi`:""}`;
+  notice.innerHTML=`<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Akış güncellendi · ${moved} gönderi yer değiştirdi${reaction?` · ${labels[reaction]||"tepki"} sinyali yerelde işlendi`:""}${ek?` · ${ek}`:""}`;
   notice.classList.add("show");clearTimeout(showRankingNotice.timer);showRankingNotice.timer=setTimeout(()=>notice.classList.remove("show"),3800);
 }
 async function startJuryDemo(){
@@ -208,7 +229,7 @@ async function startJuryDemo(){
     const initial=[...pack.gonderiler].sort((a,b)=>(beforeMap.get(Number(a.id))||99)-(beforeMap.get(Number(b.id))||99));
     initial.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.innerHTML='<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Hazır örnek senaryo · karar yerelde hesaplanıyor';updateTopics();updateLocalAgent(trace.summary);loading=false;
     setTimeout(()=>rerankVisibleFeed(),420);
-    setTimeout(()=>showRankingNotice(trace.movedCount),780);
+    setTimeout(()=>showRankingNotice(trace.movedCount,null,trace.dengelemeAcik===false?"dengeleme Ayarlar'dan kapalı, yalnızca ilgi sıralaması":""),780);
   }catch(error){console.warn("Jury demo unavailable",error);showRankingNotice(0);document.getElementById("ranking-notice").textContent="Demo şu an başlatılamadı. Lütfen yeniden dene.";}
   finally{controls.forEach(control=>{control.removeAttribute("aria-busy");if("disabled" in control)control.disabled=false;});}
 }

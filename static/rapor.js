@@ -1,7 +1,7 @@
 // İçgörü: all figures are calculated from this browser's local interaction log.
 const reactionLabels={begendim:["👍","Beğendim"],umutlandim:["✨","Umutlandım"],dusundum:["🤔","Düşündüm"],kizdim:["😠","Kızdım"],gerildim:["😣","Gerildim"]};
 const topicLabels={gundem:"Gündem",teknoloji:"Teknoloji",bilim:"Bilim",spor:"Spor",sanat:"Kültür",saglik:"Yaşam",ekonomi:"Ekonomi",egitim:"Eğitim",oyun:"Oyun",seyahat:"Keşif"};
-let allEvents=[],activeRange="week",trace=null;
+let allEvents=[],activeRange="week",trace=null,etiketModeli=null;
 const $=id=>document.getElementById(id);
 function rangeStart(range){const now=Date.now();if(range==="today"){const d=new Date();d.setHours(0,0,0,0);return +d;}return now-(range==="month"?30:7)*86400000;}
 function scopedEvents(){return allEvents.filter(event=>event.createdAt>=rangeStart(activeRange));}
@@ -52,7 +52,7 @@ function renderHeatmap(events){
   if(interactions.length<5){empty(target,"Birkaç etkileşim daha sonra konu × olası ritim örüntün burada görünür.","veri");return;}
   const sayim={};
   interactions.forEach(event=>{
-    const tahmin=window.TrainedModels.psikolojikTahmin({duygu:event.tone,dwell_saniye:event.dwell,tiklama:event.click?1:0,roket:event.rocket?1:0,yorum:event.comment?1:0});
+    const tahmin=window.TrainedModels.psikolojikTahmin({duygu:event.tone,dwell_saniye:event.dwell,tiklama:event.click?1:0,roket:event.rocket?1:0,yorum:event.comment?1:0},etiketModeli);
     sayim[event.topic]=sayim[event.topic]||{};
     sayim[event.topic][tahmin.kategori]=(sayim[event.topic][tahmin.kategori]||0)+1;
   });
@@ -61,13 +61,20 @@ function renderHeatmap(events){
   target.innerHTML=`<div class="heatmap-row"><b></b>${KATEGORI_SIRA.map(kat=>`<span style="background:none;font-size:8px;color:var(--muted)">${kat.slice(0,4)}</span>`).join("")}</div>`+
     konular.map(topic=>`<div class="heatmap-row"><b>${topicLabels[topic]||topic}</b>${KATEGORI_SIRA.map(kat=>{const deger=sayim[topic][kat]||0;return `<span style="--heat-color:${KATEGORI_RENK[kat]};--heat:${deger/max}" title="${kat}: ${deger}">${deger||""}</span>`;}).join("")}</div>`).join("");
 }
+// Eslesme orani tek basina anlamsiz olabilir: iki taban cizgisiyle yan yana
+// gosterilir. Model "hep en sik cevabi soyle" tahmininden iyi degilse bu
+// acikca yazilir.
 async function renderDogrulama(){
-  const target=$("dogrulama-chart"),agent=window.LocalPersonalization;
+  const target=$("dogrulama-chart"),not=$("dogrulama-not"),agent=window.LocalPersonalization;
+  not.textContent="";
   if(!agent){empty(target,"Yerel model bu sayfada yüklenmedi.");return;}
   const ozet=await agent.dogrulamaOzeti();
   if(!ozet.toplam){empty(target,"Ara sıra çıkan kısa onay sorusunu yanıtladıkça, tahminin gerçekle ne kadar örtüştüğü burada ölçülür.","tepki");return;}
-  const yuzde=Math.round(ozet.eslesmeOrani*100);
-  target.innerHTML=`<div><b>${ozet.toplam}</b><span>onay sorusu</span></div><div><b>%${yuzde}</b><span>tahmin eşleşti</span></div><div><b>${KATEGORI_SIRA.length}</b><span>olası kategori</span></div>`;
+  const y=oran=>`%${Math.round(oran*100)}`;
+  target.innerHTML=`<div><b>${y(ozet.eslesmeOrani)}</b><span>tahmin eşleşti · ${ozet.toplam} cevap</span></div><div><b>${y(ozet.cogunlukOrani)}</b><span>"hep en sık cevap" tabanı</span></div><div><b>${y(ozet.rastgeleOrani)}</b><span>rastgele tahmin</span></div>`;
+  const kiyas=ozet.toplam<5?`Henüz ${ozet.toplam} cevap var; karşılaştırma için en az 5 cevap gerekiyor.`:ozet.eslesmeOrani>ozet.cogunlukOrani?"Model şu an iki taban çizgisini de geçiyor.":"Model henüz \"hep en sık cevabı söyle\" tahmininden iyi değil; bu dürüstçe gösterilir.";
+  const kisisel=ozet.kisiselOrani!==null&&ozet.kisiselOrani!==undefined?` Kişisel uyarlama: ${y(ozet.kisiselOrani)} (${ozet.kisiselSayisi} cevap; her cevap önce tahmin edildi, sonra öğrenildi). Varsayılan model: ${y(ozet.varsayilanOrani)}.`:"";
+  not.textContent=kiyas+kisisel;
 }
 function renderReactions(events){const target=$("reaction-chart"),values=countBy(events.filter(event=>event.type==="post_reaction"||event.type==="news_reaction"),event=>event.reaction);const rows=Object.entries(values);if(!rows.length){empty(target,"Bir gönderiye tepki verdiğinde seçimlerin burada toplanır.","tepki");return;}target.innerHTML=rows.map(([reaction,count])=>`<div class="reaction-row"><span>${reactionLabels[reaction]?.[0]||"☺"}</span><b>${reactionLabels[reaction]?.[1]||reaction}</b><i>${count}</i></div>`).join("");}
 function renderSummary(events){const interactions=events.filter(event=>event.type==="interaction"),reactions=events.filter(event=>event.type==="post_reaction"||event.type==="news_reaction");$("kpi-interactions").textContent=interactions.length;$("kpi-reactions").textContent=reactions.length;const hareket=trace?.movedCount;$("kpi-moved").textContent=hareket??"—";const hareketAlt=document.querySelector("#kpi-moved + span");if(hareketAlt)hareketAlt.textContent=hareket==null?"demo çalışmadı":"son demo";
@@ -90,7 +97,7 @@ async function terapistOzetiOlustur(){
   let kategoriSayim={},konuKategoriSayim={};
   if(typeof window.TrainedModels!=="undefined"){
     interactions.forEach(event=>{
-      const tahmin=window.TrainedModels.psikolojikTahmin({duygu:event.tone,dwell_saniye:event.dwell,tiklama:event.click?1:0,roket:event.rocket?1:0,yorum:event.comment?1:0});
+      const tahmin=window.TrainedModels.psikolojikTahmin({duygu:event.tone,dwell_saniye:event.dwell,tiklama:event.click?1:0,roket:event.rocket?1:0,yorum:event.comment?1:0},etiketModeli);
       kategoriSayim[tahmin.kategori]=(kategoriSayim[tahmin.kategori]||0)+1;
       konuKategoriSayim[event.topic]=konuKategoriSayim[event.topic]||{};
       konuKategoriSayim[event.topic][tahmin.kategori]=(konuKategoriSayim[event.topic][tahmin.kategori]||0)+1;
@@ -135,7 +142,7 @@ document.getElementById("terapist-ozet-kopyala")?.addEventListener("click",async
   try{await navigator.clipboard.writeText($("terapist-ozet-metin").textContent);const eski=buton.textContent;buton.textContent="Kopyalandı ✓";setTimeout(()=>buton.textContent=eski,1500);}catch{}
 });
 function render(){const events=scopedEvents();renderSummary(events);renderLine(events);renderTopics(events);renderReactions(events);renderHeatmap(events);renderDogrulama();}
-async function init(){const agent=window.LocalPersonalization;if(!agent)return;await agent.init();[allEvents,trace]=await Promise.all([agent.getLocalEvents(),agent.getDecisionTrace()]);render();}
+async function init(){const agent=window.LocalPersonalization;if(!agent)return;await agent.init();[allEvents,trace,etiketModeli]=await Promise.all([agent.getLocalEvents(),agent.getDecisionTrace(),agent.etiketModeli()]);render();}
 document.querySelectorAll(".range-switch button").forEach(button=>button.addEventListener("click",()=>{activeRange=button.dataset.range;document.querySelectorAll(".range-switch button").forEach(item=>item.classList.toggle("active",item===button));render();}));
 $("insight-detail-button").addEventListener("click",()=>$("real-insights").scrollIntoView({behavior:"smooth",block:"start"}));
 init().catch(error=>console.warn("Local insight data unavailable",error));
