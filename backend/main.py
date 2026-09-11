@@ -4,6 +4,7 @@ eğitilmiş spiral sınıflandırıcı) ve psikolojik_durum.py'deki çok kategor
 anlık yorum sınıflandırıcısını bir web arayüzüne bağlar. Tek demo kullanıcı
 için bellek-içi durum tutar (gerçek üretimde bu veritabanına/oturuma taşınır).
 """
+import os
 import sys
 import time
 from collections import Counter
@@ -13,7 +14,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))  # motor.py, duygu_modeli.py, spiral_model.py kök dizinde
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -37,6 +38,12 @@ app = FastAPI(title="NSosyal Duygu-Duyarlı Katman — Prototip")
 # Aday listesi (48 gönderi) ve statik dosyalar sıkıştırılmadan gidiyordu.
 # 1 KB altındaki yanıtlar sıkıştırılmaz; orada kazanç CPU maliyetine değmez.
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Eski sunucu tarafı öğrenme uç noktaları (etkileşim, doğrulama, kişisel mod,
+# haftalık rapor...). Cihaz-içi mimaride arayüz bunları çağırmaz; ham davranış
+# verisi cihazdan çıkmaz. Bu yüzden VARSAYILAN OLARAK KAPALIDIR; yalnızca
+# NSOSYAL_ESKI_SUNUCU_YOLU=1 ortam değişkeniyle, karşılaştırma/deney için açılır.
+eski = APIRouter()
 
 
 # Statik yanitlarda Cache-Control yoktu; tarayici HTML'i kendi tahminiyle
@@ -402,7 +409,7 @@ def api_hikayeler():
     return {"hikayeler": DEPO.hikayeler()}
 
 
-@app.post("/api/demo-senaryo")
+@eski.post("/api/demo-senaryo")
 def api_demo_senaryo():
     """Yarışma demosu için sabit, tekrar üretilebilir yoğun-akış senaryosu."""
     DAVRANIS_GUNLUGU.clear()
@@ -414,19 +421,19 @@ def api_demo_senaryo():
     return {"ok": True, "spiral_seviyesi": round(spiral, 3), "ornek_sayisi": len(negatifler), "duygu_katmani": duygu_durumu}
 
 
-@app.post("/api/mudahale/ertele")
+@eski.post("/api/mudahale/ertele")
 def api_mudahale_ertele():
     MUDAHALE_DURUMU["sessize_alindi"] = time.time() + 30 * 60
     return {"ok": True, "sessize_kadar_saniye": 30 * 60}
 
 
-@app.get("/api/juri-durum")
+@eski.get("/api/juri-durum")
 def api_juri_durum():
     """Tüketici akışından ayrı, teknik inceleme için açıklanabilir durum özeti."""
     return {"duygu_katmani": _duygu_durumu(), "spiral_seviyesi": round(spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER), 3), "dogrulama": {"toplam": len(DOGRULAMA_GUNLUGU), "kalibrasyon_guveni": _kalibrasyon_guveni()}, "son_sinyaller": DAVRANIS_GUNLUGU[-10:]}
 
 
-@app.post("/api/etkilesim")
+@eski.post("/api/etkilesim")
 def api_etkilesim(e: Etkilesim):
     birlesik = _sinyalleri_birlestir(e.gonderi_id, e)
     _bolumu_kapat(e.gonderi_id, e.cikis)
@@ -475,7 +482,7 @@ def api_etkilesim(e: Etkilesim):
     }
 
 
-@app.post("/api/dogrulama")
+@eski.post("/api/dogrulama")
 def api_dogrulama_ekle(c: DogrulamaCevabi):
     """Kullanıcının kendi bildirdiği anlık durumu, modelin O ANKİ oturum
     tahminiyle karşılaştırıp günlüğe kaydeder. Kullanıcıya soru sorulmadan
@@ -518,7 +525,7 @@ def api_dogrulama_ekle(c: DogrulamaCevabi):
     }
 
 
-@app.post("/api/kisisel-mod")
+@eski.post("/api/kisisel-mod")
 def api_kisisel_mod(aktif: bool):
     """Arayüzdeki 'Varsayılan / Kişiselleştirilmiş' anahtarı. Geçmiş oturum
     kayıtlarını SEÇİLEN modelle yeniden skorlayıp güncel ortalamayı döndürür
@@ -539,7 +546,7 @@ def api_kisisel_mod(aktif: bool):
     }
 
 
-@app.get("/api/dogrulama-ozet")
+@eski.get("/api/dogrulama-ozet")
 def api_dogrulama_ozet():
     toplam = len(DOGRULAMA_GUNLUGU)
     eslesen = sum(1 for k in DOGRULAMA_GUNLUGU if k["eslesme"])
@@ -553,7 +560,7 @@ def api_dogrulama_ozet():
     }
 
 
-@app.get("/api/psikolojik-ozet")
+@eski.get("/api/psikolojik-ozet")
 def api_psikolojik_ozet():
     """Bu oturumda GERÇEKTEN kaydedilen etkileşimlerden özet — sabit örnek metin
     değil. 'Haftalık' değil (tek oturum), ama aynı mantığın küçük ölçekli, canlı
@@ -591,7 +598,7 @@ def api_psikolojik_ozet():
     }
 
 
-@app.get("/api/haftalik-rapor")
+@eski.get("/api/haftalik-rapor")
 def api_haftalik_rapor():
     """LLM ile gerçek oturum verisinden haftalık öz-farkındalık raporu üretir.
     GEMINI_API_KEY tanımlı değilse mevcut:False döner -- arayüz zaten var olan
@@ -603,7 +610,7 @@ def api_haftalik_rapor():
     return haftalik_rapor.uret(psikolojik, dogrulama)
 
 
-@app.get("/api/terapist-raporu")
+@eski.get("/api/terapist-raporu")
 def api_terapist_raporu():
     """Kullanıcının isterse bir ruh sağlığı uzmanına götürebileceği, YORUMSUZ
     ham davranışsal veri özeti -- /api/haftalik-rapor ile aynı veriyi kullanır,
@@ -615,7 +622,7 @@ def api_terapist_raporu():
     return haftalik_rapor.uret(psikolojik, dogrulama, hedef="terapist")
 
 
-@app.post("/api/sifirla")
+@eski.post("/api/sifirla")
 def api_sifirla():
     global KISISEL_MODEL
     DAVRANIS_GUNLUGU.clear()
@@ -632,5 +639,8 @@ def api_sifirla():
     MUDAHALE_DURUMU["sessize_alindi"] = 0.0
     return {"ok": True}
 
+
+if os.environ.get("NSOSYAL_ESKI_SUNUCU_YOLU") == "1":
+    app.include_router(eski)
 
 app.mount("/", StaticFiles(directory=BASE_DIR / "static", html=True), name="static")

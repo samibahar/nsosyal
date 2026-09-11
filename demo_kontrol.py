@@ -67,7 +67,18 @@ def main() -> int:
         assert basliklar.get("Content-Encoding") == "gzip", "gzip yok"
         return "aday listesi gzip'li"
 
+    def gizlilik():
+        istek = urllib.request.Request(ADRES + "/api/etkilesim", data=b'{"gonderi_id":1,"dwell_saniye":5}',
+                                       headers={"Content-Type": "application/json"}, method="POST")
+        try:
+            urllib.request.urlopen(istek, timeout=10)
+        except urllib.error.HTTPError as hata:
+            assert hata.code in (404, 405), f"beklenmeyen durum {hata.code}"
+            return "sunucu davranış verisi kabul etmiyor"
+        raise AssertionError("/api/etkilesim açık: eski sunucu yolu etkin (NSOSYAL_ESKI_SUNUCU_YOLU)")
+
     kontrol("Sayfalar", sayfalar)
+    kontrol("Gizlilik sınırı", gizlilik)
     kontrol("Duygu modeli (v3, LFS)", model)
     kontrol("48 aday listesi", adaylar)
     kontrol("Jüri demo paketi", demo)

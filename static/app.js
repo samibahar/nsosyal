@@ -234,7 +234,7 @@ async function startJuryDemo(){
 document.getElementById("yenile-buton").addEventListener("click",firstLoad);
 async function eraseLocalProfile(){
   if(localAgent){const data=await localAgent.erase();updateLocalAgent(data);closeSheet();await firstLoad();return;}
-  await fetch("/api/sifirla",{method:"POST"});closeSheet();firstLoad();
+  closeSheet();firstLoad(); // yerel depolama yok: silinecek davranis verisi de yok
 }
 document.getElementById("sifirla-buton").addEventListener("click",eraseLocalProfile);
 function showCheckin(){const until=Number(sessionStorage.getItem("nsosyal-checkin-snooze-until")||0);if(Date.now()<until)return;document.getElementById("dogrulama-karti").classList.remove("gizli");}

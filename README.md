@@ -150,9 +150,12 @@ tarayıcıda çalışan `static/trained-weights.js` dosyasına yazar.
   zekâ servisine göndermez. Duygu modeli sunucuda yerel olarak çalışır ve
   yalnızca herkese açık gönderi metnini skorlar; İçgörü'deki "uzmana
   götürülebilir özet" tarayıcıda, dil modeli kullanılmadan üretilir.
-  `backend/main.py`'deki `/api/haftalik-rapor` ve `/api/terapist-raporu` uç
-  noktaları eski sunucu tarafı mimariden kalmadır ve arayüz tarafından
-  çağrılmaz.
+  Sunucu davranış verisi (durma süresi, tıklama, kontrol cevabı) kabul eden
+  hiçbir uç nokta sunmaz: eski sunucu tarafı öğrenme uç noktaları
+  (`/api/etkilesim`, `/api/dogrulama`, haftalık rapor vb.) varsayılan olarak
+  kapalıdır ve yalnızca karşılaştırma amacıyla `NSOSYAL_ESKI_SUNUCU_YOLU=1`
+  ortam değişkeniyle açılır. Bu, tarayıcı testiyle ve `demo_kontrol.py` ile
+  doğrulanır.
 
 ## Proje Yapısı (özet)
 

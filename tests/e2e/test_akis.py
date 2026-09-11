@@ -73,6 +73,16 @@ def test_dengeleme_bildirimi_oturum_icin_kapatilabilir(masaustu):
     assert masaustu.evaluate("() => LocalPersonalization.getAyarlar()")["dengeleme"] is True  # kalıcı ayar değişmedi
 
 
+def test_sunucu_davranis_verisi_kabul_etmez(masaustu):
+    """Eski sunucu tarafı öğrenme uç noktaları varsayılan olarak kapalıdır."""
+    masaustu.goto(f"{ADRES}/index.html")
+    durumlar = masaustu.evaluate("""async () => Promise.all(
+        ['/api/etkilesim', '/api/dogrulama', '/api/kisisel-mod?aktif=true'].map(yol =>
+            fetch(yol, {method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({gonderi_id: 1, dwell_saniye: 5, kullanici_cevabi: 'sakin'})}).then(y => y.status)))""")
+    assert all(durum in (404, 405) for durum in durumlar), durumlar
+
+
 def test_mobilde_hicbir_sayfa_yatay_tasmaz_ve_hata_vermez(mobil):
     for yol in SAYFALAR:
         mobil.goto(f"{ADRES}{yol}")
