@@ -1,0 +1,195 @@
+# Model Kartı — NSosyal Duygu Katmanı
+
+Son güncelleme: 11.09.2026. Bu belge sistemdeki üç modeli ve sıralama
+kuralını; veri kaynaklarını, ölçümleri, sınırlılıkları ve etik kararları
+özetler. Rakamların kaynağı depodaki `*_sonuc.txt` dosyalarıdır ve ilgili
+betikle yeniden üretilebilir.
+
+| Bileşen | Nerede çalışır | Ne üretir | Ayrıntı |
+|---|---|---|---|
+| Duygu modeli (BERT v3) | Sunucu, gönderi başına bir kez | Gönderi metninin tonu (−1…+1) | §1 |
+| Spiral modeli v2 | Kullanıcının tarayıcısı | Son 30 dk'da yoğun içerikte pasif oyalanma olasılığı | §2 |
+| Ruh hali modeli | Kullanıcının tarayıcısı | Tek etkileşim için 5 kategorili olası örüntü | §3 |
+| Sıralama + doz dengelemesi | Kullanıcının tarayıcısı | Akışın sırası | §4 |
+
+## 1. Duygu modeli (BERT v3)
+
+**Amaç ve kullanım.** Herkese açık gönderi metninin duygusal tonunu tahmin
+eder: ton = P(pozitif) − P(negatif). Sıralamada yalnızca "yoğun tonlu" (ton <
+−0,15) işareti olarak kullanılır. Kullanıcı hakkında bir çıkarım değildir;
+gönderinin özelliğidir.
+
+**Soy ağacı.** `savasy/bert-base-turkish-sentiment-cased` → v1 (winvoker,
+~15 bin ikili örnek) → v2 (haber üslubu, ikili) → **v3 (üç sınıf: negatif /
+nötr / pozitif)**. v3'ün sınıflandırıcı katmanı rastgele değil, v2'nin
+negatif ve pozitif satırlarından başlatıldı.
+
+**Neden v3.** v2 ikili olduğu için ton = işaret × güven idi ve uygulamadaki
+gönderilerin %94'ünde |ton| > 0,9 çıkıyordu; olgusal bir duyuru da "çok
+olumsuz" sayılabiliyordu.
+
+**v3 eğitim verisi** (`ince_ayar_v3.py`):
+
+| Kaynak | Adet | Not |
+|---|---|---|
+| winvoker `split="test"` negatif | 5.600 | Kaynaklara göre dengeli |
+| winvoker `split="test"` nötr | 6.000 | Neredeyse tamamı Vikipedi cümlesi; olay/değerlik kelimesi içeren ~2.080 nötr ayıklandı |
+| winvoker `split="test"` pozitif | 6.000 | Kaynaklara göre dengeli (ürün yorumu baskın olmasın) |
+| `zayif_uslup_veri.jsonl` | 712 (×2) | Kısa, resmi haber üslubu; kısmen bir dil modeliyle, kısmen ekip tarafından üretildi |
+| `haber_uslubu_uc_sinif.jsonl` | 337 (×5) | Bu proje için yazılmış üç sınıflı haber ve paylaşım cümleleri (137 nötr, 106 negatif, 94 pozitif) |
+
+Test ve doğrulama metinleri, uygulamadaki gönderi ve haber metinleri eğitimden
+açıkça çıkarıldı.
+
+**Eğitim.** Öğrenme oranı 3e-5, 2 epoch, parti 32, %6 ısınma, fp16, en fazla
+128 belirteç; tek RTX 4060'ta ~4 dakika. Ayarlar 6 aday arasından **yalnızca
+doğrulama setiyle** seçildi (winvoker'dan test örnekleriyle kesişmeyen 1.500
+örnek + 60 cümlelik haber doğrulama seti): `v3_arama_sonuc.txt`.
+
+**Test sonuçları** (`dogrulama_v3_sonuc.txt`; hiçbiri eğitimde ya da seçimde
+kullanılmadı):
+
+| Test | v2 | v3 |
+|---|---|---|
+| winvoker 1.000 örnek, ikili doğruluk (630 pozitif/negatif) | %93,3 | **%94,0** (F1 0,963) |
+| winvoker üç sınıf doğruluğu | — | **%95,7** (F1 makro 0,929) |
+| Nötr etiketli örneklerde ortalama \|ton\| | 0,961 | 0,005 |
+| Elle etiketlenmiş 40 haber üslubu cümle | %92,5 | %92,5 |
+| Ekibin önceden puanladığı 22 haber, yön uyumu | %77 | %82 (Spearman ρ 0,65) |
+| Jüri demosundaki 14 gönderi, yön uyumu | %93 | %93 |
+| Uygulamadaki 250 gönderide \|ton\| > 0,9 | %94 | %54 |
+
+**Sınırlılıklar.**
+- Nötr sınıfı büyük ölçüde Vikipedi cümlelerinden öğrenildi.
+- Duygu kelimesi içermeyen bazı birinci şahıs cümleleri yanlış okunabiliyor
+  (örnek: "Kütüphanede herkesin aynı anda sayfa çevirmesi garip biçimde motive
+  edici" olumsuz okunuyor).
+- Ton, sınıflandırıcı olasılıkları arasındaki farktır; psikolojik bir duygu
+  yoğunluğu ölçümü değildir.
+- Eğitim verisinin bir kısmı sentetiktir (yukarıdaki tablo).
+
+**Atıf ve lisans.** Temel model `savasy/bert-base-turkish-sentiment-cased`,
+veri seti `winvoker/turkish-sentiment-analysis-dataset` (HuggingFace). Temel
+modelin sayfasında lisans belirtilmemiştir; ince ayarlı model araştırma ve
+yarışma amaçlıdır.
+
+## 2. Spiral modeli v2
+
+**Amaç.** Son 30 dakikadaki davranıştan "yoğun tonlu içerikte, kendi okuma
+hızına göre belirgin biçimde uzun ve pasif kalma" olasılığını tahmin eder.
+Teşhis değildir; yalnızca akışın dozunu ayarlamak için kullanılır.
+
+**Girdi (cihazda).** Gönderi başına birleştirilmiş olay: durma süresi, ton,
+kelime sayısı, roket/yorum. Yakın olaylar daha ağırdır (10 dk yarı ömür).
+Beklenen okuma süresi = 1,5 sn + kelime / 3,5.
+
+**Model.** İşaret kısıtlı lojistik regresyon: her özelliğin riski hangi yönde
+etkilediği hipotezle sabitlenir, büyüklüğü veriden öğrenilir. Kısıtsız
+denemede özellikler birbirini dengelemek için ters işaret alıyor ve hep olumlu
+içerik okuyan kullanıcıyı riskli sayıyordu.
+
+| Özellik | Standartlaştırılmış katsayı |
+|---|---|
+| Göreli oyalanma (yoğunlarda kendi hızına göre) | +1,59 |
+| Aktif katılım (roket, yorum) | −0,84 |
+| Yoğun pay, okuma üstü kalma | 0 (kısıt nedeniyle kullanılmadı) |
+
+**Eğitim verisi.** Davranış düzeyinde simülatör: 4.000 oturum, 7 kullanıcı
+türü (olağan, spiral, uzun okuyan, olumsuz haberleri aktif tartışan, hızlı göz
+atan, spirale geçen, saatler önce yoğun oturum geçirmiş), akıştaki yoğun
+içerik payı %5–%90, %8 etiket gürültüsü. Etiket simülasyondaki gizli durumdur,
+özelliklerin bir formülü değildir.
+
+**Ölçüm** (`spiral_v2_sonuc.txt`, simülatörün ayrılmış %25'i):
+
+| | v1 (eski) | v2 |
+|---|---|---|
+| ROC-AUC | 0,632 | 0,857 |
+| F1 | 0,517 | 0,744 |
+| Kalibrasyon hatası (ECE) | 0,299 | 0,046 |
+| Yanlış alarm: uzun okuyan / hızlı göz atan / eski oturum | %62 / %29 / %56 | %0,8 / %0 / %0 |
+| Spiral oturumu yakalama | %71 | %89 |
+
+**Sınırlılıklar.** Simülatör hipotezlerimizi kodlar ve karşılaştırma v2'nin
+lehinedir; gerçek dünya doğruluğu değildir. Sakin oturumlar 0,26 civarında
+kalır (simülasyondaki %35 spiral payından gelen önsel). Gerçek kullanıcı
+onaylarıyla yeniden eğitilmelidir. Python ve tarayıcı özellik hesabı birebir
+aynıdır (otomatik eşitlik testi); 11 senaryo testi `tests/test_spiral_model.py`.
+
+## 3. Ruh hali modeli
+
+**Amaç.** Tek bir etkileşim için beş olası örüntüden birini tahmin eder:
+sakin, mutluluk, umut, sinirli, yoğun (anksiyete). Klinik bir ölçüm değildir.
+
+**Model.** Girdi: ton, durma süresi, tıklama, roket, yorum. Standart ölçekleme
++ lojistik kayıplı SGD (bire-karşı-diğerleri). Sentetik veri: kategori başına
+500 örnek, %10 etiket gürültüsü. Sentetik test setinde doğruluk ve F1 makro
+0,704. Tarayıcıdaki olasılıklar sklearn ile birebir aynıdır (önceden softmax
+kullanıldığı için 0,17'ye kadar sapıyordu; düzeltildi).
+
+**Cihazda kişisel uyarlama.** Kullanıcı "Şu an nasıl hissediyorsun?" sorusunu
+cevapladığında kişisel modelde tek küçük bir adım atılır (η 0,15; varsayılan
+modele doğru λ 0,05 düzenlileştirme). Önce tahmin edilir, sonra öğrenilir;
+eşleşme oranı hiç görülmemiş cevaplarla ölçülür. Kişisel model yalnızca
+etiketleri etkiler, sıralamayı kaydırmaz.
+
+**Doğrulama.** İçgörü ekranı eşleşme oranını iki taban çizgisiyle yan yana
+gösterir: rastgele (%20) ve "hep en sık cevabı söyle". Model bu tabanı
+geçmiyorsa ekran bunu açıkça yazar.
+
+## 4. Sıralama ve doz dengelemesi
+
+- **Çekirdek puan:** 0,48 × sunucunun ilgi puanı + 0,34 × cihazdaki konu
+  ilgisi (+ kullanıcının son açık tepkisi).
+- **Çeşitlilik:** açgözlü seçim; bir konudan ilk gönderi +0,07, sonrakiler
+  −0,09 × n. Bonus seçilmiş listeye göre verilir.
+- **Akış yoğunluğu:** 0,7 × spiral + 0,3 × (sinirli + yoğun olasılığı);
+  dengeleme en az 10 etkileşim ve yoğunluk > 0,28 iken çalışır.
+- **Doz:** sayfadaki yoğun tonlu içerik payı hedefe iner: hedef = taban pay ×
+  (1 − 0,6 × yoğunluk). Yoğun gönderiler silinmez, aralıklanır. Resmi/acil
+  bilgi hesapları muaftır. Yaklaşım "kalibre edilmiş öneri" fikrinin (Steck,
+  RecSys 2018) maruziyet payına uygulanmasıdır.
+
+**Etki** (`etki_analizi_sonuc.txt`; 600 senaryo, ilk sayfa):
+
+| Akış yoğunluğu | Yoğun içerik payı | Korunan ilgi | Yoğunların ilk 3 sayfada kalması |
+|---|---|---|---|
+| 0,35 | −%36 | %100 | %58 |
+| 0,6 | −%47 | %99 | %47 |
+| 0,85 | −%62 | %99 | %36 |
+
+Yoğun gönderiler ortalama 6,9 sıra arayla gelir (art arda gelme %3); resmi
+gönderi 146 durumun hiçbirinde aşağı inmedi. Önceki "puandan ceza" sürümü
+yoğunluk 0,85'te payı %96 azaltıyordu (fiilen filtre); bu yüzden değiştirildi.
+Bu bir maruziyet ölçümüdür, iyi-oluş etkisi değildir.
+
+## 5. Etik ve gizlilik kararları
+
+- **Açık rıza:** ilk açılışta ne tutulduğu, nerede saklandığı ve teşhis
+  olmadığı anlatılır; açık/kapalı iki eşit seçenek.
+- **Veri cihazda:** ham davranış yalnızca tarayıcıda (en fazla 240 olay; gün
+  başına toplamlar 12 hafta). Sunucu davranış verisi kabul eden hiçbir uç nokta
+  sunmaz; tarayıcı depolamaya izin vermezse kişiselleştirme yapılmaz.
+- **Dış servis yok:** hiçbir davranış verisi üçüncü taraf bir yapay zekâ
+  servisine gönderilmez.
+- **Konu-nötr:** siyasi/dini kategori yoktur; yalnızca duygusal ton.
+- **Reklam hedefleme yok:** kırılganlık hiçbir zaman hedefleme sinyali olarak
+  kullanılmaz.
+- **Kontrol:** dengeleme kalıcı olarak (Ayarlar) ya da yalnızca bu oturum için
+  kapatılabilir; tüm yerel veriler iki adımlı onayla silinebilir.
+- **Bilgiye erişim:** resmi/acil bilgilendirme dengelenmez; ilke "haberi
+  saklamak değil, tekrarını azaltmak".
+- **Dil:** "tespit ettik" değil "olası örüntü"; hiçbir ekran teşhis iddia
+  etmez.
+- **Açık kalan:** gerçek kullanıcılarla iyi-oluş etkisi ölçülmedi; bu, pilot
+  çalışma gerektirir.
+
+## 6. Performans (`olcek_olcumu_sonuc.txt`)
+
+- Duygu modeli: tek RTX 4060'ta saniyede 1.619 gönderi (günde ~140 milyon),
+  8 çekirdek CPU'da saniyede 60 (günde ~5,2 milyon). Ton gönderi başına bir kez
+  hesaplanır; maliyet okuyucu sayısıyla değil gönderi sayısıyla büyür.
+- Cihazda: spiral 1,7 ms, ruh hali 0,3 ms (Python referansı); 48 adayın
+  sıralaması tarayıcıda ortanca 0,1 ms.
+- 48 adaylık liste gzip ile ~2–3,5 KB; fotoğraflar yalnızca gösterilen
+  gönderiler için iner.

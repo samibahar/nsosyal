@@ -49,6 +49,23 @@ listesi, demo paketi, sıkıştırma):
 python demo_kontrol.py
 ```
 
+## Jüri için 5 dakikalık tur
+
+1. Ana akışı açın; ilk açılışta duygu katmanının ne tuttuğunu anlatan
+   bilgilendirmede "Açık başlat"ı seçin.
+2. Sağ üstteki (mobilde üstteki) **Jüri demosu** düğmesine basın: hazır örnek
+   sinyaller cihazda işlenir, akış yeniden sıralanır, dengelenen kartlarda
+   "dengelendi" etiketi ve üstte "Akış biraz yoğunlaştı" bildirimi görünür.
+3. Dengelenen bir kartta **Neden bu?** → gönderinin kaç sıra aşağı alındığı ve
+   yoğun içerik payı hedefi (ör. %33 → %20).
+4. **Ayarlar** → "Duygu dengeleme"yi kapatıp demoyu tekrar çalıştırın: yoğun
+   gönderiler aşağı alınmaz. Uzun dönem özeti ve cihazda saklanan veriler de
+   buradadır.
+5. `/juri.html` → son demonun karar kanıtı (önce/sonra sıra, gerekçe).
+6. Ölçümler ve belgeler: `docs/model_karti.md`, `docs/erisilebilirlik.md`,
+   `docs/kullanici_akislari.md`, `*_sonuc.txt` dosyaları; testler
+   `python -m pytest -q`.
+
 ## Nasıl çalışır (özet)
 
 - **Ham davranış cihazda kalır.** Hangi gönderiye ne kadar bakıldığı
