@@ -76,6 +76,17 @@ def test_dengeleme_bildirimi_oturum_icin_kapatilabilir(masaustu):
     assert masaustu.evaluate("() => LocalPersonalization.getAyarlar()")["dengeleme"] is True  # kalıcı ayar değişmedi
 
 
+def test_neden_bu_paneli_acilinca_akis_bildirimi_kapanir(masaustu):
+    """Jüri demosundaki "Akış güncellendi" bildirimi açılan "Neden bu?" panelini örtüyordu."""
+    akisi_ac(masaustu)
+    masaustu.locator("#jury-demo-rail").click()
+    masaustu.wait_for_selector("#ranking-notice.show")
+    kart = masaustu.locator("#akis .post-card.yumusatildi").first
+    kart.locator(".why-button").click()
+    assert "show" not in (masaustu.locator("#ranking-notice").get_attribute("class") or "")
+    assert not masaustu.hatalar
+
+
 def test_pwa_manifesti_gecerli_ve_bagli(masaustu):
     """'Neden mobil uygulama değil?' sorusu: site telefona uygulama gibi kurulabilir."""
     masaustu.goto(f"{ADRES}/index.html")

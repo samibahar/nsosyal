@@ -104,6 +104,8 @@ function openLocalSheet(post){
   setTimeout(()=>{const erase=document.getElementById("erase-local-profile");if(erase)erase.addEventListener("click",eraseLocalProfile);},0);
 }
 function openSheet(post=null){
+  // "Akış güncellendi" bildirimi panelin üstünde kalıp içeriğini örtüyordu; panel açılınca kapanır.
+  document.getElementById("ranking-notice")?.classList.remove("show");
   if(localAgent){openLocalSheet(post);return;}
   const sheet=document.getElementById("explanation-sheet"); const summary=document.getElementById("sheet-summary"); const scores=document.getElementById("sheet-score-grid"); const technical=document.getElementById("technical-details-content");
   if(post){
