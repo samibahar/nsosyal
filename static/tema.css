@@ -633,6 +633,9 @@ body .balance-intervention #denge-kapat { background: transparent; color: #fff; 
    üstüne biniyordu (24 döşemenin çoğunda 56–76 px ile 61–103 px çakışması).
    Simge gibi köşeye sabitlenir; başlık alttan hizalı kalır. */
 .explore-card .explore-topic { position: absolute; left: 10px; top: 10px; z-index: 1; }
+/* İçgörü: tepki dengesi ve ısı haritası açıklaması dar kartlarda gövde
+   puntosunda 7 satıra yayılıyordu; kart altı açıklaması olarak küçültülür. */
+.reaction-chart .dogrulama-not, .heatmap .dogrulama-not { font-size: 12px; line-height: 1.45; color: var(--muted); margin: 10px 0 0; }
 .jury-body { background: var(--canvas); }
 .jury-intro { border-radius: var(--radius); background: var(--ink); }
 
