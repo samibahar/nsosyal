@@ -624,6 +624,15 @@ body .balance-intervention #denge-kapat { background: transparent; color: #fff; 
   border-radius: 0;
 }
 .explore-card, .profile-post, .news-card { border-radius: var(--radius); }
+/* Küçük metin düğmelerinin dokunma alanı en az 32 px; negatif kenar boşluğu
+   görünür konumu korur (mobil incelemede "Neden bu?" 12 px yüksekliğindeydi). */
+.news-card-footer .news-why { min-height: 32px; padding: 8px 10px; margin: -8px -10px; font-size: 11.5px; }
+#news-reset { min-height: 32px; padding: 6px 2px; }
+#insight-detail-button { min-height: 32px; }
+/* Keşfet: konu etiketi akışta kaldığında küçük (128 px) döşemelerde başlığın
+   üstüne biniyordu (24 döşemenin çoğunda 56–76 px ile 61–103 px çakışması).
+   Simge gibi köşeye sabitlenir; başlık alttan hizalı kalır. */
+.explore-card .explore-topic { position: absolute; left: 10px; top: 10px; z-index: 1; }
 .jury-body { background: var(--canvas); }
 .jury-intro { border-radius: var(--radius); background: var(--ink); }
 

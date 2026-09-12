@@ -101,6 +101,29 @@ def test_mobilde_hicbir_sayfa_yatay_tasmaz_ve_hata_vermez(mobil):
     assert not mobil.hatalar
 
 
+def test_mobilde_kesfet_etiketi_basliga_binmez_haber_dugmeleri_dokunulabilir(mobil):
+    """Mobil incelemede bulunanlar: küçük Keşfet döşemelerinde konu etiketi başlığın
+    üstüne biniyordu, görsel alt metni bozuk kodlanmıştı ("iÃ§eriÄŸi"), Haberler'deki
+    "Neden bu?" düğmesi 12 px yüksekliğindeydi."""
+    mobil.goto(f"{ADRES}/kesfet.html")
+    mobil.wait_for_selector(".explore-card .explore-photo")
+    kesfet = mobil.evaluate("""() => {
+        const kes = (a, b) => Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)) * Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+        const kartlar = [...document.querySelectorAll('.explore-card')];
+        return {cakisan: kartlar.filter(k => kes(k.querySelector('.explore-topic').getBoundingClientRect(), k.querySelector('.explore-card-text').getBoundingClientRect()) > 0).length,
+                etiketler: kartlar.map(k => k.querySelector('.explore-topic').textContent),
+                altlar: [...document.querySelectorAll('.explore-photo')].map(i => i.alt)};
+    }""")
+    assert kesfet["cakisan"] == 0
+    assert "Gundem" not in kesfet["etiketler"] and "Gündem" in kesfet["etiketler"]
+    assert all("içeriği için temsili görsel" in alt and "Ã" not in alt for alt in kesfet["altlar"])
+    mobil.goto(f"{ADRES}/haberler.html")
+    mobil.wait_for_selector(".news-card .news-why")
+    boy = mobil.evaluate("() => [document.querySelector('.news-why'), document.getElementById('news-reset')].map(e => e.getBoundingClientRect().height)")
+    assert min(boy) >= 32, boy
+    assert not mobil.hatalar
+
+
 def test_tepki_secimi_cihazda_kaydedilir(mobil):
     akisi_ac(mobil)
     tetik = mobil.locator(".post-reaction-trigger").first

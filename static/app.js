@@ -61,7 +61,7 @@ function updateLocalAgent(summary){
   // yansimaz; kart bunu acikca soyler (rapor 5.1: "istedigi an kapatabilir").
   if(dengelemeKapali){currentSpiral=summary.intensity;title.textContent=oturumda?"Bu oturumda dengeleme kapalı":"Dengeleme kapalı";text.textContent=oturumda?"Akış yalnızca ilgi alanlarına göre sıralanıyor; sekmeyi kapatınca yeniden açılır.":"Akış yalnızca ilgi alanlarına göre sıralanıyor. Ayarlar'dan yeniden açabilirsin.";desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;feed.style.filter="none";}
   else{updateStatus(summary.intensity);dengeBildirimi(summary);}
-  const mood=summary.lastExplicitReaction?`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`:`Olası anlık ritim: ${summary.currentMood} · kullanıcı tarafından doğrulanmadı`;
+  const mood=summary.lastExplicitReaction?`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`:`Olası anlık ritim: ${summary.currentMood} · doğrulanmadı`;
   document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;
 }
 function incrementTopic(topic){topicCounts[topic]=(topicCounts[topic]||0)+1;}
