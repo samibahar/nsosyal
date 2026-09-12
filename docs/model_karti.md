@@ -116,6 +116,15 @@ kalır (simülasyondaki %35 spiral payından gelen önsel). Gerçek kullanıcı
 onaylarıyla yeniden eğitilmelidir. Python ve tarayıcı özellik hesabı birebir
 aynıdır (otomatik eşitlik testi); 11 senaryo testi `tests/test_spiral_model.py`.
 
+**Cihazda kişisel kalibrasyon (12.09.2026).** Kontrol sorusunda "yoğun" ya da
+"sinirli" cevabı spiral için 1, "sakin/mutluluk/umut" 0 sayılır (zayıf etiket).
+Model çıktısı kişiye özel iki parametreyle yeniden ölçeklenir (Platt: eğim ×
+logit(p) + kayma). Eğim en az 0,25 tutulduğu için özelliklerin riski etkileme
+yönü hiçbir zaman tersine dönmez. Kalibrasyon akışa ancak en az 6 cevapta, her
+cevap önce tahmin edilip sonra öğrenilerek, varsayılandan düşük Brier hatası
+verirse bağlanır; jüri demosu kalibrasyonsuz çalışır. Gönüllü pilot için dışa
+aktarma ve analiz: `docs/pilot_protokolu.md`, `pilot_analizi.py`.
+
 ## 3. Ruh hali modeli
 
 **Amaç.** Son 30 dakikanın olası ruh halini beş kategoride tahmin eder:
