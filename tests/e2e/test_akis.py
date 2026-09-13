@@ -87,6 +87,26 @@ def test_neden_bu_paneli_acilinca_akis_bildirimi_kapanir(masaustu):
     assert not masaustu.hatalar
 
 
+def test_tepki_okunan_gonderilerin_yerini_degistirmez(masaustu):
+    """Tepki yalnızca henüz görülmemiş kartları ve sıradaki sayfaları etkiler;
+    ekranda ya da üstte kalan (okunmuş) gönderiler yerinde durur."""
+    akisi_ac(masaustu)
+    masaustu.locator("#akis .post-card").nth(3).scroll_into_view_if_needed()
+    sira = "() => [...document.querySelectorAll('#akis .post-card')].map(k => ({id: k.dataset.id, gorulen: k.getBoundingClientRect().top < innerHeight}))"
+    once = masaustu.evaluate(sira)
+    okunan = [k["id"] for k in once if k["gorulen"]]
+    assert 0 < len(okunan) < len(once)
+    for kimlik, tepki in zip(okunan[-3:], ["kizdim", "gerildim", "begendim"]):
+        masaustu.locator(f'#akis .post-card[data-id="{kimlik}"] .post-reaction-trigger').click()
+        masaustu.locator(f'.post-reaction-tray.open [data-post-reaction="{tepki}"]').click()
+        masaustu.wait_for_selector("#ranking-notice.show")
+        masaustu.wait_for_timeout(400)
+    sonra = [k["id"] for k in masaustu.evaluate(sira)]
+    assert sonra[:len(okunan)] == okunan
+    assert sorted(sonra) == sorted(k["id"] for k in once)
+    assert not masaustu.hatalar
+
+
 def test_pwa_manifesti_gecerli_ve_bagli(masaustu):
     """'Neden mobil uygulama değil?' sorusu: site telefona uygulama gibi kurulabilir."""
     masaustu.goto(f"{ADRES}/index.html")

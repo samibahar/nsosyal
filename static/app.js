@@ -198,24 +198,29 @@ async function firstLoad(){
   posts.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.textContent="";pageObserver.observe(sentinel);updateTopics();loading=false;
 }
 async function loadMore(){if(loading||exhausted)return;loading=true;sentinel.textContent="Yeni gönderiler hazırlanıyor…";const posts=await getPage(false);posts.forEach(post=>feed.insertBefore(createCard(post),sentinel));sentinel.textContent=exhausted?"Akışın sonuna geldin.":"";if(exhausted)pageObserver.unobserve(sentinel);updateTopics();loading=false;}
-async function rerankVisibleFeed(reaction=null){
+// Okunan (ekranda ya da ustte kalan) kartlar yerinde durur: tepki yalnizca
+// alttaki henuz gorulmemis kartlari ve havuzdaki siradaki sayfalari etkiler.
+// Juri demosu (tumu) once/sonra farkini gostermek icin tum sayfayi siralar.
+async function rerankVisibleFeed(reaction=null,{tumu=false}={}){
   if(!localAgent)return;
-  const cards=[...feed.querySelectorAll(".post-card")];
-  if(cards.length<2)return;
-  const before=new Map(cards.map((card,index)=>[card.dataset.id,{index,top:card.getBoundingClientRect().top}]));
-  const ranked=await localAgent.rank(cards.map(card=>postCache.get(Number(card.dataset.id))).filter(Boolean));
-  ranked.forEach(post=>postCache.set(post.id,post));
-  const moved=ranked.filter((post,index)=>before.get(String(post.id))?.index!==index).length;
-  // "dengelendi" etiketi yeni skorlarla guncellenir: kullanici hangi
-  // gonderinin neden asagi indigini karti acmadan da gorebilsin.
-  ranked.forEach(post=>{const card=cards.find(item=>Number(item.dataset.id)===post.id);if(card){card.dataset.localScore=String(post.local_skor);const etiket=card.querySelector(".softened-pill");if(etiket)etiket.hidden=!(post.local_dengeleme>0);card.classList.toggle("yumusatildi",post.local_dengeleme>0);feed.insertBefore(card,sentinel);}});
-  cards.forEach(card=>{const previous=before.get(card.dataset.id),next=card.getBoundingClientRect().top,delta=previous?previous.top-next:0;if(Math.abs(delta)>1)card.animate([{transform:`translateY(${delta}px)`},{transform:"translateY(0)"}],{duration:340,easing:"cubic-bezier(.2,.8,.2,1)"});});
-  if(moved)showRankingNotice(moved,reaction);
+  const cards=[...feed.querySelectorAll(".post-card")].filter(card=>tumu||card.getBoundingClientRect().top>=window.innerHeight);
+  let moved=0;
+  if(cards.length>1){
+    const before=new Map(cards.map((card,index)=>[card.dataset.id,{index,top:card.getBoundingClientRect().top}]));
+    const ranked=await localAgent.rank(cards.map(card=>postCache.get(Number(card.dataset.id))).filter(Boolean));
+    ranked.forEach(post=>postCache.set(post.id,post));
+    moved=ranked.filter((post,index)=>before.get(String(post.id))?.index!==index).length;
+    // "dengelendi" etiketi yeni skorlarla guncellenir: kullanici hangi
+    // gonderinin neden asagi indigini karti acmadan da gorebilsin.
+    ranked.forEach(post=>{const card=cards.find(item=>Number(item.dataset.id)===post.id);if(card){card.dataset.localScore=String(post.local_skor);const etiket=card.querySelector(".softened-pill");if(etiket)etiket.hidden=!(post.local_dengeleme>0);card.classList.toggle("yumusatildi",post.local_dengeleme>0);feed.insertBefore(card,sentinel);}});
+    cards.forEach(card=>{const previous=before.get(card.dataset.id),next=card.getBoundingClientRect().top,delta=previous?previous.top-next:0;if(Math.abs(delta)>1)card.animate([{transform:`translateY(${delta}px)`},{transform:"translateY(0)"}],{duration:340,easing:"cubic-bezier(.2,.8,.2,1)"});});
+  }
+  if(moved||reaction)showRankingNotice(moved,reaction);
 }
 function showRankingNotice(moved,reaction,ek=""){
   const labels={begendim:"beğeni",umutlandim:"umut",dusundum:"düşünce",kizdim:"gerginlik",gerildim:"yoğunluk"};
   const notice=document.getElementById("ranking-notice");
-  notice.innerHTML=`<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Akış güncellendi · ${moved} gönderi yer değiştirdi${reaction?` · ${labels[reaction]||"tepki"} sinyali yerelde işlendi`:""}${ek?` · ${ek}`:""}`;
+  notice.innerHTML=`<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Akış güncellendi · ${moved?`${moved} gönderi yer değiştirdi`:"sıradaki gönderiler buna göre seçilecek"}${reaction?` · ${labels[reaction]||"tepki"} sinyali yerelde işlendi`:""}${ek?` · ${ek}`:""}`;
   notice.classList.add("show");clearTimeout(showRankingNotice.timer);showRankingNotice.timer=setTimeout(()=>notice.classList.remove("show"),3800);
 }
 async function startJuryDemo(){
@@ -228,7 +233,7 @@ async function startJuryDemo(){
     juryDemoActive=true;loading=true;exhausted=true;pageObserver.unobserve(sentinel);feed.innerHTML="";feed.removeAttribute("aria-busy");postCache.clear();resetTopics();localPostReactions={};
     const initial=[...pack.gonderiler].sort((a,b)=>(beforeMap.get(Number(a.id))||99)-(beforeMap.get(Number(b.id))||99));
     initial.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.innerHTML='<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Hazır örnek senaryo · karar yerelde hesaplanıyor';updateTopics();updateLocalAgent(trace.summary);loading=false;
-    setTimeout(()=>rerankVisibleFeed(),420);
+    setTimeout(()=>rerankVisibleFeed(null,{tumu:true}),420);
     setTimeout(()=>showRankingNotice(trace.movedCount,null,trace.dengelemeAcik===false?"dengeleme Ayarlar'dan kapalı, yalnızca ilgi sıralaması":""),780);
   }catch(error){console.warn("Jury demo unavailable",error);showRankingNotice(0);document.getElementById("ranking-notice").textContent="Demo şu an başlatılamadı. Lütfen yeniden dene.";}
   finally{controls.forEach(control=>{control.removeAttribute("aria-busy");if("disabled" in control)control.disabled=false;});}
