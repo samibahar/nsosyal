@@ -165,13 +165,15 @@ html, body { background: var(--canvas); }
 /* Marka: NSosyal "N"i (bizim yesil tonlarimizda) + "sosyal". Genis ekranda sol
    menude N'in altinda "duygu katmani · prototip" satiri. */
 .brand, .mobile-brand, .insight-brand { gap: 1px; }
-.marka-n { display: block; flex: none; width: 30px; height: 30px; }
-.mobile-brand .marka-n, .insight-brand .marka-n { width: 26px; height: 26px; }
+/* logo.svg sekle kirpildi (viewBox); genislik oranla gelir, N ile "sosyal" bitisik okunur */
+.marka-n { display: block; flex: none; width: auto; height: 30px; }
+.mobile-brand .marka-n, .insight-brand .marka-n { width: auto; height: 26px; }
 .brand-text b, .mobile-brand b, .insight-brand b { font-size: 21px; font-weight: 800; letter-spacing: -.045em; line-height: 1; color: var(--ink); }
 .mobile-brand b, .insight-brand b { font-size: 19px; }
 .brand-text small { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: .01em; }
 @media (min-width: 1001px) {
-  .brand { display: grid; grid-template-columns: auto auto; justify-content: start; align-items: end; column-gap: 1px; row-gap: 5px; }
+  /* max-content: alttaki uzun satir iki sutuna yayilinca fazlalik N'in sutununa binmesin */
+  .brand { display: grid; grid-template-columns: max-content 1fr; align-items: end; column-gap: 1px; row-gap: 5px; }
   .brand > span.brand-text:last-child { display: contents; }
   .brand-text b { grid-row: 1; grid-column: 2; }
   .brand-text small { grid-row: 2; grid-column: 1 / -1; }
