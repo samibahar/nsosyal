@@ -133,7 +133,7 @@ function openReactionTray(post,trigger){
   reactionTray.querySelectorAll("[data-post-reaction]").forEach(button=>button.addEventListener("click",async event=>{
     event.preventDefault();event.stopPropagation();const current=activeReactionTray;if(!current)return;
     const reaction=button.dataset.postReaction;localPostReactions[current.post.id]=reaction;current.trigger.querySelector("span").textContent=POST_REACTION_LABELS[reaction];current.trigger.querySelector(".tepki-ikon")?.remove();
-    closeReactionTray();if(localAgent){updateLocalAgent(await localAgent.recordPostReaction(current.post,reaction));await rerankVisibleFeed(reaction);}
+    closeReactionTray();if(localAgent){updateLocalAgent(await localAgent.recordPostReaction(current.post,reaction));showRankingNotice(0,reaction);}
   }));
 }
 document.addEventListener("pointerdown",event=>{if(!event.target.closest(".post-reaction-wrap,.post-reaction-tray"))closeReactionTray();});
@@ -198,29 +198,28 @@ async function firstLoad(){
   posts.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.textContent="";pageObserver.observe(sentinel);updateTopics();loading=false;
 }
 async function loadMore(){if(loading||exhausted)return;loading=true;sentinel.textContent="Yeni gönderiler hazırlanıyor…";const posts=await getPage(false);posts.forEach(post=>feed.insertBefore(createCard(post),sentinel));sentinel.textContent=exhausted?"Akışın sonuna geldin.":"";if(exhausted)pageObserver.unobserve(sentinel);updateTopics();loading=false;}
-// Okunan (ekranda ya da ustte kalan) kartlar yerinde durur: tepki yalnizca
-// alttaki henuz gorulmemis kartlari ve havuzdaki siradaki sayfalari etkiler.
-// Juri demosu (tumu) once/sonra farkini gostermek icin tum sayfayi siralar.
-async function rerankVisibleFeed(reaction=null,{tumu=false}={}){
+// Yalnizca juri demosu kullanir: once/sonra farkini gostermek icin yuklu
+// sayfayi yeniden siralar. Normal akista yuklenen sayfa sabit kalir; tepki ve
+// ayar degisiklikleri siradaki sayfaya yansir (getPage her sayfada havuzu en
+// guncel profille siralar).
+async function rerankVisibleFeed(){
   if(!localAgent)return;
-  const cards=[...feed.querySelectorAll(".post-card")].filter(card=>tumu||card.getBoundingClientRect().top>=window.innerHeight);
-  let moved=0;
-  if(cards.length>1){
-    const before=new Map(cards.map((card,index)=>[card.dataset.id,{index,top:card.getBoundingClientRect().top}]));
-    const ranked=await localAgent.rank(cards.map(card=>postCache.get(Number(card.dataset.id))).filter(Boolean));
-    ranked.forEach(post=>postCache.set(post.id,post));
-    moved=ranked.filter((post,index)=>before.get(String(post.id))?.index!==index).length;
-    // "dengelendi" etiketi yeni skorlarla guncellenir: kullanici hangi
-    // gonderinin neden asagi indigini karti acmadan da gorebilsin.
-    ranked.forEach(post=>{const card=cards.find(item=>Number(item.dataset.id)===post.id);if(card){card.dataset.localScore=String(post.local_skor);const etiket=card.querySelector(".softened-pill");if(etiket)etiket.hidden=!(post.local_dengeleme>0);card.classList.toggle("yumusatildi",post.local_dengeleme>0);feed.insertBefore(card,sentinel);}});
-    cards.forEach(card=>{const previous=before.get(card.dataset.id),next=card.getBoundingClientRect().top,delta=previous?previous.top-next:0;if(Math.abs(delta)>1)card.animate([{transform:`translateY(${delta}px)`},{transform:"translateY(0)"}],{duration:340,easing:"cubic-bezier(.2,.8,.2,1)"});});
-  }
-  if(moved||reaction)showRankingNotice(moved,reaction);
+  const cards=[...feed.querySelectorAll(".post-card")];
+  if(cards.length<2)return;
+  const before=new Map(cards.map((card,index)=>[card.dataset.id,{index,top:card.getBoundingClientRect().top}]));
+  const ranked=await localAgent.rank(cards.map(card=>postCache.get(Number(card.dataset.id))).filter(Boolean));
+  ranked.forEach(post=>postCache.set(post.id,post));
+  const moved=ranked.filter((post,index)=>before.get(String(post.id))?.index!==index).length;
+  // "dengelendi" etiketi yeni skorlarla guncellenir: kullanici hangi
+  // gonderinin neden asagi indigini karti acmadan da gorebilsin.
+  ranked.forEach(post=>{const card=cards.find(item=>Number(item.dataset.id)===post.id);if(card){card.dataset.localScore=String(post.local_skor);const etiket=card.querySelector(".softened-pill");if(etiket)etiket.hidden=!(post.local_dengeleme>0);card.classList.toggle("yumusatildi",post.local_dengeleme>0);feed.insertBefore(card,sentinel);}});
+  cards.forEach(card=>{const previous=before.get(card.dataset.id),next=card.getBoundingClientRect().top,delta=previous?previous.top-next:0;if(Math.abs(delta)>1)card.animate([{transform:`translateY(${delta}px)`},{transform:"translateY(0)"}],{duration:340,easing:"cubic-bezier(.2,.8,.2,1)"});});
+  if(moved)showRankingNotice(moved);
 }
 function showRankingNotice(moved,reaction,ek=""){
   const labels={begendim:"beğeni",umutlandim:"umut",dusundum:"düşünce",kizdim:"gerginlik",gerildim:"yoğunluk"};
   const notice=document.getElementById("ranking-notice");
-  notice.innerHTML=`<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Akış güncellendi · ${moved?`${moved} gönderi yer değiştirdi`:"sıradaki gönderiler buna göre seçilecek"}${reaction?` · ${labels[reaction]||"tepki"} sinyali yerelde işlendi`:""}${ek?` · ${ek}`:""}`;
+  notice.innerHTML=`<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> ${moved?`Akış güncellendi · ${moved} gönderi yer değiştirdi`:"Sıradaki sayfa buna göre seçilecek"}${reaction?` · ${labels[reaction]||"tepki"} sinyali yerelde işlendi`:""}${ek?` · ${ek}`:""}`;
   notice.classList.add("show");clearTimeout(showRankingNotice.timer);showRankingNotice.timer=setTimeout(()=>notice.classList.remove("show"),3800);
 }
 async function startJuryDemo(){
@@ -233,7 +232,7 @@ async function startJuryDemo(){
     juryDemoActive=true;loading=true;exhausted=true;pageObserver.unobserve(sentinel);feed.innerHTML="";feed.removeAttribute("aria-busy");postCache.clear();resetTopics();localPostReactions={};
     const initial=[...pack.gonderiler].sort((a,b)=>(beforeMap.get(Number(a.id))||99)-(beforeMap.get(Number(b.id))||99));
     initial.forEach(post=>feed.appendChild(createCard(post)));feed.appendChild(sentinel);sentinel.innerHTML='<svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Hazır örnek senaryo · karar yerelde hesaplanıyor';updateTopics();updateLocalAgent(trace.summary);loading=false;
-    setTimeout(()=>rerankVisibleFeed(null,{tumu:true}),420);
+    setTimeout(()=>rerankVisibleFeed(),420);
     setTimeout(()=>showRankingNotice(trace.movedCount,null,trace.dengelemeAcik===false?"dengeleme Ayarlar'dan kapalı, yalnızca ilgi sıralaması":""),780);
   }catch(error){console.warn("Jury demo unavailable",error);showRankingNotice(0);document.getElementById("ranking-notice").textContent="Demo şu an başlatılamadı. Lütfen yeniden dene.";}
   finally{controls.forEach(control=>{control.removeAttribute("aria-busy");if("disabled" in control)control.disabled=false;});}
@@ -285,7 +284,7 @@ document.getElementById("story-close").addEventListener("click",closeStory);docu
 // Kalici kapatma Ayarlar'da. Onceki kart yalnizca sunucu yolunda calisiyordu.
 const intervention=document.createElement("aside");intervention.id="balance-intervention";intervention.className="balance-intervention";intervention.hidden=true;intervention.setAttribute("role","status");intervention.innerHTML='<span><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> AKIŞ DENGESİ</span><h2>Akış biraz yoğunlaştı</h2><p>Yoğun tonlu içeriklerde uzun kaldığını fark ettik. Bu oturumda onların payını biraz azaltıp aralıklandırıyoruz; hiçbir gönderi silinmiyor.</p><div><button id="denge-tamam" type="button">Tamam</button><button id="denge-kapat" type="button">Bu oturumda dengeleme yapma</button></div>';document.body.appendChild(intervention);
 document.getElementById("denge-tamam").addEventListener("click",()=>{intervention.hidden=true;});
-document.getElementById("denge-kapat").addEventListener("click",async()=>{intervention.hidden=true;try{sessionStorage.setItem("nsosyal-denge-oturum-kapali","1");}catch{}if(localAgent){updateLocalAgent(await localAgent.summary());await rerankVisibleFeed();}});
+document.getElementById("denge-kapat").addEventListener("click",async()=>{intervention.hidden=true;try{sessionStorage.setItem("nsosyal-denge-oturum-kapali","1");}catch{}if(localAgent){updateLocalAgent(await localAgent.summary());}});
 function dengeBildirimi(summary){
   if(!summary.enoughData||summary.intensity<=.58||summary.ayarlar?.dengeleme===false||summary.oturumdaKapali)return;
   try{if(sessionStorage.getItem("nsosyal-denge-bildirildi"))return;sessionStorage.setItem("nsosyal-denge-bildirildi","1");}catch{}
@@ -307,7 +306,7 @@ async function ilkBilgilendirme(){
   document.body.appendChild(arka);arka.querySelector("#onay-acik").focus();
   // aria-modal diyalog: Tab odagi kutunun icinde doner, arkadaki akisa kacmaz.
   arka.addEventListener("keydown",event=>{if(event.key!=="Tab")return;const odaklar=[...arka.querySelectorAll("button,a[href]")],ilk=odaklar[0],son=odaklar[odaklar.length-1];if(event.shiftKey&&document.activeElement===ilk){event.preventDefault();son.focus();}else if(!event.shiftKey&&document.activeElement===son){event.preventDefault();ilk.focus();}});
-  arka.querySelectorAll("[data-onay]").forEach(buton=>buton.addEventListener("click",async()=>{await localAgent.setOnay(buton.dataset.onay);arka.remove();updateLocalAgent(await localAgent.summary());if(buton.dataset.onay==="kapali")await rerankVisibleFeed();}));
+  arka.querySelectorAll("[data-onay]").forEach(buton=>buton.addEventListener("click",async()=>{await localAgent.setOnay(buton.dataset.onay);arka.remove();updateLocalAgent(await localAgent.summary());}));
 }
 // Acilis. Yerel depolama (IndexedDB) acilamazsa -- bazi gizli modlar, "site
 // verilerini engelle" ayari -- akis bos kalmasin diye sunucu siralamasina

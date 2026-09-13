@@ -87,23 +87,23 @@ def test_neden_bu_paneli_acilinca_akis_bildirimi_kapanir(masaustu):
     assert not masaustu.hatalar
 
 
-def test_tepki_okunan_gonderilerin_yerini_degistirmez(masaustu):
-    """Tepki yalnızca henüz görülmemiş kartları ve sıradaki sayfaları etkiler;
-    ekranda ya da üstte kalan (okunmuş) gönderiler yerinde durur."""
+def test_tepki_yuklu_sayfayi_degistirmez_siradaki_sayfaya_yansir(masaustu):
+    """Tepki yüklenmiş 12 gönderilik sayfayı yeniden sıralamaz (okunmuş ya da
+    aşağıda duran gönderiler yerinde kalır); sıradaki sayfa en güncel profille seçilir."""
     akisi_ac(masaustu)
-    masaustu.locator("#akis .post-card").nth(3).scroll_into_view_if_needed()
-    sira = "() => [...document.querySelectorAll('#akis .post-card')].map(k => ({id: k.dataset.id, gorulen: k.getBoundingClientRect().top < innerHeight}))"
+    sira = "() => [...document.querySelectorAll('#akis .post-card')].map(k => k.dataset.id)"
     once = masaustu.evaluate(sira)
-    okunan = [k["id"] for k in once if k["gorulen"]]
-    assert 0 < len(okunan) < len(once)
-    for kimlik, tepki in zip(okunan[-3:], ["kizdim", "gerildim", "begendim"]):
+    for kimlik, tepki in zip([once[0], once[5], once[10]], ["kizdim", "gerildim", "begendim"]):
         masaustu.locator(f'#akis .post-card[data-id="{kimlik}"] .post-reaction-trigger').click()
         masaustu.locator(f'.post-reaction-tray.open [data-post-reaction="{tepki}"]').click()
         masaustu.wait_for_selector("#ranking-notice.show")
-        masaustu.wait_for_timeout(400)
-    sonra = [k["id"] for k in masaustu.evaluate(sira)]
-    assert sonra[:len(okunan)] == okunan
-    assert sorted(sonra) == sorted(k["id"] for k in once)
+    masaustu.wait_for_timeout(400)
+    # Alttaki karta tıklamak sayfayı kaydırıp sıradaki sayfayı erkenden yükleyebilir.
+    assert masaustu.evaluate(sira)[:len(once)] == once
+    assert "Sıradaki sayfa" in masaustu.locator("#ranking-notice").inner_text()
+    masaustu.evaluate("document.querySelector('#akis').lastElementChild.scrollIntoView()")
+    masaustu.wait_for_function("document.querySelectorAll('#akis .post-card').length >= 24")
+    assert masaustu.evaluate(sira)[:12] == once
     assert not masaustu.hatalar
 
 
