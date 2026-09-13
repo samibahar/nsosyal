@@ -27,15 +27,6 @@ KONU_YAZARLARI = {
     "gundem": "mertdemir", "ekonomi": "mertdemir",
 }
 
-HIKAYELER = [
-    ("emiryusuf", "/assets/explore/12-forest.jpg", "Bugün akışta küçük bir mola."),
-    ("denizcetin", "/assets/explore/04-laptop.jpg", "Bugün masada küçük bir düzen kurdum."),
-    ("eceyilmaz", "/assets/explore/13-sea.jpg", "Sabahın en sessiz saati."),
-    ("ardaatlas", "/assets/explore/01-soccer.jpg", "Kısa bir maç arası."),
-    ("selinkaya", "/assets/explore/10-library.jpg", "Çalışma molası."),
-    ("mertdemir", "/assets/explore/15-market.jpg", "Mahalleden küçük notlar."),
-]
-
 
 class SosyalDepo:
     def __init__(self, path: Path):
@@ -75,10 +66,6 @@ class SosyalDepo:
                     id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL REFERENCES users(id), actor_id TEXT REFERENCES users(id),
                     post_id INTEGER REFERENCES posts(id), kind TEXT NOT NULL, message TEXT NOT NULL, created_at TEXT NOT NULL
                 );
-                CREATE TABLE IF NOT EXISTS stories (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL REFERENCES users(id), media_path TEXT NOT NULL,
-                    caption TEXT NOT NULL, position INTEGER NOT NULL
-                );
             """)
             for user_id, user in DEMO_KULLANICILAR.items():
                 con.execute("INSERT OR IGNORE INTO users VALUES (?, ?, ?, ?, ?, ?)", (user_id, user["ad"], user["handle"], user["bas_harf"], user["bio"], user["renk"]))
@@ -90,10 +77,6 @@ class SosyalDepo:
                 "INSERT OR IGNORE INTO posts(id, topic, text, author_id, created_at) VALUES (?, ?, ?, ?, ?)",
                 [(post["id"], post["konu"], post["metin"], post.get("yazar") or KONU_YAZARLARI.get(post["konu"], "emiryusuf"), now) for post in kaynak_gonderiler],
             )
-            if con.execute("SELECT COUNT(*) FROM stories").fetchone()[0] == 0:
-                con.executemany("INSERT INTO stories(user_id, media_path, caption, position) VALUES (?, ?, ?, ?)", [(user, media, caption, position) for position, (user, media, caption) in enumerate(HIKAYELER)])
-            elif not con.execute("SELECT 1 FROM stories WHERE user_id = 'emiryusuf'").fetchone():
-                con.execute("INSERT INTO stories(user_id, media_path, caption, position) VALUES (?, ?, ?, ?)", HIKAYELER[0] + (0,))
 
     def gonderileri_yukle(self) -> list[dict]:
         with self._baglan() as con:
@@ -172,13 +155,6 @@ class SosyalDepo:
                                 users.name AS actor_name, users.initials AS actor_initials, users.color AS actor_color
                                 FROM activities LEFT JOIN users ON users.id = activities.actor_id
                                 WHERE activities.user_id = ? ORDER BY activities.id DESC LIMIT 30""", (user_id,)).fetchall()
-        return [dict(row) for row in rows]
-
-    def hikayeler(self):
-        with self._baglan() as con:
-            rows = con.execute("""SELECT stories.id, stories.user_id, stories.media_path, stories.caption, stories.position,
-                                users.name, users.handle, users.initials, users.color
-                                FROM stories JOIN users ON users.id = stories.user_id ORDER BY stories.position""").fetchall()
         return [dict(row) for row in rows]
 
 

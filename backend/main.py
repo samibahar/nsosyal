@@ -404,11 +404,6 @@ def api_etkinlikler():
     return {"etkinlikler": DEPO.etkinlikler("emiryusuf")}
 
 
-@app.get("/api/hikayeler")
-def api_hikayeler():
-    return {"hikayeler": DEPO.hikayeler()}
-
-
 @eski.post("/api/demo-senaryo")
 def api_demo_senaryo():
     """Yarışma demosu için sabit, tekrar üretilebilir yoğun-akış senaryosu."""

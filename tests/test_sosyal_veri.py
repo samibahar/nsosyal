@@ -10,7 +10,7 @@ def test_topluluk_havuzu_profile_bazli_ve_benzersiz():
     }
 
 
-def test_sosyal_depo_follow_reaction_comment_ve_hikaye_kalici(tmp_path):
+def test_sosyal_depo_follow_reaction_comment_kalici(tmp_path):
     depo = SosyalDepo(tmp_path / "demo.sqlite3")
     depo.hazirla([{"id": 1, "konu": "bilim", "metin": "Kısa bir demo postu.", "yazar": "denizcetin"}])
 
@@ -22,4 +22,3 @@ def test_sosyal_depo_follow_reaction_comment_ve_hikaye_kalici(tmp_path):
     depo.yorum_ekle("emiryusuf", 1, "Güzel bir fikir.")
     assert depo.post_ozellikleri(1)["yorum_sayisi"] == 1
     assert len(depo.yorumlar(1)) == 1
-    assert len(depo.hikayeler()) >= 5

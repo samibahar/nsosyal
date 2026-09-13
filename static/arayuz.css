@@ -52,7 +52,6 @@ textarea:focus-visible,
 select:focus-visible,
 [tabindex]:focus-visible,
 [role="button"]:focus-visible,
-.story:focus-visible,
 .nav-item:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
@@ -60,8 +59,7 @@ select:focus-visible,
 }
 /* Odak halkasi koyu zeminde kaybolmasin */
 .bottom-nav :focus-visible,
-.jury-intro :focus-visible,
-.story-dialog :focus-visible {
+.jury-intro :focus-visible {
   outline-color: #cdf58a;
 }
 
@@ -78,7 +76,6 @@ select:focus-visible,
 .dogrulama-secenek,
 .checkin-close,
 .sheet-close,
-.story-close,
 .create-button {
   min-height: var(--hedef);
   display: inline-flex;
@@ -87,7 +84,7 @@ select:focus-visible,
   gap: 6px;
 }
 .action-button, .why-button { min-width: 64px; }
-.round-button, .checkin-close, .sheet-close, .story-close {
+.round-button, .checkin-close, .sheet-close {
   min-width: var(--hedef);
 }
 
@@ -190,7 +187,6 @@ select:focus-visible,
 /* 2h. Hikaye halkalarindaki bas harfler acik uclu gradyanlar uzerinde
    soluk kaliyordu. Bilgi zaten hemen altindaki isim etiketinde de var
    (yani tek tasiyici degil), yine de okunurlugu artiriyoruz. */
-.story-photo { text-shadow: 0 1px 4px rgba(12, 18, 10, .55); }
 
 /* 2e. Ekran okuyucu metni */
 .sr-only {
@@ -405,7 +401,7 @@ select:focus-visible,
   gap: 3px;
 }
 .round-button .ikon { vertical-align: 0; }
-.story .ikon, .create-button .ikon { vertical-align: 0; }
+.create-button .ikon { vertical-align: 0; }
 
 /* Marka kivilcimi: metin akisinda degil, kendi kutusunda */
 .status-spark {
