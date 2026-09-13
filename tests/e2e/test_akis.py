@@ -107,6 +107,32 @@ def test_tepki_yuklu_sayfayi_degistirmez_siradaki_sayfaya_yansir(masaustu):
     assert not masaustu.hatalar
 
 
+def test_kullanim_ozeti_10_dakikalik_araya_gore_oturum_ayirir(masaustu):
+    """Sağ paneldeki 'Kullanım' kartı ve İçgörü aynı hesabı kullanır; demo olayları sayılmaz."""
+    akisi_ac(masaustu)
+    ozet = masaustu.evaluate("""() => {
+        const t = 1e12, dk = 60000, o = (d, id, ek = {}) => ({type: 'interaction', createdAt: t + d * dk, postId: id, dwell: 5, ...ek});
+        return LocalPersonalization.kullanimOzeti([o(0, 1), o(2, 2), o(4, 2), o(5, 9, {demo: true}), o(20, 3), o(21, 4)], 0, t + 22 * dk);
+    }""")
+    assert ozet["toplam"] == {"sureSn": 245 + 65, "gonderi": 4, "oturum": 2}
+    assert ozet["oturum"] == {"sureSn": 65, "gonderi": 2, "oturum": 1}
+
+
+def test_kullanim_karti_sag_panelde_ve_icgoru_de_gorunur(masaustu):
+    akisi_ac(masaustu)
+    assert masaustu.locator("#kullanim-karti").is_hidden()  # henüz kayıt yok
+    masaustu.mouse.move(640, 400)
+    for _ in range(4):
+        masaustu.mouse.wheel(0, 700)
+        masaustu.wait_for_timeout(500)
+    masaustu.wait_for_selector("#kullanim-karti:not([hidden])")
+    assert "gönderi" in masaustu.locator("#kullanim-bugun").inner_text()
+    masaustu.goto(f"{ADRES}/rapor.html")
+    masaustu.wait_for_function("document.getElementById('kpi-sure').textContent !== '—'")
+    assert "gönderi" in masaustu.locator("#kpi-sure-alt").inner_text()
+    assert not masaustu.hatalar
+
+
 def test_pwa_manifesti_gecerli_ve_bagli(masaustu):
     """'Neden mobil uygulama değil?' sorusu: site telefona uygulama gibi kurulabilir."""
     masaustu.goto(f"{ADRES}/index.html")

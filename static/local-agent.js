@@ -106,6 +106,25 @@
     const negatifRuhHaliKutlesi = psikolojik ? (psikolojik.olasiliklar.sinirli || 0) + (psikolojik.olasiliklar.anksiyete || 0) : 0;
     return clamp(spiralOlasilik * 0.7 + negatifRuhHaliKutlesi * 0.3);
   }
+  // Kullanim suresi (sag panel ve Icgoru): 10 dakikadan uzun ara yeni oturum
+  // sayilir. Oturum suresi, ilk kartin gorunmeye basladigi andan son olaya kadar
+  // gecen zamandir; "gonderi" gorulen farkli gonderi sayisidir. Juri demosunun
+  // betikli olaylari sayilmaz.
+  const OTURUM_ARA_MS = 10 * 60 * 1000;
+  const _gunBasi = () => { const gun = new Date(); gun.setHours(0, 0, 0, 0); return +gun; };
+  function kullanimOzeti(events, bas = 0, simdi = Date.now()) {
+    const oturumlar = [];
+    events.filter(event => !event.demo && event.createdAt >= bas).sort((a, b) => a.createdAt - b.createdAt).forEach(event => {
+      const baslangic = event.createdAt - Math.min(Math.max(Number(event.dwell) || 0, 0), 60) * 1000;
+      let oturum = oturumlar[oturumlar.length - 1];
+      if (!oturum || baslangic - oturum.bitis > OTURUM_ARA_MS) { oturum = { baslangic, bitis: event.createdAt, gonderiler: new Set() }; oturumlar.push(oturum); }
+      oturum.bitis = Math.max(oturum.bitis, event.createdAt);
+      if (event.type === "interaction") oturum.gonderiler.add(event.postId);
+    });
+    const ozet = liste => ({ sureSn: Math.round(liste.reduce((toplam, oturum) => toplam + oturum.bitis - oturum.baslangic, 0) / 1000), gonderi: new Set(liste.flatMap(oturum => [...oturum.gonderiler])).size, oturum: liste.length });
+    const son = oturumlar[oturumlar.length - 1];
+    return { toplam: ozet(oturumlar), oturum: ozet(son && simdi - son.bitis <= OTURUM_ARA_MS ? [son] : []) };
+  }
   // kalibrasyonsuz: jüri demosu her cihazda aynı sonucu versin diye varsayılan modelle çalışır.
   function calculate(events, state, { kalibrasyonsuz = false } = {}) {
     const meaningful = events.filter(event => event.type === "interaction"), recent = meaningful.slice(-12), negative = recent.filter(event => event.tone < -0.15), sustained = negative.filter(event => event.dwell >= 3.5), unique = new Set(recent.map(event => event.topic)).size;
@@ -116,13 +135,14 @@
     // Toplam etkilesim sayaci state'te tutulur; events yalnizca son 24 saattir.
     const toplamEtkilesim = Math.max(state.etkilesimSayisi || 0, meaningful.length);
     const confidence = clamp(toplamEtkilesim / 16), enoughData = toplamEtkilesim >= 10;
+    const kullanim = kullanimOzeti(events, _gunBasi());
     const preferred = Object.entries(state.topicWeights || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
     // Jüri demosunun betikli tepkileri (runDemoScenario) burada HARİÇ tutulur --
     // aksi halde "Son tepkin: ... sen belirttin" etiketi, kullanıcının hiç
     // tıklamadığı senaryo-içi bir tepkiyi kendisi vermiş gibi gösteriyordu
     // (kullanıcı tarafından tespit edildi, 21.08.2026).
     const latestExplicit = [...events].reverse().find(event => (event.type === "post_reaction" || event.type === "news_reaction") && !event.demo && Date.now() - event.createdAt < 30 * 60 * 1000);
-    return { mode: "local", eventCount: toplamEtkilesim, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, oturumdaKapali: _oturumdaKapali(), kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, spiralKalibrasyonEtkin: kalibrasyonEtkin, shouldCheckin: state.ayarlar.kontrolSorulari && toplamEtkilesim >= 12 && toplamEtkilesim % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
+    return { mode: "local", eventCount: toplamEtkilesim, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, oturumdaKapali: _oturumdaKapali(), kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, spiralKalibrasyonEtkin: kalibrasyonEtkin, kullanim: { oturum: kullanim.oturum, bugun: kullanim.toplam }, shouldCheckin: state.ayarlar.kontrolSorulari && toplamEtkilesim >= 12 && toplamEtkilesim % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
   }
   async function trimEvents() {
     await _eskileriSil(IDBKeyRange.upperBound(Date.now() - GUNLUK_SAKLAMA_GUN * 86400000, true));
@@ -451,5 +471,5 @@
     Object.keys(state.gunluk).forEach(tarih => { if (state.gunluk[tarih].ornek) delete state.gunluk[tarih]; });
     await setState(state); return uzunDonemOzeti();
   }
-  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, spiralDogrulamaOzeti, pilotDosyasi, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, siralaSaf, rankNews, runDemoScenario, getDecisionTrace, erase, getOnay, setOnay, getAyarlar, setAyar, kisiselModelDurumu, etiketModeli, kisiselModeliSifirla, uzunDonemOzeti, ornekGecmisYukle, ornekGecmisiKaldir };
+  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, spiralDogrulamaOzeti, pilotDosyasi, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, siralaSaf, rankNews, runDemoScenario, getDecisionTrace, erase, getOnay, setOnay, getAyarlar, setAyar, kisiselModelDurumu, etiketModeli, kisiselModeliSifirla, uzunDonemOzeti, ornekGecmisYukle, ornekGecmisiKaldir, kullanimOzeti };
 })();

@@ -55,6 +55,8 @@ const OLUMSUZ_CEVAP=new Set(["sinirli","anksiyete"]);
 const yz=x=>`%${Math.round(x*100)}`;
 // Unutulmuş açık bir sekme toplamı domine etmesin diye süre 60 sn'de kesilir (günlük özetle aynı).
 const sure=event=>Math.min(Math.max(Number(event.dwell)||0,0),60);
+// Kullanım süresi ana sayfadaki "Kullanım" kartıyla aynı hesaptan gelir (LocalPersonalization.kullanimOzeti).
+const sureMetni=saniye=>{const dk=Math.round(saniye/60);if(dk<1)return "1 dk'dan az";return dk<60?`${dk} dk`:`${Math.floor(dk/60)} sa${dk%60?` ${dk%60} dk`:""}`;};
 // Olası ruh hali seyri: her etkileşim anında son 30 dakikanın birleşik tahmini
 // (trained-models.js ruhHaliSeyri). Tek gönderi sayılmaz; raporlarda her an
 // o sırada geçen süreyle ağırlıklandırılır: 2 sn göz atmak ile 1 dk okumak
@@ -131,6 +133,7 @@ function renderReactions(events){
     `<p class="dogrulama-not">${d.olumlu} olumlu · ${d.notr} düşündüm · ${d.olumsuz} olumsuz${etkilesim?` · 100 etkileşimde ${Math.round(tepkiler.length/etkilesim*100)} tepki`:""}${d.olumsuz?`. Yoğun tonlu içeriğe verilen olumsuz tepki: ${d.olumsuzYogunIcerik}/${d.olumsuz}.`:""}</p>`;
 }
 function renderSummary(events){const interactions=events.filter(event=>event.type==="interaction"),reactions=events.filter(event=>event.type==="post_reaction"||event.type==="news_reaction");$("kpi-interactions").textContent=interactions.length;$("kpi-reactions").textContent=reactions.length;const hareket=trace?.movedCount;$("kpi-moved").textContent=hareket??"—";const hareketAlt=document.querySelector("#kpi-moved + span");if(hareketAlt)hareketAlt.textContent=hareket==null?"demo çalışmadı":"son demo";
+  const kullanim=window.LocalPersonalization?.kullanimOzeti?.(events);if(kullanim){$("kpi-sure").textContent=kullanim.toplam.oturum?sureMetni(kullanim.toplam.sureSn):"—";$("kpi-sure-alt").textContent=`${kullanim.toplam.gonderi} gönderi · ${kullanim.toplam.oturum} oturum`;}
   if(!interactions.length){$("insight-status-title").textContent="Veri bekleniyor";$("insight-status-text").textContent="Etkileşimlerin yalnızca bu cihazda özetlenir.";return;}
   const topics=Object.entries(countBy(interactions,event=>event.topic)).sort((a,b)=>b[1]-a[1]);const top=topicLabels[topics[0]?.[0]]||"çeşitli konular";$("insight-status-title").textContent="Akış ritmin oluşuyor";$("insight-status-text").textContent=`Bu ${activeRange==="today"?"gün":activeRange==="week"?"hafta":"ay"} en çok ${top} içeriğiyle etkileştin. ${reactions.length?"Gönüllü tepkilerin sıralamayı yerelde günceller.":"İstersen tepki vererek akışı daha açık biçimde şekillendirebilirsin."}`;
 }

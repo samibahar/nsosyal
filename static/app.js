@@ -52,8 +52,16 @@ function updateTopics(){
   const list=document.getElementById("konu-sayaclari"); const rows=Object.entries(topicCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
   list.innerHTML=rows.length?rows.map(([key,count])=>`<div class="topic-row"><b>${escapeText(topicFor(key).name)}</b><span>${count} gönderi</span></div>`).join(""):'<span class="topic-loading">Akış yükleniyor…</span>';
 }
+// Sag paneldeki "Kullanim" karti: bu oturum ve bugun (sure + gorulen gonderi).
+// Hic kayit yokken (or. riza kapali) kart gizli kalir.
+function sureMetni(saniye){const dk=Math.round(saniye/60);if(dk<1)return "1 dk'dan az";return dk<60?`${dk} dk`:`${Math.floor(dk/60)} sa${dk%60?` ${dk%60} dk`:""}`;}
+function kullanimGoster(kullanim){
+  const kart=document.getElementById("kullanim-karti");if(!kart||!kullanim||(kart.hidden&&!kullanim.bugun.oturum))return;
+  kart.hidden=false;
+  [["kullanim-oturum",kullanim.oturum],["kullanim-bugun",kullanim.bugun]].forEach(([id,ozet])=>{document.getElementById(id).textContent=ozet.oturum?`${sureMetni(ozet.sureSn)} · ${ozet.gonderi} gönderi`:"—";});
+}
 function updateLocalAgent(summary){
-  localSummary=summary;
+  localSummary=summary;kullanimGoster(summary.kullanim);
   const title=document.getElementById("flow-status-title"),text=document.getElementById("flow-status-text"),desktopTitle=document.getElementById("desktop-status-title"),desktopText=document.getElementById("desktop-status-text");
   const oturumda=summary.oturumdaKapali&&summary.ayarlar?.dengeleme!==false,dengelemeKapali=summary.ayarlar?.dengeleme===false||oturumda;
   if(!summary.enoughData){title.textContent="Bu cihazda öğreniyor";text.textContent=`${summary.eventCount}/10 anlamlı etkileşim · ${dengelemeKapali?"dengeleme kapalı":"ham davranış verisi cihazında kalır"}`;desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;if(summary.lastExplicitReaction){const mood=`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`;document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;}else updateMood(null);return;}

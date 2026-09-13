@@ -454,6 +454,9 @@ body .balance-intervention #denge-kapat { background: transparent; color: #fff; 
   border-radius: 0;
 }
 .insight-hero h1 { letter-spacing: -.03em; }
+/* Dort KPI (etkilesim, tepki, sure, akis hareketi); telefonda 2x2 */
+.data-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 720px) { .data-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .insight-chart-card,
 .data-kpis article,
 .insight-data-note {
