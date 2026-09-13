@@ -107,5 +107,14 @@ $("tumunu-sil").addEventListener("click",async event=>{
   clearTimeout(silmeOnayi);silmeOnayi=null;buton.classList.remove("onay");metin.textContent=" Tüm yerel verileri sil";
   await ajan.erase();await yenile();$("veri-bildirim").textContent="Yerel veriler silindi. Ayar seçimlerin korundu.";
 });
+// Sunum öncesi sıfırlama (bilgisayarda ana sayfanın sol menüsünde de var).
+$("oturum-sifirla").addEventListener("click",async()=>{await ajan.oturumuSifirla();await yenile();$("sifirla-bildirim").textContent="Oturum sıfırlandı. İlgi alanların, kişisel modelin ve geçmişin korundu.";});
+let tamSifirlamaOnayi=null;
+$("tamamen-sifirla").addEventListener("click",async event=>{
+  const buton=event.currentTarget,metin=buton.lastChild;
+  if(!tamSifirlamaOnayi){buton.classList.add("onay");metin.textContent=" Emin misin? Silmek için tekrar dokun";tamSifirlamaOnayi=setTimeout(()=>{tamSifirlamaOnayi=null;buton.classList.remove("onay");metin.textContent=" Tamamen sıfırla";},4000);return;}
+  clearTimeout(tamSifirlamaOnayi);tamSifirlamaOnayi=null;buton.classList.remove("onay");metin.textContent=" Tamamen sıfırla";
+  await ajan.tamamenSifirla();await yenile();$("sifirla-bildirim").textContent="Her şey sıfırlandı. Ana sayfa ilk kez açılmış gibi açılacak.";
+});
 
 if(ajan){ajan.init().then(yenile).catch(error=>{console.warn("Ayarlar yüklenemedi",error);$("ayar-bildirim").textContent="Yerel depolama bu tarayıcıda kullanılamıyor.";});}

@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css?v=40" />
   <link rel="stylesheet" href="/arayuz.css?v=14" />
-  <link rel="stylesheet" href="/tema.css?v=21" />
+  <link rel="stylesheet" href="/tema.css?v=22" />
 </head>
 <body class="insight-body ayarlar-body">
 <svg class="ikon-sprite" aria-hidden="true" focusable="false"><defs>
@@ -66,6 +66,19 @@
       </div>
     </section>
 
+    <section class="insight-chart-card" aria-labelledby="sifirla-baslik">
+      <div class="chart-heading"><div><span>SIFIRLAMA</span><h2 id="sifirla-baslik">Temiz bir başlangıç</h2></div></div>
+      <ul class="veri-listesi">
+        <li><b>Bu oturumu sıfırla</b><small>Akış yoğunluğu, olası ritim ve "bu oturum" sayacı sıfırlanır. İlgi alanların, kişisel modelin ve geçmişin korunur.</small></li>
+        <li><b>Tamamen sıfırla</b><small>Tüm yerel veriler, ayarlar ve ilk açılış tercihin silinir; uygulama ilk kez açılmış gibi olur. Geri alınamaz.</small></li>
+      </ul>
+      <div class="veri-eylemleri">
+        <button id="oturum-sifirla" type="button" class="ikincil-buton">Bu oturumu sıfırla</button>
+        <button id="tamamen-sifirla" type="button" class="tehlike-buton"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-cop"/></svg> Tamamen sıfırla</button>
+      </div>
+      <p id="sifirla-bildirim" class="ayar-bildirim" role="status" aria-live="polite"></p>
+    </section>
+
     <section class="insight-chart-card" aria-labelledby="veri-baslik">
       <div class="chart-heading"><div><span>VERİLERİN</span><h2 id="veri-baslik">Bu cihazda ne saklanıyor?</h2></div></div>
       <ul id="veri-listesi" class="veri-listesi"></ul>
@@ -88,8 +101,8 @@
   <nav class="bottom-nav insight-nav" aria-label="Alt menü"><a class="nav-item" href="/index.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-ev"/></svg></span><small>Ana Sayfa</small></a><a class="nav-item" href="/kesfet.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-kesfet"/></svg></span><small>Keşfet</small></a><a class="create-button" href="/index.html?compose=1" aria-label="Yeni gönderi"><svg class="ikon ikon-lg" aria-hidden="true"><use href="#i-arti"/></svg></a><a class="nav-item" href="/haberler.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-haber"/></svg></span><small>Haberler</small></a><a class="nav-item" href="/rapor.html"><span><svg class="ikon" aria-hidden="true"><use href="#i-icgoru"/></svg></span><small>İçgörü</small></a></nav>
   <script src="/trained-weights.js?v=2"></script>
   <script src="/trained-models.js?v=5"></script>
-  <script src="/local-agent.js?v=20"></script>
-  <script src="/ayarlar.js?v=4"></script>
+  <script src="/local-agent.js?v=21"></script>
+  <script src="/ayarlar.js?v=5"></script>
   <script src="/erisim.js?v=1"></script>
 </body>
 </html>

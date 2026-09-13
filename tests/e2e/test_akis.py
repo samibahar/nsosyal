@@ -133,6 +133,40 @@ def test_kullanim_karti_sag_panelde_ve_icgoru_de_gorunur(masaustu):
     assert not masaustu.hatalar
 
 
+def test_oturumu_sifirla_kayit_silmez_yogunlugu_ve_oturumluk_secimleri_sifirlar(masaustu):
+    """Sol menüdeki 'Bu oturumu sıfırla': jüri önünde temiz akış, geçmiş korunur."""
+    akisi_ac(masaustu)
+    juri_demosu(masaustu)
+    masaustu.evaluate("() => sessionStorage.setItem('nsosyal-denge-oturum-kapali', '1')")
+    durum = "async () => ({olay: (await LocalPersonalization.getLocalEvents()).length, ozet: await LocalPersonalization.summary(), kapali: sessionStorage.getItem('nsosyal-denge-oturum-kapali')})"
+    once = masaustu.evaluate(durum)
+    assert once["ozet"]["intensity"] > 0.28
+    masaustu.locator("#oturum-sifirla").click()
+    masaustu.wait_for_function("document.getElementById('ranking-notice').textContent.includes('Oturum sıfırlandı')")
+    sonra = masaustu.evaluate(durum)
+    # Kayıt silinmez; akış yeniden yüklenirken ekrandan çıkan kartlar yeni oturumun ilk kayıtları olur.
+    assert sonra["olay"] >= once["olay"]
+    assert sonra["ozet"]["intensity"] < 0.28 and sonra["kapali"] is None
+    assert sonra["ozet"]["kullanim"]["bugun"]["gonderi"] >= once["ozet"]["kullanim"]["bugun"]["gonderi"]
+    assert not masaustu.hatalar
+
+
+def test_tamamen_sifirla_ayarlardan_her_seyi_siler_ilk_acilis_geri_gelir(mobil):
+    akisi_ac(mobil)
+    mobil.evaluate("() => LocalPersonalization.setAyar('doygunluk', false)")
+    mobil.goto(f"{ADRES}/ayarlar.html")
+    buton = mobil.locator("#tamamen-sifirla")
+    buton.click()
+    assert "Emin misin" in buton.inner_text()
+    buton.click()
+    mobil.wait_for_function("document.getElementById('sifirla-bildirim').textContent.includes('sıfırlandı')")
+    son = mobil.evaluate("async () => ({onay: await LocalPersonalization.getOnay(), ayarlar: await LocalPersonalization.getAyarlar(), olay: (await LocalPersonalization.getLocalEvents()).length})")
+    assert son["onay"] is None and son["olay"] == 0 and son["ayarlar"]["doygunluk"] is True
+    mobil.goto(f"{ADRES}/index.html")
+    mobil.wait_for_selector(".onay-kutu")
+    assert not mobil.hatalar
+
+
 def test_pwa_manifesti_gecerli_ve_bagli(masaustu):
     """'Neden mobil uygulama değil?' sorusu: site telefona uygulama gibi kurulabilir."""
     masaustu.goto(f"{ADRES}/index.html")

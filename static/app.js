@@ -251,6 +251,16 @@ async function eraseLocalProfile(){
   closeSheet();firstLoad(); // yerel depolama yok: silinecek davranis verisi de yok
 }
 document.getElementById("sifirla-buton").addEventListener("click",eraseLocalProfile);
+// Sunum oncesi sifirlama (sol menu; telefonda Ayarlar). Tamamen sifirlama geri
+// alinamaz: ilk tiklama yalnizca onay ister, 4 saniye icinde ikinci tiklama siler.
+function kisaBildirim(metin){const notice=document.getElementById("ranking-notice");notice.textContent=metin;notice.classList.add("show");clearTimeout(showRankingNotice.timer);showRankingNotice.timer=setTimeout(()=>notice.classList.remove("show"),3800);}
+document.getElementById("oturum-sifirla").addEventListener("click",async()=>{if(!localAgent)return;hideCheckin();document.getElementById("balance-intervention").hidden=true;updateLocalAgent(await localAgent.oturumuSifirla());await firstLoad();kisaBildirim("Oturum sıfırlandı · ilgi alanların ve geçmişin korundu");});
+let tamSifirlamaOnayi=null;
+document.getElementById("tamamen-sifirla").addEventListener("click",async event=>{
+  const buton=event.currentTarget,yaz=metin=>{buton.querySelector("span").textContent=metin;buton.setAttribute("aria-label",metin);};
+  if(!tamSifirlamaOnayi){buton.classList.add("onay");yaz("Emin misin? Tekrar tıkla");tamSifirlamaOnayi=setTimeout(()=>{tamSifirlamaOnayi=null;buton.classList.remove("onay");yaz("Tamamen sıfırla");},4000);return;}
+  clearTimeout(tamSifirlamaOnayi);if(localAgent)await localAgent.tamamenSifirla();location.reload();
+});
 function showCheckin(){const until=Number(sessionStorage.getItem("nsosyal-checkin-snooze-until")||0);if(Date.now()<until)return;document.getElementById("dogrulama-karti").classList.remove("gizli");}
 function hideCheckin(){document.getElementById("dogrulama-karti").classList.add("gizli");}
 document.getElementById("dogrulama-gec-buton").addEventListener("click",()=>{sessionStorage.setItem("nsosyal-checkin-snooze-until",String(Date.now()+20*60*1000));hideCheckin();});
@@ -322,7 +332,7 @@ async function ilkBilgilendirme(){
 async function baslat(){
   if(localAgent){try{await localAgent.init();}catch(error){console.warn("Yerel depolama kullanılamıyor; sunucu sıralamasına geçildi",error);localAgent=null;}}
   if(!localAgent){const baslik="Kişiselleştirme kapalı",metin="Tarayıcın yerel depolamaya izin vermediği için akış kişiselleştirilmeden gösteriliyor; davranış verin hiçbir yere gönderilmiyor.";["flow-status-title","desktop-status-title"].forEach(id=>{document.getElementById(id).textContent=baslik;});["flow-status-text","desktop-status-text"].forEach(id=>{document.getElementById(id).textContent=metin;});}
-  if(localAgent){yerelArayuzuKur();document.getElementById("sifirla-buton").textContent="Yerel verileri sil";document.querySelector(".flow-eyebrow").textContent="DUYGU KATMANI · YEREL";try{updateLocalAgent(await localAgent.summary());}catch(error){console.warn("Local agent unavailable",error);}}
+  if(localAgent){yerelArayuzuKur();document.getElementById("rail-sifirla").hidden=false;document.getElementById("sifirla-buton").textContent="Yerel verileri sil";document.querySelector(".flow-eyebrow").textContent="DUYGU KATMANI · YEREL";try{updateLocalAgent(await localAgent.summary());}catch(error){console.warn("Local agent unavailable",error);}}
   await firstLoad();
   if(localAgent)ilkBilgilendirme().catch(error=>console.warn("Bilgilendirme gösterilemedi",error));
   if(new URLSearchParams(location.search).has("demo"))setTimeout(startJuryDemo,550);

@@ -43,6 +43,8 @@
   const safeTone = value => Number.isFinite(Number(value)) ? Number(value) : 0;
   // "Bu oturumda dengeleme yapma" secimi yalnizca bu sekme oturumu icin gecerli.
   const _oturumdaKapali = () => { try { return sessionStorage.getItem("nsosyal-denge-oturum-kapali") === "1"; } catch { return false; } };
+  // Sifirlamada temizlenen oturumluk secimler (dengelemeyi bu oturum kapat, akis bildirimi, kontrol sorusu ertelemesi).
+  const _oturumSecimleriniSil = () => { try { Object.keys(sessionStorage).filter(anahtar => anahtar.startsWith("nsosyal-")).forEach(anahtar => sessionStorage.removeItem(anahtar)); } catch { return; } };
 
   // Uzun donem ozeti icin GUNLUK TOPLAMLAR (Ayarlar'daki haftalik grafik).
   // Ham olaylar da ayni sure (12 hafta) saklanir; Icgoru ve uzman ozeti
@@ -127,7 +129,10 @@
   }
   // kalibrasyonsuz: jüri demosu her cihazda aynı sonucu versin diye varsayılan modelle çalışır.
   function calculate(events, state, { kalibrasyonsuz = false } = {}) {
-    const meaningful = events.filter(event => event.type === "interaction"), recent = meaningful.slice(-12), negative = recent.filter(event => event.tone < -0.15), sustained = negative.filter(event => event.dwell >= 3.5), unique = new Set(recent.map(event => event.topic)).size;
+    // "Bu oturumu sifirla": model sinyalleri sifirlama anindan sonraki olaylardan
+    // hesaplanir; ham kayit ve "bugun" toplami korunur.
+    const sinir = state.oturumSifirlama || 0, oturumOlaylari = sinir ? events.filter(event => event.createdAt >= sinir) : events;
+    const meaningful = oturumOlaylari.filter(event => event.type === "interaction"), recent = meaningful.slice(-12), negative = recent.filter(event => event.tone < -0.15), sustained = negative.filter(event => event.dwell >= 3.5), unique = new Set(recent.map(event => event.topic)).size;
     const yedekYogunluk = clamp((recent.length ? sustained.length / recent.length : 0) * .72 + (recent.length > 3 ? 1 - unique / recent.length : 0) * .28);
     const kalibrasyonEtkin = !kalibrasyonsuz && _spiralKalibrasyonEtkin(state);
     const egitilmisYogunluk = _egitilmisYogunluk(meaningful, kalibrasyonEtkin ? state.spiralKalibrasyon : null);
@@ -135,14 +140,14 @@
     // Toplam etkilesim sayaci state'te tutulur; events yalnizca son 24 saattir.
     const toplamEtkilesim = Math.max(state.etkilesimSayisi || 0, meaningful.length);
     const confidence = clamp(toplamEtkilesim / 16), enoughData = toplamEtkilesim >= 10;
-    const kullanim = kullanimOzeti(events, _gunBasi());
+    const gunBasi = _gunBasi(), kullanim = { oturum: kullanimOzeti(events, Math.max(gunBasi, sinir)).oturum, bugun: kullanimOzeti(events, gunBasi).toplam };
     const preferred = Object.entries(state.topicWeights || {}).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
     // Jüri demosunun betikli tepkileri (runDemoScenario) burada HARİÇ tutulur --
     // aksi halde "Son tepkin: ... sen belirttin" etiketi, kullanıcının hiç
     // tıklamadığı senaryo-içi bir tepkiyi kendisi vermiş gibi gösteriyordu
     // (kullanıcı tarafından tespit edildi, 21.08.2026).
-    const latestExplicit = [...events].reverse().find(event => (event.type === "post_reaction" || event.type === "news_reaction") && !event.demo && Date.now() - event.createdAt < 30 * 60 * 1000);
-    return { mode: "local", eventCount: toplamEtkilesim, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, oturumdaKapali: _oturumdaKapali(), kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, spiralKalibrasyonEtkin: kalibrasyonEtkin, kullanim: { oturum: kullanim.oturum, bugun: kullanim.toplam }, shouldCheckin: state.ayarlar.kontrolSorulari && toplamEtkilesim >= 12 && toplamEtkilesim % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
+    const latestExplicit = [...oturumOlaylari].reverse().find(event => (event.type === "post_reaction" || event.type === "news_reaction") && !event.demo && Date.now() - event.createdAt < 30 * 60 * 1000);
+    return { mode: "local", eventCount: toplamEtkilesim, enoughData, confidence, intensity, currentMood: !enoughData ? null : intensity > .58 ? "Yoğun" : intensity > .28 ? "Dengeleniyor" : "Dengeli", lastExplicitReaction: latestExplicit?.reaction || null, repeatedNegative: sustained.length, preferredTopic: preferred, ayarlar: { ...state.ayarlar }, oturumdaKapali: _oturumdaKapali(), kisiselGuncelleme: state.kisiselModel?.guncelleme || 0, spiralKalibrasyonEtkin: kalibrasyonEtkin, kullanim, shouldCheckin: state.ayarlar.kontrolSorulari && toplamEtkilesim >= 12 && toplamEtkilesim % 8 === 0 && Date.now() - state.lastCheckinAt > 20 * 60 * 1000 };
   }
   async function trimEvents() {
     await _eskileriSil(IDBKeyRange.upperBound(Date.now() - GUNLUK_SAKLAMA_GUN * 86400000, true));
@@ -172,7 +177,7 @@
   const _yuvarla = nesne => Object.fromEntries(Object.entries(nesne).map(([ad, deger]) => [ad, +Number(deger).toFixed(4)]));
   async function recordCheckin(value) {
     const state = await getState(), T = window.TrainedModels, simdi = Date.now() / 1000;
-    const etkilesimler = (await getEvents(Date.now() - YAKIN_MS)).filter(event => event.type === "interaction"), son = etkilesimler.at(-1);
+    const etkilesimler = (await getEvents(Math.max(Date.now() - YAKIN_MS, state.oturumSifirlama || 0))).filter(event => event.type === "interaction"), son = etkilesimler.at(-1);
     const psiOlaylari = T && T.ruhHaliPenceresi ? _psikolojikOlaylari(etkilesimler) : [];
     const varsayilanDurum = psiOlaylari.length ? T.ruhHaliPenceresi(psiOlaylari, simdi, null, 1) : null;
     const kisiselDurum = varsayilanDurum && state.kisiselModel ? T.ruhHaliPenceresi(psiOlaylari, simdi, state.kisiselModel, 1) : null;
@@ -370,7 +375,7 @@
   }
   async function rank(posts, secenek = {}) {
     const state = await getState(), events = await getEvents(Date.now() - YAKIN_MS), report = calculate(events, state, secenek);
-    const latestReaction = [...events].reverse().find(event => event.type === "post_reaction" && Date.now() - event.createdAt < 60 * 60 * 1000) || null;
+    const latestReaction = [...events].reverse().find(event => event.type === "post_reaction" && event.createdAt >= (state.oturumSifirlama || 0) && Date.now() - event.createdAt < 60 * 60 * 1000) || null;
     return siralaSaf(posts, { topicWeights: state.topicWeights || {}, intensity: report.intensity, enoughData: report.enoughData, dengelemeAcik: state.ayarlar.dengeleme && !_oturumdaKapali(), latestReaction });
   }
   // Jüri demosu yalnizca siralama profilini sifirlar. Ayarlar, uzun donem
@@ -409,6 +414,12 @@
   // silinir. Yalnizca Ayarlar'daki secimler korunur -- dengelemeyi kapatmis
   // bir kullanici veri sildi diye dengeleme sessizce geri acilmasin.
   async function erase() { const state = await getState(); await clearStores(); await setState({ ...defaults(), ayarlar: state.ayarlar, onay: state.onay }); return summary(); }
+  // Sunum oncesi sifirlama (sol menu; telefonda Ayarlar). "Bu oturumu sifirla"
+  // hicbir kaydi silmez: yogunluk, ruh hali ve "bu oturum" sayaci bu andan
+  // sonraki olaylardan hesaplanir; ilgi profili, kisisel model ve gecmis kalir.
+  // "Tamamen sifirla" ayarlar ve ilk acilis tercihi dahil her seyi siler.
+  async function oturumuSifirla() { const state = await getState(); state.oturumSifirlama = Date.now(); await setState(state); _oturumSecimleriniSil(); return summary(); }
+  async function tamamenSifirla() { await clearStores(); await setState(defaults()); _oturumSecimleriniSil(); return summary(); }
 
   // Ilk acilistaki acik riza secimi. "kapali" secilirse duygu katmaninin tum
   // anahtarlari kapanir; akis yalnizca ilgi alanlarina gore kisisellesir.
@@ -471,5 +482,5 @@
     Object.keys(state.gunluk).forEach(tarih => { if (state.gunluk[tarih].ornek) delete state.gunluk[tarih]; });
     await setState(state); return uzunDonemOzeti();
   }
-  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, spiralDogrulamaOzeti, pilotDosyasi, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, siralaSaf, rankNews, runDemoScenario, getDecisionTrace, erase, getOnay, setOnay, getAyarlar, setAyar, kisiselModelDurumu, etiketModeli, kisiselModeliSifirla, uzunDonemOzeti, ornekGecmisYukle, ornekGecmisiKaldir, kullanimOzeti };
+  window.LocalPersonalization = { init: openDatabase, getLocalEvents: getEvents, recordInteraction, recordCheckin, dogrulamaOzeti, spiralDogrulamaOzeti, pilotDosyasi, recordPostReaction, postReactionState, recordNewsReaction, newsState, clearNewsData, summary, rank, siralaSaf, rankNews, runDemoScenario, getDecisionTrace, erase, getOnay, setOnay, getAyarlar, setAyar, kisiselModelDurumu, etiketModeli, kisiselModeliSifirla, uzunDonemOzeti, ornekGecmisYukle, ornekGecmisiKaldir, kullanimOzeti, oturumuSifirla, tamamenSifirla };
 })();

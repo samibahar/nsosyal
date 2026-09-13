@@ -290,6 +290,16 @@ html, body { background: var(--canvas); }
 .jury-demo-button:hover { background: #000; }
 
 .profile-mini:hover { background: var(--yuzey-2); border-radius: 999px; }
+/* Sunum oncesi sifirlama: menu ogelerinden ayri, kesik cizgili kutu */
+.rail-sifirla { margin-top: auto; display: grid; gap: 6px; padding: 10px; border: 1px dashed var(--line-guclu); border-radius: 16px; }
+.rail-sifirla[hidden] { display: none; }
+.rail-sifirla small { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--muted); }
+.rail-sifirla button { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.rail-sifirla button:hover { background: var(--yuzey-2); }
+.rail-sifirla button.tehlike { color: #a3231b; border-color: #efc7c3; }
+.rail-sifirla button.tehlike.onay { background: #fdeceb; border-color: #a3231b; }
+.rail-sifirla + .profile-mini { margin-top: 12px; }
+@media (max-width: 1000px) { .rail-sifirla { padding: 6px; } .rail-sifirla small, .rail-sifirla span { display: none; } .rail-sifirla button { justify-content: center; padding: 6px; } }
 
 /* --------------------------------------------------------------------------
    SAG PANEL
