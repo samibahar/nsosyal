@@ -29,7 +29,8 @@ def tarayici():
     if not _ayakta():
         pytest.skip(f"Sunucu çalışmıyor ({ADRES}); önce: python -m uvicorn backend.main:app --port 8000")
     with sync_api.sync_playwright() as p:
-        tarayici = p.chromium.launch()
+        kanal = os.environ.get("NSOSYAL_BROWSER_CHANNEL")
+        tarayici = p.chromium.launch(**({"channel": kanal} if kanal else {}))
         yield tarayici
         tarayici.close()
 

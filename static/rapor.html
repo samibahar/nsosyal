@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css?v=42" />
   <link rel="stylesheet" href="/arayuz.css?v=15" />
-  <link rel="stylesheet" href="/tema.css?v=26" />
+  <link rel="stylesheet" href="/tema.css?v=27" />
 </head>
 <body class="insight-body">
 <svg class="ikon-sprite" aria-hidden="true" focusable="false"><defs>
@@ -48,14 +48,14 @@
     <section class="data-kpis" aria-label="Oturum özeti"><article><small>Etkileşim</small><b id="kpi-interactions">0</b><span>bu cihazda</span></article><article><small>Süre</small><b id="kpi-sure">—</b><span id="kpi-sure-alt">henüz kayıt yok</span></article><article><small>Gönüllü tepki</small><b id="kpi-reactions">0</b><span>sen belirttin</span></article><article><small>Akış hareketi</small><b id="kpi-moved">—</b><span>son demo</span></article></section>
     <section id="real-insights" class="insight-chart-card"><div class="chart-heading"><div><span>ETKİLEŞİM RİTMİ</span><h2>Zaman içinde sinyaller</h2></div><small id="rhythm-caption">Henüz veri yok</small></div><div id="rhythm-chart" class="session-line-chart" role="img" aria-label="Oturumdaki etkileşim ritmi grafiği"></div></section>
     <section class="insight-grid useful-grid"><article class="insight-chart-card"><div class="chart-heading"><div><span>KONU DAĞILIMI</span><h2>Nelerle etkileştin?</h2></div></div><div id="topic-chart" class="topic-chart"></div></article><article class="insight-chart-card"><div class="chart-heading"><div><span>GÖNÜLLÜ TEPKİLER</span><h2>Senin geri bildirimin</h2></div></div><div id="reaction-chart" class="reaction-chart"></div></article></section>
-    <section class="insight-chart-card"><div class="chart-heading"><div><span>KONU × OLASI RİTİM</span><h2>Hangi konularda nasıl hissettin?</h2></div></div><div id="heatmap-chart" class="heatmap"></div></section>
+    <section class="insight-chart-card"><div class="chart-heading"><div><span>KONU × OLASI RİTİM</span><h2>Konulara göre olası ritim</h2></div></div><div id="heatmap-chart" class="heatmap"></div></section>
     <section class="insight-chart-card"><div class="chart-heading"><div><span>MODEL DOĞRULAMA</span><h2>Tahminler ne kadar tutuyor?</h2></div><small>Sorulmadan önce gösterilmez</small></div><div id="dogrulama-chart" class="validation-grid"></div><p id="dogrulama-not" class="dogrulama-not"></p></section>
     <section class="insight-data-note"><b><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> Verin sende kalır</b><p>Grafikler bu tarayıcının yerel etkileşim kaydından hesaplanır. Bu ekran bir teşhis veya klinik değerlendirme değildir.</p></section>
     <section class="insight-chart-card">
       <div class="chart-heading"><div><span>UZMANA GÖTÜRMEK İSTERSEN</span><h2>Yorumsuz veri özeti</h2></div></div>
       <p class="data-note" style="margin-top:6px">Yapay zekâ yorumu içermez, sadece bu cihazdaki sayıları düzenler. Klinik bir belge değildir; nihai değerlendirme uzmana aittir.</p>
       <button id="terapist-ozet-buton" type="button" class="insight-action">Özeti oluştur</button>
-      <pre id="terapist-ozet-metin" style="display:none;white-space:pre-wrap;font-family:inherit;font-size:11.5px;line-height:1.55;background:rgba(255,255,255,.7);border-radius:14px;padding:13px;margin-top:12px"></pre>
+      <pre tabindex="0" role="region" aria-label="Yorumsuz veri özeti" id="terapist-ozet-metin" style="display:none;white-space:pre-wrap;font-family:inherit;font-size:11.5px;line-height:1.55;background:rgba(255,255,255,.7);border-radius:14px;padding:13px;margin-top:12px"></pre>
       <button id="terapist-ozet-kopyala" type="button" class="insight-action" style="display:none;margin-top:8px">Panoya kopyala</button>
     </section>
   </main>
@@ -63,7 +63,7 @@
   <script src="/trained-weights.js?v=3"></script>
   <script src="/trained-models.js?v=7"></script>
   <script src="/local-agent.js?v=21"></script>
-  <script src="/rapor.js?v=18"></script>
+  <script src="/rapor.js?v=19"></script>
   <script src="/erisim.js?v=1"></script>
 </body>
 </html>

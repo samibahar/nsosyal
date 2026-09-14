@@ -9,6 +9,8 @@ tonu en fazla SOZLUK_TONU olur (yalnızca aşağı çekilir, hiç yukarı çekil
 Ölçüm: liste yazılırken hiç bakılmamış, elle etiketlenmiş 100 gerçek başlıkta
 güçlü olumsuz yakalama %6 → %83; işaretlenenlerin %97'si gerçekten olumsuz.
 Eğitim gerektirmez ve açıklanabilirdir: "Neden bu?" eşleşen sözcüğü gösterir.
+Bu oranlar ilk sözlüğün tarihsel sonucudur; güncel karaktersiz yazım
+değerlendirmesi docs/gorunurluk_ve_final_dogrulamasi.md içindedir.
 
 Bilerek dışarıda bırakılanlar: çıplak "deprem", "sel", "felaket" (yeniden
 yapılanma ve yardım haberlerini işaretliyordu; ölüm ve yaralanma zaten ayrıca
@@ -22,11 +24,28 @@ kelime içi eşleşme hep yanlış alarmdı ("bilinçli" → linç, "başvuru" �
 import re
 
 SOZLUK_TONU = -0.9
-_DESEN = re.compile(
-    r"\b(?:öl(dü|ü|dür|en)|hayatını kaybet|can kayb|can verdi|yaral|hastanelik|cinayet|katled|katliam|katil|vurul|bıçak|"
-    r"saldır|terör|şehit|yangın|kaza(\b|da|sı|ya|lar)|çarp(ış|tı|an|ma)|devril|taciz|istismar|tecavüz|şiddet(?!li|le mücadele)|"
-    r"dehşet|vahşet|facia|enkaz|ceset|intihar|patla|çöktü|yıkıl|kavga|silahlı|rehin|linç|savaş|bombal|yaktı\b|yakıl|yakarak|sabotaj)"
+SOZCUKLER = [
+    r"öl(dü|ü|dür|en)", r"hayatını kaybet", r"can kayb", r"can verdi", r"yaral",
+    r"hastanelik", r"cinayet", r"katled", r"katliam", r"katil(?![ıi]m)", r"vurul", r"bıçak",
+    r"saldır", r"terör", r"şehit", r"yangın", r"kaza(\b|da|sı(?!z)|ya|lar)",
+    r"çarp(ış|tı|an|ma)", r"devril", r"taciz", r"istismar", r"tecavüz", r"şiddet(?!li|le mücadele)",
+    r"dehşet", r"vahşet", r"facia", r"enkaz", r"ceset", r"intihar", r"patla", r"çöktü",
+    r"yıkıl", r"kavga", r"silahlı", r"rehin", r"linç", r"savaş", r"bombal", r"yaktı\b",
+    r"yakıl", r"yakarak", r"sabotaj",
+]
+_DESEN = re.compile(r"\b(?:" + "|".join(SOZCUKLER) + ")")
+_KATLA = str.maketrans("çğıöşüâîû", "cgiosuaiu")
+_KATLANMAZ = {r"öl(dü|ü|dür|en)", r"katil(?![ıi]m)", r"çöktü"}
+_ASCII_DESEN = re.compile(r"\b(?:" + "|".join(s.translate(_KATLA) for s in SOZCUKLER if s not in _KATLANMAZ) + ")")
+
+# Açıkça eğitim, araç ya da mecaz bildiren ifadeler olay kanıtı değildir.
+# Yalnızca eşleşen ifade atlanır; cümledeki başka bir olay hâlâ yakalanır.
+_OLAY_DISI = re.compile(
+    r"\b(?:yangın\s+(?:tatbikat\w*|eğitim\w*|söndürme\s+(?:tüp\w*|cihaz\w*))|"
+    r"bıçak\s+(?:set\w*|bileme\w*)|"
+    r"(?:satış\w*|talep\w*|ihracat\w*|kahkaha\w*)\s+patla\w*)"
 )
+_ASCII_OLAY_DISI = re.compile(_OLAY_DISI.pattern.translate(_KATLA))
 
 
 def _kucuk(metin: str) -> str:
@@ -36,8 +55,16 @@ def _kucuk(metin: str) -> str:
 
 def yogun_sozcuk(metin: str) -> str | None:
     """Metinde açık bir olumsuz olay sözcüğü varsa onu, yoksa None döndürür."""
-    eslesme = _DESEN.search(_kucuk(metin or ""))
-    return eslesme.group(0) if eslesme else None
+    metin = _kucuk(metin or "")
+    katli = metin.translate(_KATLA)
+    olay_disi = [m.span() for m in _OLAY_DISI.finditer(metin)] + [m.span() for m in _ASCII_OLAY_DISI.finditer(katli)]
+    for eslesme in _DESEN.finditer(metin):
+        if not any(bas <= eslesme.start() < son for bas, son in olay_disi):
+            return eslesme.group(0)
+    for eslesme in _ASCII_DESEN.finditer(katli):
+        if not any(bas <= eslesme.start() < son for bas, son in olay_disi):
+            return metin[eslesme.start():eslesme.end()]
+    return None
 
 
 def sistem_tonu(model_tonu: float, metin: str) -> tuple[float, str | None]:

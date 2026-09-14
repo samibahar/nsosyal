@@ -69,7 +69,7 @@ function updateLocalAgent(summary){
   // yansimaz; kart bunu acikca soyler (rapor 5.1: "istedigi an kapatabilir").
   if(dengelemeKapali){currentSpiral=summary.intensity;title.textContent=oturumda?"Bu oturumda dengeleme kapalı":"Dengeleme kapalı";text.textContent=oturumda?"Akış yalnızca ilgi alanlarına göre sıralanıyor; sekmeyi kapatınca yeniden açılır.":"Akış yalnızca ilgi alanlarına göre sıralanıyor. Ayarlar'dan yeniden açabilirsin.";desktopTitle.textContent=title.textContent;desktopText.textContent=text.textContent;feed.style.filter="none";}
   else{updateStatus(summary.intensity);dengeBildirimi(summary);}
-  const mood=summary.lastExplicitReaction?`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`:`Olası anlık ritim: ${summary.currentMood} · doğrulanmadı`;
+  const mood=summary.lastExplicitReaction?`Son tepkin: ${POST_REACTION_LABELS[summary.lastExplicitReaction]} · sen belirttin`:`Dengeleme durumu: ${dengelemeKapali?"Kapalı":summary.currentMood} · ruh hali tahmini değildir`;
   document.getElementById("flow-current-mood").textContent=mood;document.getElementById("desktop-current-mood").textContent=mood;
 }
 function incrementTopic(topic){topicCounts[topic]=(topicCounts[topic]||0)+1;}
@@ -83,12 +83,52 @@ async function sendInteraction(id,dwell,click=false,rocket=false,comment=false,e
   // Yerel depolama yoksa davranis verisi hicbir yere gonderilmez (sunucuya da):
   // kisisellestirme yapilmaz. "Ham davranis cihazda kalir" ilkesi yedek yolda da gecerli.
 }
-function dwellFor(id){return visibleSince.has(id)?Math.max(.3,(performance.now()-visibleSince.get(id))/1000):1.5;}
-const dwellObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
-  const id=Number(entry.target.dataset.id);
-  if(entry.isIntersecting)visibleSince.set(id,performance.now());
-  else if(visibleSince.has(id)){const dwell=(performance.now()-visibleSince.get(id))/1000;visibleSince.delete(id);sendInteraction(id,dwell,false,false,false,true);}
-}),{threshold:.6});
+// Görünürlük okunduğunun kanıtı değildir. Aynı anda yalnızca bir kartın süresi tutulur.
+// Tıklamada tüketilen süre, karttan çıkarken ikinci kez kaydedilmez. Süresi tutulmayan
+// karta yapılan tıklama/yorum kaybolmasın diye okuma sayılmayan çok kısa bir süreyle yazılır
+// (0 süreli etkileşimi yerel ajan kaydetmez).
+function dwellFor(id){
+  if(!visibleSince.has(id))return .05;
+  const now=performance.now(),seconds=Math.max(.05,(now-visibleSince.get(id))/1000);
+  visibleSince.set(id,now);return seconds;
+}
+const dwellCards=new Set();
+let dwellReady=false;
+function dwellStop(){
+  for(const [id,start] of visibleSince){
+    visibleSince.delete(id);
+    sendInteraction(id,Math.max(0,(performance.now()-start)/1000),false,false,false,true);
+  }
+}
+function dwellUpdate(){
+  if(!dwellReady||document.hidden||document.querySelector('.onay-arka,.sheet-backdrop.open,#dogrulama-karti:not(.gizli)')){dwellStop();return;}
+  const head=document.querySelector('.topbar')?.getBoundingClientRect();
+  const nav=document.querySelector('.bottom-nav')?.getBoundingClientRect();
+  const top=head&&head.bottom>0?Math.max(0,head.bottom):0;
+  const bottom=nav&&nav.height>0?Math.min(innerHeight,nav.top):innerHeight;
+  let best=null,score=0;
+  for(const card of dwellCards){
+    if(!card.isConnected){dwellCards.delete(card);continue;}
+    const r=card.getBoundingClientRect();
+    const visible=Math.max(0,Math.min(r.bottom,bottom)-Math.max(r.top,top));
+    const ratio=visible/Math.max(1,Math.min(r.height,bottom-top));
+    if(r.width<=0||r.right<=0||r.left>=innerWidth||ratio<.6)continue;
+    // Tam görünen kısa kart, kısmen görünen komşusundan önce gelir.
+    const s=ratio*10000-Math.abs((Math.max(r.top,top)+Math.min(r.bottom,bottom))/2-(top+bottom)/2);
+    if(s>score){score=s;best=Number(card.dataset.id);}
+  }
+  if(best!==null&&visibleSince.has(best))return;
+  dwellStop();if(best!==null)visibleSince.set(best,performance.now());
+}
+let dwellFrame=0;
+function dwellSchedule(){if(!dwellFrame)dwellFrame=requestAnimationFrame(()=>{dwellFrame=0;dwellUpdate();});}
+const dwellObserver={observe(card){dwellCards.add(card);dwellSchedule();}};
+window.addEventListener('scroll',dwellSchedule,{passive:true});
+window.addEventListener('resize',dwellSchedule);
+document.addEventListener('visibilitychange',dwellUpdate);
+window.addEventListener('pagehide',dwellStop);
+// Görsel yüklenmesi ve pencere açılması da kaydırmadan görünürlüğü değiştirebilir.
+setInterval(dwellUpdate,250);
 
 function scoreBox(label,value){return `<div class="score-box"><small>${label}</small><b>${value}</b></div>`;}
 // Ton, açık bir olay sözcüğüyle aşağı çekildiyse (yogun_sozluk.py) sözcük ve modelin kendi tonu da gösterilir.
@@ -256,7 +296,7 @@ async function eraseLocalProfile(){
   if(localAgent){const data=await localAgent.erase();updateLocalAgent(data);closeSheet();await firstLoad();return;}
   closeSheet();firstLoad(); // yerel depolama yok: silinecek davranis verisi de yok
 }
-document.getElementById("sifirla-buton").addEventListener("click",eraseLocalProfile);
+document.getElementById("sifirla-buton").addEventListener("click",()=>{location.href="/ayarlar.html#veri-baslik";});
 // Sunum oncesi sifirlama (sol menu; telefonda Ayarlar). Tamamen sifirlama geri
 // alinamaz: ilk tiklama yalnizca onay ister, 4 saniye icinde ikinci tiklama siler.
 function kisaBildirim(metin){const notice=document.getElementById("ranking-notice");notice.textContent=metin;notice.classList.add("show");clearTimeout(showRankingNotice.timer);showRankingNotice.timer=setTimeout(()=>notice.classList.remove("show"),3800);}
@@ -331,9 +371,12 @@ async function ilkBilgilendirme(){
 async function baslat(){
   if(localAgent){try{await localAgent.init();}catch(error){console.warn("Yerel depolama kullanılamıyor; sunucu sıralamasına geçildi",error);localAgent=null;}}
   if(!localAgent){const baslik="Kişiselleştirme kapalı",metin="Tarayıcın yerel depolamaya izin vermediği için akış kişiselleştirilmeden gösteriliyor; davranış verin hiçbir yere gönderilmiyor.";["flow-status-title","desktop-status-title"].forEach(id=>{document.getElementById(id).textContent=baslik;});["flow-status-text","desktop-status-text"].forEach(id=>{document.getElementById(id).textContent=metin;});}
-  if(localAgent){yerelArayuzuKur();document.getElementById("rail-sifirla").hidden=false;document.getElementById("sifirla-buton").textContent="Yerel verileri sil";document.querySelector(".flow-eyebrow").textContent="DUYGU KATMANI · YEREL";try{updateLocalAgent(await localAgent.summary());}catch(error){console.warn("Local agent unavailable",error);}}
+  if(localAgent){yerelArayuzuKur();document.getElementById("rail-sifirla").hidden=false;document.getElementById("sifirla-buton").textContent="Veri ayarları";document.querySelector(".flow-eyebrow").textContent="DUYGU KATMANI · YEREL";try{updateLocalAgent(await localAgent.summary());}catch(error){console.warn("Local agent unavailable",error);}}
   await firstLoad();
-  if(localAgent)ilkBilgilendirme().catch(error=>console.warn("Bilgilendirme gösterilemedi",error));
+  if(localAgent){
+    try{await ilkBilgilendirme();dwellReady=true;dwellSchedule();}
+    catch(error){console.warn("Bilgilendirme gösterilemedi",error);}
+  }
   if(new URLSearchParams(location.search).has("demo"))setTimeout(startJuryDemo,550);
 }
 baslat();

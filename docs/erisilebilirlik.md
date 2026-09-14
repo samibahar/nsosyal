@@ -29,8 +29,9 @@ düzeltildi, güncel durum **0 ihlal**.
 
 ## Diğer önlemler
 
-- Dokunma hedefleri en az 44 px (Apple HIG), metin düğmelerinde görünmez
-  dokunma payı.
+- Temel akış eylemleri ve Haberler'deki tepki/açıklama/silme kontrolleri
+  en az 44 px yüksekliği hedefler; metin düğmelerinde ek dokunma payı vardır.
+  Tüm bağlantıların 44 × 44 px olduğu iddia edilmez.
 - Görünür odak halkası tüm etkileşimli öğelerde.
 - Ayarlar'daki anahtarlar `role="switch"` + `aria-checked`, açıklamaları
   `aria-describedby` ile bağlı.
@@ -41,6 +42,11 @@ düzeltildi, güncel durum **0 ihlal**.
 - `prefers-reduced-motion` desteklenir (iskelet animasyonu, geçişler).
 
 ## Sınırlılıklar
+
+- 14.09 akşamı: Haberler tepki tepsisi kapalıyken `inert` ve
+  `aria-hidden` uygulanır. Escape, dış tıklama ve seçim durumunda
+  `aria-expanded` eşitlenir; açıklama penceresi klavye odağını içeride tutar.
+  Dar İçgörü kartları tek sütuna geçer; uzman özeti klavyeyle kaydırılabilir.
 
 - Otomatik araçlar erişilebilirlik sorunlarının ancak bir kısmını yakalar;
   ekran okuyucu (NVDA, VoiceOver) ile gerçek kullanıcı testi yapılmadı.

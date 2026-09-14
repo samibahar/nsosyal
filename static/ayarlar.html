@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="/favicon.svg" />
   <link rel="stylesheet" href="/style.css?v=42" />
   <link rel="stylesheet" href="/arayuz.css?v=15" />
-  <link rel="stylesheet" href="/tema.css?v=26" />
+  <link rel="stylesheet" href="/tema.css?v=27" />
 </head>
 <body class="insight-body ayarlar-body">
 <svg class="ikon-sprite" aria-hidden="true" focusable="false"><defs>
@@ -34,7 +34,7 @@
       <div class="chart-heading"><div><span>AKIŞ KONTROLLERİ</span><h2 id="akis-baslik">Duygu katmanı nasıl davransın?</h2></div></div>
       <div class="ayar-liste">
         <div class="ayar-satir">
-          <div><b id="ayar-dengeleme-ad">Duygu dengeleme</b><p id="ayar-dengeleme-acik">Yoğun tonlu içeriklerde uzun kaldığını fark edince benzerlerini akışta biraz aşağı alır. Hiçbir içerik silinmez. Kapatırsan akış yalnızca ilgi alanlarına göre sıralanır.</p></div>
+          <div><b id="ayar-dengeleme-ad">Duygu dengeleme</b><p id="ayar-dengeleme-acik">Yoğun içerikte uzun ve pasif kaldığında benzer gönderileri aralıklandırır. Hiçbir içerik silinmez.</p><details class="ayar-ayrinti"><summary>Kapattığımda ne olur?</summary><p>Akış ilgi alanların ve içerik çeşitliliğine göre sıralanmaya devam eder.</p></details></div>
           <button class="anahtar" type="button" role="switch" aria-checked="true" data-ayar="dengeleme" aria-labelledby="ayar-dengeleme-ad" aria-describedby="ayar-dengeleme-acik"><span></span></button>
         </div>
         <div class="ayar-satir">
@@ -46,7 +46,7 @@
           <button class="anahtar" type="button" role="switch" aria-checked="true" data-ayar="kontrolSorulari" aria-labelledby="ayar-kontrol-ad" aria-describedby="ayar-kontrol-acik"><span></span></button>
         </div>
         <div class="ayar-satir">
-          <div><b id="ayar-kisisel-ad">Kişisel uyarlama</b><p id="ayar-kisisel-acik">Kontrol sorularına verdiğin cevaplarla tahmin modellerini bu cihazda sana göre küçük adımlarla ayarlar. Dengelemenin ne zaman devreye gireceğini ancak en az 6 cevapta varsayılan modelden daha iyi tuttuğu görülürse etkiler.</p><small id="kisisel-durum" class="ayar-alt">Henüz güncellenmedi</small></div>
+          <div><b id="ayar-kisisel-ad">Kişisel uyarlama</b><p id="ayar-kisisel-acik">Tahminleri, verdiğin cevaplarla bu cihazda sana göre uyarlar.</p><small id="kisisel-durum" class="ayar-alt">Henüz kontrol sorusu yanıtlanmadı.</small><details class="ayar-ayrinti"><summary>Ne zaman akışı etkiler?</summary><p>Dengelemenin ne zaman başlayacağını ancak en az 6 yanıtla değerlendirildikten ve varsayılan tahminden daha iyi sonuç verdikten sonra etkiler. Kişisel ruh hali tahminleri sıralamayı değiştirmez.</p></details></div>
           <button class="anahtar" type="button" role="switch" aria-checked="true" data-ayar="kisiselUyarlama" aria-labelledby="ayar-kisisel-ad" aria-describedby="ayar-kisisel-acik"><span></span></button>
         </div>
       </div>
@@ -102,7 +102,7 @@
   <script src="/trained-weights.js?v=3"></script>
   <script src="/trained-models.js?v=7"></script>
   <script src="/local-agent.js?v=21"></script>
-  <script src="/ayarlar.js?v=5"></script>
+  <script src="/ayarlar.js?v=6"></script>
   <script src="/erisim.js?v=1"></script>
 </body>
 </html>

@@ -680,3 +680,21 @@ body .balance-intervention #denge-kapat { background: transparent; color: #fff; 
 }
 .jury-receipt { background: var(--yuzey-2); }
 .jury-actions .primary, .jury-empty a { background: var(--accent); color: var(--accent-ink); }
+
+/* Okunabilir ayarlar ve dokunmatik kontroller. */
+.geri-ikon { transform: rotate(180deg); }
+.ayar-ayrinti { margin-top: 8px; font-size: 13px; color: var(--muted); }
+.ayar-ayrinti summary { min-height: 44px; padding: 10px 0; cursor: pointer; color: var(--accent-koyu); }
+.ayar-ayrinti p { margin-top: 4px; }
+.ayar-alt { display: block; margin-top: 8px; line-height: 1.5; }
+.news-card-footer .news-why, #news-reset, #insight-detail-button,
+.news-reaction-trigger, .news-categories button, .explore-chips button,
+.insight-action, .ikincil-buton, .tehlike-buton { min-height: 44px; }
+.news-reaction-wheel[aria-hidden="true"] { visibility: hidden; }
+#terapist-ozet-metin { max-height: 55vh; overflow: auto; font-size: 13px !important; }
+@media (max-width: 480px) {
+  .insight-grid.useful-grid { grid-template-columns: minmax(0, 1fr); }
+  .ayar-satir { gap: 12px; }
+  .ayar-satir > div { min-width: 0; }
+  .anahtar { flex-shrink: 0; }
+}

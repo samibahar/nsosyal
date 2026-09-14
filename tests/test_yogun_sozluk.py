@@ -26,3 +26,27 @@ def test_ton_yalnizca_asagi_cekilir():
     assert sistem_tonu(0.91, "Bir işçi öldü") == (SOZLUK_TONU, "öldü")
     assert sistem_tonu(-0.95, "Bir işçi öldü")[0] == -0.95
     assert sistem_tonu(0.4, "Güzel bir gün") == (0.4, None)
+
+
+def test_olay_olmayan_arac_egitim_ve_mecaz():
+    for metin in ["Okulda yangın tatbikatı yapıldı", "Yeni bıçak seti satışa çıktı",
+                  "İhracatta patlama yaşandı", "Salonda kahkaha patlaması oldu",
+                  "Yangın söndürme tüpleri yenilendi"]:
+        assert sistem_tonu(0.4, metin) == (0.4, None), metin
+
+
+def test_olay_disi_ifade_gercek_olayi_gizlemez():
+    for metin in ["Yangın tatbikatında bir kişi yaralandı",
+                  "Bıçak seti taşıyan araç kaza yaptı",
+                  "Yangın söndürme tüpü patladı"]:
+        assert sistem_tonu(0.4, metin)[0] == SOZLUK_TONU, metin
+
+
+def test_karaktersiz_yazim_olaylari_ve_cakismalar():
+    for metin in ["Saldiri sonucu yarali var", "Bir asker sehit oldu", "SALDIRI HABERI"]:
+        assert yogun_sozcuk(metin), metin
+    for metin in ["Guzel oldu", "Etkinlige katilim artti", "Bu yil coktu", "Takim kazandi",
+                  "Kazasız belasız geldik", "Kazasiz belasiz geldik", "Yangin tatbikati yapildi",
+                  "Bicak seti satisa cikti", "Ihracatta patlama yasandi"]:
+        assert yogun_sozcuk(metin) is None, metin
+    assert yogun_sozcuk("Yangin tatbikatinda yarali var")

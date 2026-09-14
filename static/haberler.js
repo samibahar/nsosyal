@@ -2,6 +2,7 @@ const newsFeed = document.getElementById("news-feed");
 const newsAgent = window.LocalPersonalization;
 const newsById = new Map();
 let allNews = [], activeCategory = "Tümü", newsState = { reactions: {}, eventCount: 0, lastReaction: null };
+let newsSheetTrigger = null;
 
 const reactionOptions = [
   ["begendim", "👍", "Beğendim"], ["umutlandim", "🌤️", "Umutlandım"],
@@ -13,7 +14,7 @@ function scoreBox(label, value) { return `<div class="score-box"><small>${label}
 
 function updateNewsRhythm() {
   const title = document.getElementById("news-rhythm-title"), text = document.getElementById("news-rhythm-text");
-  if (!newsState.lastReaction) { title.textContent = "Haber ritmin dengeli"; text.textContent = "Tepkilerin yalnızca bu cihazda kalır."; return; }
+  if (!newsState.lastReaction) { title.textContent = "Henüz haber tepkisi yok"; text.textContent = "İstersen tepkini belirt; yalnızca bu cihazda kalır."; return; }
   const tense = newsState.lastReaction === "kizdim" || newsState.lastReaction === "gerildim";
   title.textContent = tense ? "Son haber sende yoğun bir tepki bıraktı" : "Tepkini sen belirttin";
   text.textContent = `${reactionLabels[newsState.lastReaction]} · ${newsState.eventCount} yerel haber tepkisi`;
@@ -23,18 +24,34 @@ function reactionWheel(article) {
   return `<div class="news-reaction-wrap"><button class="news-reaction-trigger" type="button" aria-expanded="false"><span>${reactionLabels[newsState.reactions?.[article.id]] || "<svg class='ikon ikon-sm' aria-hidden='true'><use href='#i-tepki'/></svg> Tepki ver"}</span></button><div class="news-reaction-wheel" role="group" aria-label="Bu haber sana nasıl hissettirdi?">${reactionOptions.map(([key, emoji, label]) => `<button type="button" data-reaction="${key}" title="${label}" aria-label="${label}" class="${newsState.reactions?.[article.id] === key ? "selected" : ""}"><span>${emoji}</span><small>${label}</small></button>`).join("")}</div></div>`;
 }
 
+function setNewsWheel(wheel, open, restoreFocus = false) {
+  const trigger = wheel.previousElementSibling;
+  if (!open && (restoreFocus || wheel.contains(document.activeElement))) trigger.focus();
+  wheel.classList.toggle("open", open);
+  wheel.inert = !open;
+  wheel.setAttribute("aria-hidden", String(!open));
+  trigger.setAttribute("aria-expanded", String(open));
+}
+
 function articleCard(article, alternative = false) {
   const card = document.createElement("article");
   card.className = `news-card${alternative ? " alternative-news-card" : ""}`;
   card.dataset.newsId = article.id;
   card.innerHTML = `${alternative ? '<div class="alternative-ribbon"><svg class="ikon ikon-sm" aria-hidden="true"><use href="#i-kivilcim"/></svg> AYNI GELİŞME · BAŞKA BİR KAYNAK</div>' : ""}<div class="news-media"><img src="${article.gorsel}" alt="" loading="lazy"><span>${escapeNews(article.kategori)}</span></div><div class="news-content"><div class="news-source"><span>${escapeNews(article.kaynak_kodu)}</span><div><b>${escapeNews(article.kaynak)}</b><small>${escapeNews(article.zaman)} · örnek kaynak</small></div><i>${escapeNews(article.cerceve)}</i></div><h2>${escapeNews(article.baslik)}</h2><p>${escapeNews(article.ozet)}</p>${reactionWheel(article)}<div class="news-card-footer"><button class="news-why" type="button">✦ Neden bu?</button><span>Skor ${Math.round((article.local_news_score || .5) * 100)}</span></div></div>`;
   const trigger = card.querySelector(".news-reaction-trigger"), wheel = card.querySelector(".news-reaction-wheel");
-  trigger.addEventListener("click", event => { event.stopPropagation(); const open = wheel.classList.toggle("open"); trigger.setAttribute("aria-expanded", String(open)); });
+  setNewsWheel(wheel, false);
+  card.querySelector(".news-card-footer > span").remove();
+  trigger.addEventListener("click", event => {
+    event.stopPropagation();
+    const open = !wheel.classList.contains("open");
+    document.querySelectorAll(".news-reaction-wheel.open").forEach(other => setNewsWheel(other, false));
+    setNewsWheel(wheel, open);
+  });
   wheel.querySelectorAll("[data-reaction]").forEach(button => button.addEventListener("click", async event => {
     event.stopPropagation();
     newsState = await newsAgent.recordNewsReaction(article, button.dataset.reaction);
     updateNewsRhythm();
-    wheel.classList.remove("open"); trigger.setAttribute("aria-expanded", "false");
+    setNewsWheel(wheel, false, true);
     trigger.querySelector("span").textContent = reactionLabels[button.dataset.reaction];
     wheel.querySelectorAll("button").forEach(item => item.classList.toggle("selected", item === button));
     if (newsState.shouldOfferAlternative && !alternative) showAlternative(card, article);
@@ -61,6 +78,7 @@ function renderNews() {
 }
 
 function openNewsSheet(article = null) {
+  newsSheetTrigger = document.activeElement;
   const sheet = document.getElementById("news-sheet"), summary = document.getElementById("news-sheet-summary"), scores = document.getElementById("news-sheet-scores"), technical = document.getElementById("news-sheet-technical");
   if (article) {
     summary.textContent = `${article.kaynak} kaynağındaki bu haber, yerel ilgi ve konu çeşitliliği sinyalleriyle sıralandı.`;
@@ -71,9 +89,14 @@ function openNewsSheet(article = null) {
     scores.innerHTML = scoreBox("Yerel tepki", newsState.eventCount) + scoreBox("Tercih", newsState.preferredCategory || "Oluşuyor") + scoreBox("Kontrol", "Sende");
     technical.innerHTML = "<p><b>İki aşamalı sistem</b><br>1. Sunucu yalnızca örnek haber adaylarını sağlar.<br>2. Tarayıcı; kategori ilgisi, kaynak çeşitliliği ve yoğunluk ağırlığıyla yerel sıralama yapar.<br><br>Öfke veya stres, daha fazla benzer yoğun haber önermek için kullanılmaz.</p>";
   }
-  sheet.classList.add("open"); sheet.setAttribute("aria-hidden", "false");
+  sheet.classList.add("open"); sheet.setAttribute("aria-hidden", "false"); sheet.inert = false;
+  document.getElementById("news-sheet-close").focus();
 }
-function closeNewsSheet() { const sheet = document.getElementById("news-sheet"); sheet.classList.remove("open"); sheet.setAttribute("aria-hidden", "true"); }
+function closeNewsSheet() {
+  const sheet = document.getElementById("news-sheet");
+  if (newsSheetTrigger?.isConnected) newsSheetTrigger.focus();
+  sheet.classList.remove("open"); sheet.setAttribute("aria-hidden", "true"); sheet.inert = true;
+}
 
 async function loadNews() {
   await newsAgent.init();
@@ -90,5 +113,17 @@ document.getElementById("news-info-button").addEventListener("click", () => open
 document.getElementById("news-sheet-close").addEventListener("click", closeNewsSheet);
 document.getElementById("news-sheet").addEventListener("click", event => { if (event.target.id === "news-sheet") closeNewsSheet(); });
 document.getElementById("news-reset").addEventListener("click", async () => { newsState = await newsAgent.clearNewsData(); allNews = await newsAgent.rankNews(allNews); updateNewsRhythm(); renderNews(); });
-document.addEventListener("click", event => { if (!event.target.closest(".news-reaction-wrap")) document.querySelectorAll(".news-reaction-wheel.open").forEach(wheel => wheel.classList.remove("open")); });
+document.addEventListener("click", event => { if (!event.target.closest(".news-reaction-wrap")) document.querySelectorAll(".news-reaction-wheel.open").forEach(wheel => setNewsWheel(wheel, false)); });
+document.addEventListener("keydown", event => {
+  const sheet = document.getElementById("news-sheet");
+  if (event.key === "Tab" && sheet.classList.contains("open")) {
+    const items = [...sheet.querySelectorAll('button, a[href], summary, [tabindex="0"]')].filter(e => e.getClientRects().length && !e.disabled);
+    const first = items[0], last = items[items.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !sheet.contains(document.activeElement))) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && (document.activeElement === last || !sheet.contains(document.activeElement))) { event.preventDefault(); first?.focus(); }
+  }
+  if (event.key !== "Escape") return;
+  document.querySelectorAll(".news-reaction-wheel.open").forEach(wheel => setNewsWheel(wheel, false, true));
+  if (sheet.classList.contains("open")) closeNewsSheet();
+});
 loadNews().catch(() => { newsFeed.innerHTML = '<div class="loading-state">Haberler şu an yüklenemedi.</div>'; });

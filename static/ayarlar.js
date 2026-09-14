@@ -20,8 +20,8 @@ function gunAnahtari(zaman){const d=new Date(zaman);return `${d.getFullYear()}-$
 function anahtarlariGoster(ayarlar){document.querySelectorAll("[data-ayar]").forEach(buton=>buton.setAttribute("aria-checked",String(!!ayarlar[buton.dataset.ayar])));}
 async function kisiselDurumGoster(){
   const durum=await ajan.kisiselModelDurumu();
-  const spiral=durum.spiralGuncelleme?` · spiral kalibrasyonu ${durum.spiralEtkin?"akışa bağlı":"henüz akışa bağlı değil"}`:"";
-  $("kisisel-durum").textContent=durum.guncelleme?`${durum.guncelleme} cevapla güncellendi${spiral}`:"Henüz güncellenmedi";
+  const spiral=durum.spiralEtkin?"Dengeleme için kişisel uyarlama etkin.":"Akış için varsayılan tahmin kullanılıyor.";
+  $("kisisel-durum").textContent=durum.guncelleme?`${durum.guncelleme} yanıtla güncellendi. ${spiral}`:"Henüz kontrol sorusu yanıtlanmadı.";
 }
 // Pilot dosyası: indirmeden önce içeriği sayfada gösterilir.
 async function pilotGoster(){

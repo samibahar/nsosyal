@@ -14,6 +14,12 @@ betikle yeniden üretilebilir.
 
 ## 1. Duygu modeli (BERT v3)
 
+**Son sözlük güncellemesi (14.09 akşamı):** Karaktersiz yazım ve "kazasız" düzeltmeleri sonrasında
+normal yazımlı 450 başlığın sonuçları değişmedi. Karaktersiz varyantlarda güçlü
+olumsuz yakalama %53,3'ten %77,8'e; olumsuz olmayanda işaret %3,8'den %5,9'a
+çıktı. Bunlar geliştirmede görülmüş örneklerdir. Görünürlük takibi, model rolü,
+bileşen karşılaştırması ve sınırlar için [son doğrulama notu](gorunurluk_ve_final_dogrulamasi.md).
+
 **Amaç ve kullanım.** Herkese açık gönderi metninin duygusal tonunu tahmin
 eder: ton = P(pozitif) − P(negatif). Sıralamada yalnızca "yoğun tonlu" (ton <
 −0,15) işareti olarak kullanılır. Kullanıcı hakkında bir çıkarım değildir;
@@ -69,6 +75,15 @@ kullanılmadı):
 - Eğitim verisinin bir kısmı sentetiktir (yukarıdaki tablo).
 
 **Gerçek haber başlıklarında sınır ve olay sözcüğü desteği (14.09.2026).**
+Bu bölümdeki %83/%97, sözlüğün ilk sürümünün (commit `f203a7d`) iç
+değerlendirmesidir; ayrılmış 100 başlık, sözlüğün son küçük düzeltmelerinden
+önce de görülmüştü. Aynı sürüm daha sonra hiç görülmemiş dört kaynaktan 200 yeni
+başlıkta güçlü olumsuzların %82'sini yakaladı (isabet %90). Sonraki eklemelerle
+(karaktersiz yazım, "kazasız", dar bağlam istisnaları) 450 başlığın normal
+yazımındaki sonuç değişmedi, ama bu başlıkların hepsi artık geliştirmede
+görülmüştür. Bağımsız son değerlendirme için kurallar dondurulduktan sonra yeni
+örneklem ve ikinci etiketleyici gerekir.
+
 Yukarıdaki testler winvoker ve bizim yazdığımız cümlelerdir. Herkese açık
 gerçek Türkçe haber başlıklarından elle etiketlediğimiz 250 başlıkta v3, açık
 olumsuz bir olay bildiren başlıkların (ölüm, yaralanma, saldırı, yangın,

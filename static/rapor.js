@@ -224,13 +224,24 @@ async function terapistOzetiOlustur(){
 document.getElementById("terapist-ozet-buton")?.addEventListener("click",async event=>{
   const buton=event.currentTarget,alan=$("terapist-ozet-metin"),kopyala=$("terapist-ozet-kopyala");
   buton.disabled=true;buton.textContent="Oluşturuluyor…";
-  alan.textContent=await terapistOzetiOlustur();
-  alan.style.display="block";kopyala.style.display="inline-flex";
-  buton.disabled=false;buton.textContent="Özeti yeniden oluştur";
+  try {
+    alan.textContent=await terapistOzetiOlustur();
+    alan.style.display="block";kopyala.style.display="inline-flex";
+    alan.focus();
+    buton.textContent="Özeti yeniden oluştur";
+  } catch {
+    alan.textContent="Özet oluşturulamadı. Yeniden deneyebilirsin.";
+    alan.style.display="block";kopyala.style.display="none";
+    buton.textContent="Tekrar dene";
+  } finally { buton.disabled=false; }
 });
 document.getElementById("terapist-ozet-kopyala")?.addEventListener("click",async event=>{
   const buton=event.currentTarget;
-  try{await navigator.clipboard.writeText($("terapist-ozet-metin").textContent);const eski=buton.textContent;buton.textContent="Kopyalandı ✓";setTimeout(()=>buton.textContent=eski,1500);}catch{}
+  try{await navigator.clipboard.writeText($("terapist-ozet-metin").textContent);const eski=buton.textContent;buton.textContent="Kopyalandı ✓";setTimeout(()=>buton.textContent=eski,1500);}catch{
+    const alan=$("terapist-ozet-metin"),secim=window.getSelection(),aralik=document.createRange();
+    aralik.selectNodeContents(alan);secim.removeAllRanges();secim.addRange(aralik);alan.focus();
+    buton.textContent="Metin seçildi; kopyalama menüsünü kullan";
+  }
 });
 function render(){const events=scopedEvents();renderSummary(events);renderLine(events);renderTopics(events);renderReactions(events);renderHeatmap();renderDogrulama();}
 async function init(){const agent=window.LocalPersonalization;if(!agent)return;await agent.init();[allEvents,trace,etiketModeli]=await Promise.all([agent.getLocalEvents(),agent.getDecisionTrace(),agent.etiketModeli()]);seyirTum=ruhHaliSeyriHesapla(allEvents.filter(event=>event.type==="interaction"));render();}
