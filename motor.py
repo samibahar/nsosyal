@@ -8,6 +8,7 @@ import time
 import spiral_model
 import spiral_ozellik
 from duygu_modeli import duygu_skoru
+from yogun_sozluk import sistem_tonu
 
 # Spiral sınıflandırıcı, süreç başlarken bir kere eğitilir ve bellekte tutulur
 # (gerçek üretimde bu, önceden eğitilip diske kaydedilmiş bir model dosyası olurdu).
@@ -18,7 +19,10 @@ def gonderileri_puanla(gonderiler: list[dict]) -> list[dict]:
     """Her gönderiye BERT ile gerçek bir duygu_skoru ekler (yoksa)."""
     for g in gonderiler:
         if "duygu" not in g:
-            g["duygu"] = duygu_skoru(g["metin"])
+            # Model tonu saklanır; açık olumsuz olay sözcüğü varsa (yogun_sozluk.py)
+            # uygulamanın kullandığı ton en fazla −0,9 olur ve sözcük açıklamada gösterilir.
+            g["duygu_model"] = duygu_skoru(g["metin"])
+            g["duygu"], g["yogun_sozcuk"] = sistem_tonu(g["duygu_model"], g["metin"])
     return gonderiler
 
 

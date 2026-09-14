@@ -319,7 +319,7 @@ def test_ruh_hali_tek_gonderiyle_degismez(masaustu):
     akisi_ac(masaustu)
     sonuc = masaustu.evaluate("""() => {
         const T = TrainedModels, simdi = 100000;
-        const sakin = i => ({zaman: simdi - 300 + i * 40, ozellik: {duygu: 0.05, dwell_saniye: 1.2, tiklama: 0, roket: 0, yorum: 0}});
+        const sakin = i => ({zaman: simdi - 300 + i * 40, ozellik: {duygu: 0.05, dwell_saniye: 2, tiklama: 0, roket: 0, yorum: 0}});
         const olaylar = [0, 1, 2, 3, 4, 5].map(sakin);
         const sinirli = {zaman: simdi, ozellik: {duygu: -0.8, dwell_saniye: 2.5, tiklama: 1, roket: 1, yorum: 1}};
         return {tek: T.psikolojikTahmin(sinirli.ozellik).kategori, once: T.ruhHaliPenceresi(olaylar, simdi).kategori,

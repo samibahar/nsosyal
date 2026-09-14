@@ -79,23 +79,36 @@ def ozellikler(olaylar: list[dict], simdi: float) -> dict | None:
         return None
     agirlik_top = oran_top = aktif_top = 0.0
     yogun_oran = yogun_agirlik = fazla_top = 0.0
+    # Göreli oyalanma yalnızca okuma tabanı (1,5 sn) kadar ya da daha uzun
+    # durulan gönderilerden hesaplanır. Daha kısa durmalar göz gezdirmedir;
+    # 0,6 ile 0,9 sn arasındaki rastgele fark büyük bir oran farkı gibi
+    # görünüp hızlı kaydırmayı "oyalanma" sanıyordu (gerçek veri testi,
+    # 14.09.2026: hızlı kaydırmada %23 yanlış dengeleme → %2).
+    g_agirlik = g_oran = g_yogun_oran = g_yogun_agirlik = 0.0
     for kayit in gunluk:
         agirlik = 0.5 ** ((simdi - kayit["zaman"]) / YARI_OMUR_SANIYE)
         oran = min(kayit["dwell"] / beklenen_okuma(kayit.get("kelime")), ORAN_UST)
         agirlik_top += agirlik
         oran_top += agirlik * oran
         aktif_top += agirlik * (1.0 if (kayit["roket"] or kayit["yorum"]) else 0.0)
-        if kayit["ton"] < YOGUN_TON:
+        yogun = kayit["ton"] < YOGUN_TON
+        if yogun:
             yogun_oran += agirlik * oran
             yogun_agirlik += agirlik
             fazla_top += agirlik * min(max(0.0, oran - 1.0), FAZLA_UST)
-    diger_agirlik = agirlik_top - yogun_agirlik
+        if kayit["dwell"] >= OKUMA_TABAN:
+            g_agirlik += agirlik
+            g_oran += agirlik * oran
+            if yogun:
+                g_yogun_oran += agirlik * oran
+                g_yogun_agirlik += agirlik
     goreli = 0.0
-    if yogun_agirlik > 0:
-        yogun_ort = yogun_oran / yogun_agirlik
+    if g_yogun_agirlik > 0:
+        yogun_ort = g_yogun_oran / g_yogun_agirlik
         # Kıyaslanacak yoğun olmayan gönderi yoksa (akışın tamamı yoğun: kriz
         # günü) referans, metni okuma süresi kadar bakmaktır (oran 1).
-        diger_ort = (oran_top - yogun_oran) / diger_agirlik if diger_agirlik > 1e-9 else 1.0
+        diger_agirlik = g_agirlik - g_yogun_agirlik
+        diger_ort = (g_oran - g_yogun_oran) / diger_agirlik if diger_agirlik > 1e-9 else 1.0
         goreli = max(-GORELI_UST, min(GORELI_UST, math.log((yogun_ort + GORELI_PAY) / (diger_ort + GORELI_PAY))))
     return {
         "yogun_pay": yogun_oran / oran_top if oran_top > 0 else 0.0,

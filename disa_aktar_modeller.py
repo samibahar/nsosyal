@@ -16,7 +16,7 @@ import json
 
 import spiral_ozellik
 from spiral_model import egitilmis
-from psikolojik_durum import _VARSAYILAN_MODEL, _OLCEKLEYICI
+from psikolojik_durum import DWELL_UST, _VARSAYILAN_MODEL, _OLCEKLEYICI
 
 spiral = egitilmis()
 
@@ -37,6 +37,7 @@ veri = {
         "intercept": _VARSAYILAN_MODEL.intercept_.tolist(),
         "olcekleyici_ortalama": _OLCEKLEYICI.mean_.tolist(),
         "olcekleyici_olcek": _OLCEKLEYICI.scale_.tolist(),
+        "dwell_ust": DWELL_UST,
     },
 }
 

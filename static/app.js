@@ -91,6 +91,8 @@ const dwellObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
 }),{threshold:.6});
 
 function scoreBox(label,value){return `<div class="score-box"><small>${label}</small><b>${value}</b></div>`;}
+// Ton, açık bir olay sözcüğüyle aşağı çekildiyse (yogun_sozluk.py) sözcük ve modelin kendi tonu da gösterilir.
+function tonSatiri(post){return `Duygu skoru: <b>${Number(post.duygu||0).toFixed(2)}</b>${post.yogun_sozcuk?` (açık olay sözcüğü «${escapeText(post.yogun_sozcuk)}»; modelin kendi tonu ${Number(post.duygu_model).toFixed(2)})`:""}`;}
 function openLocalSheet(post){
   const sheet=document.getElementById("explanation-sheet"),summary=document.getElementById("sheet-summary"),scores=document.getElementById("sheet-score-grid"),technical=document.getElementById("technical-details-content");
   const dengelemeAcik=localSummary.ayarlar?.dengeleme!==false&&!localSummary.oturumdaKapali;
@@ -102,7 +104,7 @@ function openLocalSheet(post){
     // Doz: yogun tonlu iceriklerin sayfadaki payi hedefe indirilir; bu gonderi
     // o yuzden kac sira asagi kaydiysa o gosterilir.
     const doz=dengelemeAcik&&post.local_doz_hedef<post.local_doz_taban?`Yoğun içerik payı hedefi: <b>%${Math.round(post.local_doz_taban*100)} → %${Math.round(post.local_doz_hedef*100)}</b><br>`:"";
-    technical.innerHTML=`<p><b>Yerel çevrim içi sıralama</b><br>${post.aday_toplami?`Aday sırası: <b>${post.aday_sirasi} / ${post.aday_toplami}</b><br>`:""}İlgi ağırlığı: <b>${(post.local_ilgi||0).toFixed(2)}</b><br>Akış dengeleme: <b>${dengelemeAcik?(post.local_dengeleme?`${post.local_dengeleme} sıra aşağı`:"yok"):"kapalı"}</b><br>${doz}Açık tepki etkisi: <b>${(post.local_tepki_etkisi||0).toFixed(2)}</b><br>Yerel sıralama skoru: <b>${(post.local_skor||0).toFixed(2)}</b><br><br>Ham tıklama ve durma süresi bu hesap için sunucuya gönderilmez.</p>`;
+    technical.innerHTML=`<p><b>Yerel çevrim içi sıralama</b><br>${post.aday_toplami?`Aday sırası: <b>${post.aday_sirasi} / ${post.aday_toplami}</b><br>`:""}${tonSatiri(post)}<br>İlgi ağırlığı: <b>${(post.local_ilgi||0).toFixed(2)}</b><br>Akış dengeleme: <b>${dengelemeAcik?(post.local_dengeleme?`${post.local_dengeleme} sıra aşağı`:"yok"):"kapalı"}</b><br>${doz}Açık tepki etkisi: <b>${(post.local_tepki_etkisi||0).toFixed(2)}</b><br>Yerel sıralama skoru: <b>${(post.local_skor||0).toFixed(2)}</b><br><br>Ham tıklama ve durma süresi bu hesap için sunucuya gönderilmez.</p>`;
   }else{
     summary.textContent="Kişiselleştirme profili ve ham etkileşim geçmişi bu tarayıcının IndexedDB alanında tutulur. Sunucu yalnızca herkese açık aday gönderileri sağlar.";
     scores.innerHTML=scoreBox("Yerel sinyal",`${localSummary.eventCount} etkileşim`)+scoreBox("Güven",`${Math.round((localSummary.confidence||0)*100)}%`)+scoreBox("Dengeleme",dengelemeAcik?"Açık":"Kapalı");
@@ -119,7 +121,7 @@ function openSheet(post=null){
   if(post){
     summary.textContent=post.aciklama;
     scores.innerHTML=scoreBox("İlgi eşleşmesi",`${Math.round(post.ilgi_skoru*100)}%`)+scoreBox("Akış ayarı",post.refah_cezasi?`−${Math.round(post.refah_cezasi*100)} puan`:"Yok")+scoreBox("Sonuç",`${Math.round(post.final_skor*100)}%`);
-    technical.innerHTML=`<p>Duygu skoru: <b>${post.duygu.toFixed(2)}</b><br>İlgi skoru: <b>${post.ilgi_skoru.toFixed(2)}</b><br>Refah yumuşatması: <b>${post.refah_cezasi.toFixed(2)}</b><br>Final sıralama skoru: <b>${post.final_skor.toFixed(2)}</b></p>`;
+    technical.innerHTML=`<p>${tonSatiri(post)}<br>İlgi skoru: <b>${post.ilgi_skoru.toFixed(2)}</b><br>Refah yumuşatması: <b>${post.refah_cezasi.toFixed(2)}</b><br>Final sıralama skoru: <b>${post.final_skor.toFixed(2)}</b></p>`;
   }else{
     const copy=statusCopy(currentSpiral);summary.textContent=copy.text;scores.innerHTML=scoreBox("Akış yoğunluğu",`${Math.round(currentSpiral*100)}%`)+scoreBox("Yaklaşım","Nazik dengeleme")+scoreBox("Kontrol","Sende");technical.innerHTML=`<p>Spiral seviyesi: <b>${currentSpiral.toFixed(3)}</b><br>Bu değer son etkileşim örüntülerinden hesaplanır. İçerik kaldırılmaz; yalnızca sıralamadaki ağırlığı değişebilir.</p>`;
   }
@@ -190,9 +192,13 @@ const pageObserver=new IntersectionObserver(entries=>{if(entries[0].isIntersecti
 // Fotograflar yalnizca karta donusen (gosterilen) gonderiler icin iner.
 const SAYFA_BOYU=12,ADAY_SAYISI=48;
 let adayHavuzu=[],sunucuTukendi=false;
-async function adaylariGetir(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}&aday=${ADAY_SAYISI}`);const data=await response.json();sunucuTukendi=data.tukendi;return data.gonderiler||[];}
+// Sunucu "zaten gosterildi" listesini tarayici oturumuna gore tutar; tek ortak
+// liste cok kisili pilotta birinin yenilemesiyle herkesin sayfalamasini
+// sifirliyordu. Kimlik rastgeledir, kullaniciya ya da davranisa bagli degildir.
+const SAYFA_OTURUMU=(()=>{const yeni=()=>Math.random().toString(36).slice(2,12);try{let k=sessionStorage.getItem("nsosyal-sayfa-oturumu");if(!k){k=yeni();sessionStorage.setItem("nsosyal-sayfa-oturumu",k);}return k;}catch{return yeni();}})();
+async function adaylariGetir(reset){const response=await fetch(`/api/gonderiler?sifirdan=${reset}&aday=${ADAY_SAYISI}&oturum=${SAYFA_OTURUMU}`);const data=await response.json();sunucuTukendi=data.tukendi;return data.gonderiler||[];}
 async function getPage(reset){
-  if(!localAgent){const response=await fetch(`/api/gonderiler?sifirdan=${reset}`);const data=await response.json();exhausted=data.tukendi;return data.gonderiler;}
+  if(!localAgent){const response=await fetch(`/api/gonderiler?sifirdan=${reset}&oturum=${SAYFA_OTURUMU}`);const data=await response.json();exhausted=data.tukendi;return data.gonderiler;}
   if(reset){adayHavuzu=[];sunucuTukendi=false;}
   if(adayHavuzu.length<SAYFA_BOYU&&!sunucuTukendi)adayHavuzu=adayHavuzu.concat(await adaylariGetir(reset));
   const siralanmis=await localAgent.rank(adayHavuzu),toplam=siralanmis.length;

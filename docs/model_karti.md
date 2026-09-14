@@ -1,13 +1,13 @@
 # Model Kartı — NSosyal Duygu Katmanı
 
-Son güncelleme: 12.09.2026. Bu belge sistemdeki üç modeli ve sıralama
+Son güncelleme: 14.09.2026. Bu belge sistemdeki üç modeli ve sıralama
 kuralını; veri kaynaklarını, ölçümleri, sınırlılıkları ve etik kararları
 özetler. Rakamların kaynağı depodaki `*_sonuc.txt` dosyalarıdır ve ilgili
 betikle yeniden üretilebilir.
 
 | Bileşen | Nerede çalışır | Ne üretir | Ayrıntı |
 |---|---|---|---|
-| Duygu modeli (BERT v3) | Sunucu, gönderi başına bir kez | Gönderi metninin tonu (−1…+1) | §1 |
+| Duygu modeli (BERT v3) + olay sözcüğü desteği | Sunucu, gönderi başına bir kez | Gönderi metninin tonu (−1…+1) | §1 |
 | Spiral modeli v2 | Kullanıcının tarayıcısı | Son 30 dk'da yoğun içerikte pasif oyalanma olasılığı | §2 |
 | Ruh hali modeli | Kullanıcının tarayıcısı | Son 30 dk'daki etkileşimlerden 5 kategorili olası ruh hali | §3 |
 | Sıralama + doz dengelemesi | Kullanıcının tarayıcısı | Akışın sırası | §4 |
@@ -68,6 +68,34 @@ kullanılmadı):
   yoğunluğu ölçümü değildir.
 - Eğitim verisinin bir kısmı sentetiktir (yukarıdaki tablo).
 
+**Gerçek haber başlıklarında sınır ve olay sözcüğü desteği (14.09.2026).**
+Yukarıdaki testler winvoker ve bizim yazdığımız cümlelerdir. Herkese açık
+gerçek Türkçe haber başlıklarından elle etiketlediğimiz 250 başlıkta v3, açık
+olumsuz bir olay bildiren başlıkların (ölüm, yaralanma, saldırı, yangın,
+kaza…) yalnızca %6–8'ini yoğun okudu: haber üslubundaki olgusal anlatımı nötr
+sayıyor. Model yeniden eğitilmeden açık olay sözcükleri için bir sözlük
+eklendi (`yogun_sozluk.py`): başlıkta böyle bir sözcük varsa ton en fazla
+−0,9 olur. Sözlük tonu yalnızca aşağı çeker, olumluya çeviremez. Sözlük 150
+başlıklık geliştirme setiyle yazıldı, sonra hiç bakılmamış 100 başlıkla
+ölçüldü:
+
+| Ayrılmış 100 başlık | v3 | v3 + sözlük |
+|---|---|---|
+| Güçlü olumsuz başlıkları yakalama | %6 | **%83** |
+| Herhangi bir olumsuz başlık (tutuklama, dava dahil) | %9 | %43 |
+| İşaretlenenlerin gerçekten olumsuz olması (isabet) | %100 (çok az işaret) | %97 |
+| Olumsuz olmayan başlığı işaretleme | %0 | %3 |
+| Gerçek tweetler: saldırgan / normal işaretleme | %82 / %16 | %83 / %20 |
+
+Hafif olumsuz haberlerin (tutuklama, dava) çoğu bilerek işaretlenmez: doz,
+sarsıcı içeriğin tekrarını azaltmayı hedefler. Tek başına "deprem", "sel",
+"şiddetli" ya da "kazan-" gibi yanlış alarm üreten sözcükler sözlüğe
+alınmadı. Denenen alternatifler: v2 haberlerde daha çok yakalıyor ama normal
+tweetlerin %47'sini işaretliyor; hazır bir çıkarım (NLI) modeli ancak test
+etiketlerine bakılarak seçilen bir hipotez cümlesiyle iyi sonuç verdiği için
+güvenilir bulunmadı. "Neden bu?" açıklaması tonu sözcüğün belirlediğini ve
+modelin kendi tonunu gösterir.
+
 **Atıf ve lisans.** Temel model `savasy/bert-base-turkish-sentiment-cased`,
 veri seti `winvoker/turkish-sentiment-analysis-dataset` (HuggingFace). Temel
 modelin sayfasında lisans belirtilmemiştir; ince ayarlı model araştırma ve
@@ -90,8 +118,8 @@ içerik okuyan kullanıcıyı riskli sayıyordu.
 
 | Özellik | Standartlaştırılmış katsayı |
 |---|---|
-| Göreli oyalanma (yoğunlarda kendi hızına göre) | +1,59 |
-| Aktif katılım (roket, yorum) | −0,84 |
+| Göreli oyalanma (yoğunlarda kendi hızına göre) | +1,56 |
+| Aktif katılım (roket, yorum) | −0,85 |
 | Yoğun pay, okuma üstü kalma | 0 (kısıt nedeniyle kullanılmadı) |
 
 **Eğitim verisi.** Davranış düzeyinde simülatör: 4.000 oturum, 7 kullanıcı
@@ -104,11 +132,30 @@ içerik payı %5–%90, %8 etiket gürültüsü. Etiket simülasyondaki gizli du
 
 | | v1 (eski) | v2 |
 |---|---|---|
-| ROC-AUC | 0,632 | 0,857 |
-| F1 | 0,517 | 0,744 |
-| Kalibrasyon hatası (ECE) | 0,299 | 0,046 |
-| Yanlış alarm: uzun okuyan / hızlı göz atan / eski oturum | %62 / %29 / %56 | %0,8 / %0 / %0 |
-| Spiral oturumu yakalama | %71 | %89 |
+| ROC-AUC | 0,632 | 0,856 |
+| F1 | 0,517 | 0,728 |
+| Kalibrasyon hatası (ECE) | 0,299 | 0,041 |
+| Yanlış alarm: uzun okuyan / hızlı göz atan / eski oturum | %62 / %29 / %56 | %0,8 / %1,2 / %0 |
+| Spiral oturumu yakalama | %71 | %88 |
+
+**Hızlı kaydırma düzeltmesi (14.09.2026).** Gerçek gönderilerle kurulan
+oturumlarda 0,4–1 sn'lik rastgele durma farkları hızlı kaydırmayı "oyalanma"
+gibi gösteriyor ve oturumların %23–34'ünde dengelemeyi başlatıyordu. Okuma
+tabanının (1,5 sn) altındaki durmalar artık göreli oyalanmaya girmez; model
+aynı simülatörde bu tanımla yeniden eğitildi (katsayılar ve ölçümler yukarıda
+günceldir). Aynı kural ruh hali penceresine de uygulandı (§3). Gerçek
+gönderilerle (haber başlıkları, tweetler; tonlar §1'deki gibi) 200'er oturumda
+son durum:
+
+| Davranış | Dengeleme başlar | Bildirim |
+|---|---|---|
+| Suç/şiddet haberlerinde pasif takılma | %100 | %66 |
+| Deprem haberlerinde pasif takılma | %91 | %16 |
+| Saldırgan tweetlerde pasif takılma | %100 | %84 |
+| Aynısı, yorum yazarak (aktif) | %29 | %0 |
+| Olağan okuma | %12 | %0 |
+| Hızlı kaydırma (0,4–1 sn) | %0 | %0 |
+| Uzun olumlu okuma | %0 | %0 |
 
 **Sınırlılıklar.** Simülatör hipotezlerimizi kodlar ve karşılaştırma v2'nin
 lehinedir; gerçek dünya doğruluğu değildir. Sakin oturumlar 0,26 civarında
@@ -135,7 +182,10 @@ sinyali de zayıftır. Sınıflandırıcı her etkileşimi ayrı tahmin eder, so
 30 dakikadaki tahminler zamanla azalan ağırlıkla (10 dk yarı ömür, spiral ile
 aynı) ortalanır. Ortalama alınır, çarpılmaz: ardışık gönderiler bağımsız kanıt
 değildir, çarpım modeli gereksiz yere kesinleştirirdi. En az 3 etkileşim yoksa
-tahmin yapılmaz. Raporlarda (İçgörü ısı haritası, uzman özeti) her an, o sırada
+tahmin yapılmaz. Okuma tabanından (1,5 sn) kısa durulan gönderi okunmamış
+sayılır ve kanıta girmez; 15 sn'den uzun durma 15 sn sayılır (sentetik eğitim
+verisi bu aralığın dışını görmedi, olumsuz içerikte 30 sn durma "umut"
+okunuyordu; 14.09.2026). Raporlarda (İçgörü ısı haritası, uzman özeti) her an, o sırada
 geçen süreyle ağırlıklandırılır: gönderi sayısı değil süre sayılır.
 
 **Model.** Girdi: ton, durma süresi, tıklama, roket, yorum. Standart ölçekleme
@@ -169,18 +219,21 @@ geçmiyorsa ekran bunu açıkça yazar.
   bilgi hesapları muaftır. Yaklaşım "kalibre edilmiş öneri" fikrinin (Steck,
   RecSys 2018) maruziyet payına uygulanmasıdır.
 
-**Etki** (`etki_analizi_sonuc.txt`; 600 senaryo, ilk sayfa):
+**Etki** (`etki_analizi_sonuc.txt`; 600 senaryo, ilk sayfa; tonlar olay
+sözcüğü desteğiyle):
 
 | Akış yoğunluğu | Yoğun içerik payı | Korunan ilgi | Yoğunların ilk 3 sayfada kalması |
 |---|---|---|---|
-| 0,35 | −%36 | %100 | %58 |
-| 0,6 | −%47 | %99 | %47 |
+| 0,35 | −%35 | %100 | %58 |
+| 0,6 | −%47 | %99 | %48 |
 | 0,85 | −%62 | %99 | %36 |
 
-Yoğun gönderiler ortalama 6,9 sıra arayla gelir (art arda gelme %3); resmi
+Yoğun gönderiler ortalama 6,8 sıra arayla gelir (art arda gelme %3); resmi
 gönderi 146 durumun hiçbirinde aşağı inmedi. Önceki "puandan ceza" sürümü
 yoğunluk 0,85'te payı %96 azaltıyordu (fiilen filtre); bu yüzden değiştirildi.
-Bu bir maruziyet ölçümüdür, iyi-oluş etkisi değildir.
+Gerçek haber başlıklarından kurulan akışta (300 senaryo) aynı yöntem payı
+−%33 / −%48 / −%59 azalttı, ilgi %99,9+ korundu. Bu bir maruziyet ölçümüdür,
+iyi-oluş etkisi değildir.
 
 ## 5. Etik ve gizlilik kararları
 

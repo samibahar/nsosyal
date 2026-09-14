@@ -7,7 +7,7 @@ için bellek-içi durum tutar (gerçek üretimde bu veritabanına/oturuma taşı
 import os
 import sys
 import time
-from collections import Counter
+from collections import Counter, OrderedDict
 from datetime import datetime
 from pathlib import Path
 
@@ -70,7 +70,21 @@ SAYFA_BOYU = 12
 
 DAVRANIS_GUNLUGU: list[dict] = []  # spiral modeli için kayan pencere (son 20, gönderi başına 1 kayıt)
 PSIKOLOJIK_GUNLUK: list[dict] = []  # oturum özeti için (gönderi başına 1 kayıt)
-GOSTERILEN_ID_SETI: set[int] = set()  # sayfalama: bu oturumda zaten sunulan gönderiler
+# Sayfalama: her tarayıcı oturumu için ayrı "zaten sunulan gönderiler" kümesi.
+# Tek ortak küme, çok kişili pilotta birinin akışı yenilemesiyle herkesin
+# sayfalamasını sıfırlıyor, iki kişinin gördüklerini birbirinden düşüyordu.
+# Kimlik istemcinin rastgele ürettiği bir dizgidir; en eski oturumlar düşülür.
+GOSTERILEN: OrderedDict[str, set[int]] = OrderedDict()
+GOSTERILEN_OTURUM_SINIRI = 500
+
+
+def _gosterilen(oturum: str) -> set[int]:
+    anahtar = (oturum or "varsayilan")[:64]
+    kume = GOSTERILEN.pop(anahtar, None) or set()
+    GOSTERILEN[anahtar] = kume
+    while len(GOSTERILEN) > GOSTERILEN_OTURUM_SINIRI:
+        GOSTERILEN.popitem(last=False)
+    return kume
 SON_ETKILESIMLER: dict[int, dict] = {}  # gonderi_id -> o gönderiye dair BİRLEŞTİRİLMİŞ ham sinyal
 
 TAM_GUVEN_ESIGI = 8  # spiral oranı bu kadar farklı gönderi görülmeden tam güvenilir sayılmaz
@@ -240,7 +254,7 @@ def _duygu_durumu() -> dict:
 
 
 @app.get("/api/gonderiler")
-def api_gonderiler(sifirdan: bool = False, aday: int = SAYFA_BOYU):
+def api_gonderiler(sifirdan: bool = False, aday: int = SAYFA_BOYU, oturum: str = ""):
     """Sayfa başına aday gönderi listesi.
 
     Cihaz-içi sıralama yapan istemci `aday=48` ister: telefon 48 adayın
@@ -251,17 +265,18 @@ def api_gonderiler(sifirdan: bool = False, aday: int = SAYFA_BOYU):
     fotoğraflar yalnızca gösterilen gönderiler için iner.
     """
     aday = max(1, min(aday, 60))
+    gosterilen = _gosterilen(oturum)
     if sifirdan:
-        GOSTERILEN_ID_SETI.clear()
+        gosterilen.clear()
 
     spiral = spiral_olasiligi(DAVRANIS_GUNLUGU, GONDERILER)
     siralanmis = sirala(GONDERILER, KULLANICI_ILGI, spiral)
     siralanmis = dogal_cesitlilik_ekle(siralanmis)
 
-    kalanlar = [g for g in siralanmis if g["id"] not in GOSTERILEN_ID_SETI]
-    sayfa = aday_listesi(siralanmis, GOSTERILEN_ID_SETI, aday, SAYFA_BOYU)
+    kalanlar = [g for g in siralanmis if g["id"] not in gosterilen]
+    sayfa = aday_listesi(siralanmis, gosterilen, aday, SAYFA_BOYU)
     for g in sayfa:
-        GOSTERILEN_ID_SETI.add(g["id"])
+        gosterilen.add(g["id"])
 
     return {
         "spiral_seviyesi": round(spiral, 3),
@@ -287,7 +302,8 @@ def api_gonderi_olustur(yeni: YeniGonderi):
     DEPO.gonderi_olustur(yeni_id, metin, konu)
     GONDERILER.insert(0, gonderi)
     GONDERI_BY_ID[yeni_id] = gonderi
-    GOSTERILEN_ID_SETI.discard(yeni_id)
+    for kume in GOSTERILEN.values():
+        kume.discard(yeni_id)
     return {"ok": True, "gonderi": _sosyal_ile_zenginlestir([gonderi])[0]}
 
 
@@ -622,7 +638,7 @@ def api_sifirla():
     global KISISEL_MODEL
     DAVRANIS_GUNLUGU.clear()
     PSIKOLOJIK_GUNLUK.clear()
-    GOSTERILEN_ID_SETI.clear()
+    GOSTERILEN.clear()
     SON_ETKILESIMLER.clear()
     DOGRULAMA_GUNLUGU.clear()
     SAYAC["son_dogrulamadan_beri"] = 0

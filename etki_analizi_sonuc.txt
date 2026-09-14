@@ -1,53 +1,53 @@
 ETKİ ANALİZİ (python etki_analizi.py)
 ========================================================================
-253 gönderilik havuz, yoğun tonlu (ton < -0.15) payı %21.3; 600 senaryo (rastgele ilgi profili × 48 aday × yoğunluk [0.35, 0.6, 0.85])
+253 gönderilik havuz, yoğun tonlu (ton < -0.15) payı %22.1; 600 senaryo (rastgele ilgi profili × 48 aday × yoğunluk [0.35, 0.6, 0.85])
 Ölçütler ilk sayfadaki 12 gönderi üzerinde; erişim = yoğun gönderilerin ilk 3 sayfada (36) kalma oranı.
 Bu bir maruziyet ölçümüdür, iyi-oluş ölçümü değildir.
 
 1) Politikalar (ilk sayfa ortalamaları; ilgi = A'ya göre korunan pay)
   Akış yoğunluğu 0.35:
-    A dengeleme yok              yoğun pay % 19.1 (−%  0) · ilgi %100.0 · konu  8.1 · erişim % 74
-    B doz α=0,6 (uygulamadaki)   yoğun pay % 12.2 (−% 36) · ilgi %100.1 · konu  8.1 · erişim % 58
-    E eski: puandan ceza 0,62    yoğun pay %  5.1 (−% 73) · ilgi % 98.2 · konu  7.9 · erişim % 54
-    C sert filtre                yoğun pay %  0.0 (−%100) · ilgi % 97.9 · konu  8.2 · erişim %  0
-    D kişiselleştirmesiz         yoğun pay % 19.5 (−% -2) · ilgi % 60.8 · konu  6.1 · erişim % 75
+    A dengeleme yok              yoğun pay % 19.6 (−%  0) · ilgi %100.0 · konu  8.1 · erişim % 74
+    B doz α=0,6 (uygulamadaki)   yoğun pay % 12.7 (−% 35) · ilgi %100.1 · konu  8.1 · erişim % 58
+    E eski: puandan ceza 0,62    yoğun pay %  5.3 (−% 73) · ilgi % 98.2 · konu  7.8 · erişim % 55
+    C sert filtre                yoğun pay %  0.0 (−%100) · ilgi % 97.6 · konu  8.2 · erişim %  0
+    D kişiselleştirmesiz         yoğun pay % 19.5 (−%  0) · ilgi % 60.8 · konu  6.1 · erişim % 75
   Akış yoğunluğu 0.6:
-    A dengeleme yok              yoğun pay % 21.3 (−%  0) · ilgi %100.0 · konu  8.0 · erişim % 74
-    B doz α=0,6 (uygulamadaki)   yoğun pay % 11.2 (−% 47) · ilgi % 99.3 · konu  8.0 · erişim % 47
-    E eski: puandan ceza 0,62    yoğun pay %  1.9 (−% 91) · ilgi % 93.5 · konu  8.0 · erişim % 40
-    C sert filtre                yoğun pay %  0.0 (−%100) · ilgi % 96.5 · konu  8.1 · erişim %  0
-    D kişiselleştirmesiz         yoğun pay % 21.0 (−%  1) · ilgi % 60.6 · konu  6.1 · erişim % 75
+    A dengeleme yok              yoğun pay % 21.8 (−%  0) · ilgi %100.0 · konu  8.0 · erişim % 75
+    B doz α=0,6 (uygulamadaki)   yoğun pay % 11.5 (−% 47) · ilgi % 99.4 · konu  8.0 · erişim % 48
+    E eski: puandan ceza 0,62    yoğun pay %  2.0 (−% 91) · ilgi % 93.3 · konu  8.0 · erişim % 41
+    C sert filtre                yoğun pay %  0.0 (−%100) · ilgi % 96.1 · konu  8.1 · erişim %  0
+    D kişiselleştirmesiz         yoğun pay % 21.0 (−%  3) · ilgi % 60.6 · konu  6.1 · erişim % 75
   Akış yoğunluğu 0.85:
-    A dengeleme yok              yoğun pay % 21.8 (−%  0) · ilgi %100.0 · konu  8.1 · erişim % 77
-    B doz α=0,6 (uygulamadaki)   yoğun pay %  8.3 (−% 62) · ilgi % 98.6 · konu  8.2 · erişim % 36
-    E eski: puandan ceza 0,62    yoğun pay %  0.8 (−% 96) · ilgi % 90.8 · konu  8.2 · erişim % 26
-    C sert filtre                yoğun pay %  0.0 (−%100) · ilgi % 95.7 · konu  8.2 · erişim %  0
-    D kişiselleştirmesiz         yoğun pay % 21.8 (−%  0) · ilgi % 60.3 · konu  6.1 · erişim % 74
+    A dengeleme yok              yoğun pay % 22.2 (−%  0) · ilgi %100.0 · konu  8.1 · erişim % 77
+    B doz α=0,6 (uygulamadaki)   yoğun pay %  8.5 (−% 62) · ilgi % 98.8 · konu  8.2 · erişim % 36
+    E eski: puandan ceza 0,62    yoğun pay %  0.8 (−% 96) · ilgi % 90.8 · konu  8.2 · erişim % 27
+    C sert filtre                yoğun pay %  0.0 (−%100) · ilgi % 95.5 · konu  8.3 · erişim %  0
+    D kişiselleştirmesiz         yoğun pay % 21.8 (−%  2) · ilgi % 60.3 · konu  6.1 · erişim % 75
 
 2) Doz dengelemesinin güvenceleri
   Resmi/acil gönderinin dengeleme yüzünden aşağı indiği durum: 0/146
-  İlk 3 sayfada yoğun gönderiler arası ortalama mesafe: 6.9 sıra (art arda gelme oranı %3)
+  İlk 3 sayfada yoğun gönderiler arası ortalama mesafe: 6.8 sıra (art arda gelme oranı %3)
 
 3) α duyarlılığı (doz; hedef pay = taban × (1 − α × yoğunluk))
     yoğunluk 0.6 · α 0.3  yoğun pay −% 37 (hedef −% 18) · ilgi % 97.2 · erişim % 60
-    yoğunluk 0.6 · α 0.45 yoğun pay −% 42 (hedef −% 27) · ilgi % 97.2 · erişim % 53
+    yoğunluk 0.6 · α 0.45 yoğun pay −% 42 (hedef −% 27) · ilgi % 97.1 · erişim % 53
     yoğunluk 0.6 · α 0.6  yoğun pay −% 49 (hedef −% 36) · ilgi % 97.0 · erişim % 47  ← uygulamadaki
     yoğunluk 0.6 · α 0.75 yoğun pay −% 54 (hedef −% 45) · ilgi % 96.9 · erişim % 41
-    yoğunluk 0.6 · α 0.9  yoğun pay −% 62 (hedef −% 54) · ilgi % 96.4 · erişim % 33
+    yoğunluk 0.6 · α 0.9  yoğun pay −% 63 (hedef −% 54) · ilgi % 96.2 · erişim % 33
     yoğunluk 0.85 · α 0.3  yoğun pay −% 43 (hedef −% 26) · ilgi % 99.9 · erişim % 55
     yoğunluk 0.85 · α 0.45 yoğun pay −% 50 (hedef −% 38) · ilgi % 99.8 · erişim % 47
-    yoğunluk 0.85 · α 0.6  yoğun pay −% 61 (hedef −% 51) · ilgi % 99.2 · erişim % 37  ← uygulamadaki
-    yoğunluk 0.85 · α 0.75 yoğun pay −% 67 (hedef −% 64) · ilgi % 99.2 · erişim % 27
-    yoğunluk 0.85 · α 0.9  yoğun pay −% 78 (hedef −% 76) · ilgi % 98.9 · erişim % 18
+    yoğunluk 0.85 · α 0.6  yoğun pay −% 61 (hedef −% 51) · ilgi % 99.1 · erişim % 37  ← uygulamadaki
+    yoğunluk 0.85 · α 0.75 yoğun pay −% 67 (hedef −% 64) · ilgi % 99.1 · erişim % 27
+    yoğunluk 0.85 · α 0.9  yoğun pay −% 78 (hedef −% 76) · ilgi % 98.8 · erişim % 18
 
 4) Eski yaklaşım (puandan ceza, geliş sırası çeşitlilik) neden bırakıldı
-    yoğunluk 0.6 · katsayı 0.1  yoğun pay −% 24 · ilgi % 99.6 · erişim % 71
-    yoğunluk 0.6 · katsayı 0.2  yoğun pay −% 45 · ilgi % 99.0 · erişim % 65
+    yoğunluk 0.6 · katsayı 0.1  yoğun pay −% 24 · ilgi % 99.7 · erişim % 71
+    yoğunluk 0.6 · katsayı 0.2  yoğun pay −% 45 · ilgi % 99.1 · erişim % 66
     yoğunluk 0.6 · katsayı 0.4  yoğun pay −% 76 · ilgi % 96.4 · erişim % 54
-    yoğunluk 0.6 · katsayı 0.62 yoğun pay −% 90 · ilgi % 94.1 · erişim % 40
-    yoğunluk 0.85 · katsayı 0.1  yoğun pay −% 33 · ilgi % 99.1 · erişim % 69
-    yoğunluk 0.85 · katsayı 0.2  yoğun pay −% 61 · ilgi % 98.2 · erişim % 61
-    yoğunluk 0.85 · katsayı 0.4  yoğun pay −% 88 · ilgi % 94.5 · erişim % 43
-    yoğunluk 0.85 · katsayı 0.62 yoğun pay −% 97 · ilgi % 92.0 · erişim % 25
+    yoğunluk 0.6 · katsayı 0.62 yoğun pay −% 90 · ilgi % 94.0 · erişim % 41
+    yoğunluk 0.85 · katsayı 0.1  yoğun pay −% 33 · ilgi % 99.3 · erişim % 70
+    yoğunluk 0.85 · katsayı 0.2  yoğun pay −% 60 · ilgi % 98.3 · erişim % 62
+    yoğunluk 0.85 · katsayı 0.4  yoğun pay −% 88 · ilgi % 94.5 · erişim % 44
+    yoğunluk 0.85 · katsayı 0.62 yoğun pay −% 97 · ilgi % 91.9 · erişim % 26
   Küçük katsayı az azaltıyor, büyük katsayı içeriği sayfadan tümüyle atıyor; maruziyet payını
   doğrudan hedefleyen bir ayar yok. Doz yaklaşımında azaltma oranı α × yoğunluk ile doğrudan belirlenir.

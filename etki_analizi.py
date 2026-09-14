@@ -60,10 +60,11 @@ def yaz(metin: str = ""):
 
 def gonderi_havuzu() -> list[dict]:
     from duygu_modeli import duygu_skoru
+    from yogun_sozluk import sistem_tonu  # uygulamanın tonu: model + yoğun içerik sözlüğü (motor.py ile aynı)
     havuz = []
     for g in [*ORNEK_GONDERILER, *TOPLULUK_GONDERILERI, *RESMI_GONDERILER]:
         ilgi = ORNEK_KULLANICI_ILGI.get(g["konu"], 0.3)
-        havuz.append({**g, "duygu": duygu_skoru(g["metin"]), "ilgi_skoru": ilgi, "final_skor": ilgi,
+        havuz.append({**g, "duygu": sistem_tonu(duygu_skoru(g["metin"]), g["metin"])[0], "ilgi_skoru": ilgi, "final_skor": ilgi,
                       "resmi": g.get("yazar") in RESMI_HESAPLAR})
     return havuz
 

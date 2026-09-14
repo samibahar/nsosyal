@@ -70,6 +70,12 @@ rng = np.random.default_rng(RASTGELE_TOHUM)
 
 KATEGORILER = ["sakin", "mutluluk", "umut", "sinirli", "anksiyete"]
 OZELLIK_ADLARI = ["duygu", "dwell_saniye", "tiklama", "roket", "yorum"]
+# Çıkarımda tek gönderideki durma bu sınırda kesilir. Eğitimde uzun durma
+# yalnızca olumlu "umut" senaryolarında vardı; model uzun durmayı tek başına
+# umut sanıyor, olumsuz içerikte 30 sn durmayı bile "umut" okuyordu (gerçek veri
+# testi, 14.09.2026). 15 sn'den uzun durma ek kanıt taşımaz (telefon bırakılmış
+# olabilir). trained-weights.js'e disa_aktar_modeller.py ile yazılır.
+DWELL_UST = 15.0
 
 # Kişiselleştirme (online SGD adımları) için öğrenme oranı. NOT: gerçek üretimde
 # (binlerce kullanıcı, aylarca veri) bu çok daha küçük olurdu (örn. 0.0005) --
@@ -192,6 +198,7 @@ def kisisel_guncelle(model, ozellik: list, gercek_kategori: str):
     yaratır. `model` parametresi YERİNDE (in-place) güncellenir. `ozellik`
     HAM (ölçeklenmemiş) değerlerdir -- eğitimle tutarlı olması için burada
     _OLCEKLEYICI ile dönüştürülür."""
+    ozellik = [ozellik[0], min(float(ozellik[1]), DWELL_UST), *ozellik[2:]]
     X = _OLCEKLEYICI.transform(np.array([ozellik], dtype=float))
     y = np.array([gercek_kategori])
     model.partial_fit(X, y, classes=_KATEGORI_DIZISI)
@@ -202,7 +209,7 @@ def psikolojik_durum_tahmini(duygu: float, dwell_saniye: float, tiklama: bool,
     """Tek bir etkileşim anı için kategori olasılık dağılımını döndürür.
     `model` verilmezse VARSAYILAN (hiç değişmeyen) model kullanılır."""
     model = model if model is not None else _VARSAYILAN_MODEL
-    X_ham = np.array([[duygu, dwell_saniye, int(tiklama), int(roket), int(yorum)]])
+    X_ham = np.array([[duygu, min(dwell_saniye, DWELL_UST), int(tiklama), int(roket), int(yorum)]])
     X = _OLCEKLEYICI.transform(X_ham)
     olasiliklar = model.predict_proba(X)[0]
     dagilim = {str(kat): round(float(p), 3) for kat, p in zip(model.classes_, olasiliklar)}

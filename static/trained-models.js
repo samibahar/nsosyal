@@ -31,17 +31,23 @@
     const gunluk = [...kayitlar.values()].sort((a, b) => a.zaman - b.zaman).slice(-P.maks_gonderi);
     if (gunluk.length < P.min_gonderi) return null;
     let agirlikTop = 0, oranTop = 0, aktifTop = 0, yogunOran = 0, yogunAgirlik = 0, fazlaTop = 0;
+    // Goreli oyalanma yalnizca okuma tabani (1,5 sn) kadar ya da daha uzun
+    // durulan gonderilerden hesaplanir; daha kisa durmalar goz gezdirmedir
+    // (hizli kaydirmadaki yanlis dengelemeyi onler, spiral_ozellik.py ile ayni).
+    let gAgirlik = 0, gOran = 0, gYogunOran = 0, gYogunAgirlik = 0;
     gunluk.forEach(kayit => {
       const agirlik = Math.pow(0.5, (simdi - kayit.zaman) / P.yari_omur_saniye);
       const oran = Math.min(kayit.dwell / okuma(kayit.kelime), P.oran_ust);
+      const yogun = kayit.ton < P.yogun_ton;
       agirlikTop += agirlik; oranTop += agirlik * oran;
       aktifTop += agirlik * (kayit.roket || kayit.yorum ? 1 : 0);
-      if (kayit.ton < P.yogun_ton) { yogunOran += agirlik * oran; yogunAgirlik += agirlik; fazlaTop += agirlik * Math.min(Math.max(0, oran - 1), P.fazla_ust); }
+      if (yogun) { yogunOran += agirlik * oran; yogunAgirlik += agirlik; fazlaTop += agirlik * Math.min(Math.max(0, oran - 1), P.fazla_ust); }
+      if (kayit.dwell >= P.okuma_taban) { gAgirlik += agirlik; gOran += agirlik * oran; if (yogun) { gYogunOran += agirlik * oran; gYogunAgirlik += agirlik; } }
     });
-    const digerAgirlik = agirlikTop - yogunAgirlik;
     let goreli = 0;
-    if (yogunAgirlik > 0) {
-      const yogunOrt = yogunOran / yogunAgirlik, digerOrt = digerAgirlik > 1e-9 ? (oranTop - yogunOran) / digerAgirlik : 1;
+    if (gYogunAgirlik > 0) {
+      const digerAgirlik = gAgirlik - gYogunAgirlik;
+      const yogunOrt = gYogunOran / gYogunAgirlik, digerOrt = digerAgirlik > 1e-9 ? (gOran - gYogunOran) / digerAgirlik : 1;
       goreli = Math.max(-P.goreli_ust, Math.min(P.goreli_ust, Math.log((yogunOrt + P.goreli_pay) / (digerOrt + P.goreli_pay))));
     }
     return {
@@ -52,9 +58,16 @@
     };
   }
 
+  // Ruh hali modeli dwell_saniye'yi yalnizca egitim araliginda gordu; tek bir
+  // gonderide bundan uzun durma (telefon birakilmis olabilir) ek kanit
+  // tasimaz, ustu kesilir. Aksi halde olumsuz icerikte 30 sn durmak "umut"
+  // okunuyordu (gercek veri testi, 14.09.2026). Sinir psikolojik_durum.py'den.
   function _olcekle(ozellikler) {
-    const { ozellik_sirasi, olcekleyici_ortalama, olcekleyici_olcek } = W.psikolojik;
-    return ozellik_sirasi.map((ad, i) => ((Number(ozellikler[ad]) || 0) - olcekleyici_ortalama[i]) / olcekleyici_olcek[i]);
+    const { ozellik_sirasi, olcekleyici_ortalama, olcekleyici_olcek, dwell_ust = Infinity } = W.psikolojik;
+    return ozellik_sirasi.map((ad, i) => {
+      const x = Number(ozellikler[ad]) || 0;
+      return ((ad === "dwell_saniye" ? Math.min(x, dwell_ust) : x) - olcekleyici_ortalama[i]) / olcekleyici_olcek[i];
+    });
   }
 
   // SGDClassifier(loss="log_loss") cok sinifli problemde bire-karsi-digerleri
@@ -84,9 +97,13 @@
   // olasilik vektorlerinin agirlikli ortalamasiyla birlestirilir; carpilmaz,
   // cunku ardisik gonderiler bagimsiz kanit degildir ve carpim modeli
   // gereksiz yere kesinlestirirdi. Olay: {zaman (sn), ozellik (5 sinyal)}.
+  // Okuma tabanindan (1,5 sn) kisa durulan gonderi okunmamistir, kanit
+  // sayilmaz (spiraldeki goreli oyalanma ile ayni kural). Gercek veri testinde
+  // hizli kaydirmada gecilen olumsuz gonderiler ruh halini "anksiyete"ye
+  // cekip oturumlarin %40'inda dengelemeyi baslatiyordu (14.09.2026).
   function ruhHaliPenceresiSec(olaylar, simdi) {
     const P = W.spiral.parametreler;
-    const secili = olaylar.filter(o => o.zaman <= simdi && simdi - o.zaman <= P.pencere_saniye)
+    const secili = olaylar.filter(o => o.zaman <= simdi && simdi - o.zaman <= P.pencere_saniye && (o.ozellik.dwell_saniye ?? P.okuma_taban) >= P.okuma_taban)
       .map(o => ({ olay: o, agirlik: Math.pow(0.5, (simdi - o.zaman) / P.yari_omur_saniye) }));
     const toplam = secili.reduce((a, s) => a + s.agirlik, 0);
     return secili.map(s => ({ ...s, agirlik: s.agirlik / toplam }));
