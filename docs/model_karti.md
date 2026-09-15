@@ -1,6 +1,6 @@
 # Model Kartı — NSosyal Duygu Katmanı
 
-Son güncelleme: 14.09.2026. Bu belge sistemdeki üç modeli ve sıralama
+Son güncelleme: 15.09.2026. Bu belge sistemdeki üç modeli ve sıralama
 kuralını; veri kaynaklarını, ölçümleri, sınırlılıkları ve etik kararları
 özetler. Rakamların kaynağı depodaki `*_sonuc.txt` dosyalarıdır ve ilgili
 betikle yeniden üretilebilir.
@@ -110,6 +110,28 @@ tweetlerin %47'sini işaretliyor; hazır bir çıkarım (NLI) modeli ancak test
 etiketlerine bakılarak seçilen bir hipotez cümlesiyle iyi sonuç verdiği için
 güvenilir bulunmadı. "Neden bu?" açıklaması tonu sözcüğün belirlediğini ve
 modelin kendi tonunu gösterir.
+
+**Bileşen karşılaştırması (15.09.2026).** Aynı etiketli verilerde model tek
+başına, sözlük tek başına ve ikisi birlikte ölçüldü. Güncel sözlük ve −0,15
+eşiği kullanıldı; bu sonuçlara bakılarak sözlük ya da eşik değiştirilmedi.
+
+| Ölçüm | v3 | Yalnız sözlük | v3 + sözlük |
+|---|---|---|---|
+| 450 başlık: güçlü olumsuzu yakalama (90 başlık) | %9 | %87 | %89 |
+| 450 başlık: isabet | %96 | %94 | %94 |
+| 450 başlık: olumsuz olmayanı işaretleme | %1 | %4 | %4 |
+| Yeni 200 başlık: güçlü olumsuzu yakalama (34 başlık) | %12 | %79 | %82 |
+| Tweet: saldırgan / normal işaretleme | %82 / %16 | %7 / %4 | %83 / %20 |
+| Toksik mesaj: toksik / değil | %83 / %11 | %9 / %4 | %85 / %15 |
+| Film yorumu: olumsuz / olumlu | %81 / %17 | %11 / %11 | %84 / %26 |
+
+Haber başlıklarında tespitin neredeyse tamamını sözlük yapıyor. Sosyal
+içerikte işi model yapıyor. Orada sözlük yakalamaya birkaç puan ekliyor ama
+olumlu ya da normal metinlerde yanlış işareti artırıyor. Sosyal içerikte
+yalnız sözlüğün işaretlediği 60 rastgele metinden 5'i açıkça sarsıcı, 8'i
+sınırdaydı (tek etiketleyici). Sözlüğü haber içeriğiyle sınırlamak aday bir
+iyileştirmedir; henüz uygulanmadı. Bu setlerin hepsi güncel sözlüğün
+geliştirilmesi sırasında görülmüştür; hiçbiri "hiç görülmemiş test" sayılmaz.
 
 **Atıf ve lisans.** Temel model `savasy/bert-base-turkish-sentiment-cased`,
 veri seti `winvoker/turkish-sentiment-analysis-dataset` (HuggingFace). Temel
