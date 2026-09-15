@@ -200,7 +200,7 @@ Evet, kurabiliriz. Ama ortaya çıkan şey bir kanıt olmaz; mekanizmaya dayanan
 
 **Sistem kendi başarısını ölçüyor:** "Yoğun içerik" müdahalenin kullandığı ton modeliyle tanımlanıyor; o içerik azalınca yoğunluk ölçüsü de kendiliğinden düşer. Bu yüzden "yoğunluk %X düştü, kaygı %X azaldı" denemez. Üç kollu simülasyona bu yüzden ikinci bir ölçüt eklendi: veri setlerinin kendi etiketine göre olumsuz içerikte (saldırgan mesaj, düşük puanlı yorum) geçen süre. Sonuçlar bu ölçütte de aynı yönde, ama bu ölçüt de insan duygusu değil.
 
-**Neden uyarlanan doz, basit kural değil? (üç kollu simülasyon, 12.600 oturum):** Aynı kullanıcı her kolda aynı ilgi profili, aday çekilişi, sayfa sayısı ve davranış tohumuyla yaşatıldı. Takılan (4 profil) ve olağan (5 profil) gruplar, sabit düzeyler ve eşleştirme kuralı sonuçlardan önce yazıldı.
+**Neden uyarlanan doz, basit kural değil? (üç kollu simülasyon, 18.000 oturum):** Aynı kullanıcı her kolda aynı ilgi profili, aday çekilişi, sayfa sayısı ve davranış tohumuyla yaşatıldı. Takılan (4 profil) ve olağan (5 profil) gruplar, sabit düzeyler ve eşleştirme kuralı sonuçlardan önce yazıldı.
 
 | Kol | Toplam müdahale (oturum başına kalkan yoğun gösterim) | Takılan profiller | Olağan profiller | Müdahalenin takılanlara düşen payı |
 |---|---:|---:|---:|---:|

@@ -36,7 +36,7 @@
   eşit tutulduğu için toplam süre ölçüldü. Serbest kullanımda oturum
   uzunluğu değişebilir; bu ölçülmedi.
 - **Uyarlanan doz ile basit kural** (üç kollu kapalı döngü simülasyonu,
-  12.600 oturum). Önceden belirlenen sabit düzeylerin en düşüğü bile
+  18.000 oturum). Önceden belirlenen sabit düzeylerin en düşüğü bile
   uyarlanan dozdan yaklaşık 1,7 kat fazla müdahale etti, yani "eşit toplam
   müdahale" koşulu sağlanamadı. Önceden belirlenen ölçüte göre sonuç
   "kısmen":
