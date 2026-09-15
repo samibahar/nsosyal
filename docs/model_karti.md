@@ -77,7 +77,7 @@ kullanılmadı):
 **Gerçek haber başlıklarında sınır ve olay sözcüğü desteği (14.09.2026).**
 Bu bölümdeki %83/%97, sözlüğün ilk sürümünün (commit `f203a7d`) iç
 değerlendirmesidir; ayrılmış 100 başlık, sözlüğün son küçük düzeltmelerinden
-önce de görülmüştü. Aynı sürüm daha sonra hiç görülmemiş dört kaynaktan 200 yeni
+önce de görülmüştü. Aynı sürüm daha sonra, o sürüm için yeni olan dört kaynaktan 200
 başlıkta güçlü olumsuzların %82'sini yakaladı (isabet %90). Sonraki eklemelerle
 (karaktersiz yazım, "kazasız", dar bağlam istisnaları) 450 başlığın normal
 yazımındaki sonuç değişmedi, ama bu başlıkların hepsi artık geliştirmede
@@ -290,8 +290,9 @@ iyi-oluş etkisi değildir.
   saklamak değil, tekrarını azaltmak".
 - **Dil:** "tespit ettik" değil "olası örüntü"; hiçbir ekran teşhis iddia
   etmez.
-- **Açık kalan:** gerçek kullanıcılarla iyi-oluş etkisi ölçülmedi; bu, pilot
-  çalışma gerektirir.
+- **Açık kalan:** gerçek kullanıcılarla iyi-oluş etkisi ölçülmedi; bu, ayrı
+  bir katılımcı çalışması gerektirir. 5–10 kişilik kullanılabilirlik pilotu
+  bunu gösteremez ([bilimsel dayanak](bilimsel_dayanak.md)).
 
 ## 6. Performans (`olcek_olcumu_sonuc.txt`)
 
