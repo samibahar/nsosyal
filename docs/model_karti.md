@@ -133,6 +133,29 @@ sınırdaydı (tek etiketleyici). Sözlüğü haber içeriğiyle sınırlamak ad
 iyileştirmedir; henüz uygulanmadı. Bu setlerin hepsi güncel sözlüğün
 geliştirilmesi sırasında görülmüştür; hiçbiri "hiç görülmemiş test" sayılmaz.
 
+**Etiketli gerçek metinlerde doğruluk (18.09.2026).** 72.495 metinlik
+taramanın etiketli kısmında, uygulamadaki karar kuralıyla (ton < −0,15)
+ölçüldü. Eğitim yapılmadı, eşik değiştirilmedi.
+
+| Veri kümesi | n | Doğruluk | Yakalama | Yanlış işaret | AUC |
+|---|---:|---:|---:|---:|---:|
+| OffensEval tweet | 10.607 | %82 | %83 | %20 | 0,90 |
+| Toksik dil (TOLD + zorbalık) | 8.000 | %85 | %85 | %15 | 0,92 |
+| Nefret haritası | 5.000 | %67 | %60 | %31 | 0,69 |
+| E-ticaret yorumu | 4.177 | %92 | %83 | %5 | 0,94 |
+| Film yorumu | 4.000 | %77 | %84 | %26 | 0,88 |
+| Beyazperde | 401 | %89 | %88 | %11 | 0,98 |
+| Vitamin yorumu | 2.834 | %93 | %84 | %6 | 0,93 |
+| KAP bildirimi | 2.230 | %93 | %2 | %1 | 0,48 |
+| **Toplam** | **37.249** | **%83** | **%81** | **%16** | **0,89** |
+
+Sınırlar: Buradaki etiketler "olumsuz, saldırgan ya da düşük puanlı"
+anlamındadır; "sarsıcı olay" değildir. Yani bu doğruluk, akıştaki "yoğun"
+kararının değil, olumsuzluk ayrımının doğruluğudur. 3 yıldızlı yorumlar ve
+nötr KAP bildirimleri karşılaştırmaya girmedi. KAP'ta AUC 0,48'dir: finans
+bildirimleri bilerek yoğun sayılmaz. Taramanın 34.195 metni (forum, RSS,
+BBC, TTC4900, Vikihaber) etiketsizdir; orada doğruluk hesaplanamaz.
+
 **Atıf ve lisans.** Temel model `savasy/bert-base-turkish-sentiment-cased`,
 veri seti `winvoker/turkish-sentiment-analysis-dataset` (HuggingFace). Temel
 modelin sayfasında lisans belirtilmemiştir; ince ayarlı model araştırma ve
