@@ -1,7 +1,7 @@
 # 20 Eylül 2026 final sunumu: konuşma metni ve anlatım planı
 
 NSosyal İnovasyon Yarışması, Duygu Katmanı takımı. Canlı sunum 20.09.2026, KÜME Vakfı: 15 dakika sunum, ardından ayrı 2 dakika demo.
-Bu metin `NSosyal_Final_Sunum_v18.pdf` içindir. Her bölümde önce söylenecek metin, sonra varsa "Dikkat" ve "Soru gelirse" notları var. Rakam haritası ve tüm soru-cevaplar: `20eylul_soru_cevap.md`.
+Bu metin `NSosyal_Final_Sunum_v20.pdf` içindir. Her bölümde önce söylenecek metin, sonra varsa "Dikkat" ve "Soru gelirse" notları var. Rakam haritası ve tüm soru-cevaplar: `20eylul_soru_cevap.md`.
 
 ## Sayfa sayfa akış
 
@@ -27,7 +27,7 @@ Bu metin `NSosyal_Final_Sunum_v18.pdf` içindir. Her bölümde önce söylenecek
 
 ## Prova metni
 
-Bu dosya jüriye yüklenecek sunuma dahil değildir. Sayfa numaraları aynı klasördeki 17 sayfalık `NSosyal_Final_Sunum_v18.pdf` ile eşleşir.
+Bu dosya jüriye yüklenecek sunuma dahil değildir. Sayfa numaraları aynı klasördeki 17 sayfalık `NSosyal_Final_Sunum_v20.pdf` ile eşleşir.
 
 Hedef zaman planı: **14 dakika 27 saniye**, ardından ayrı **2 dakika demo**. Süreler metnin hece sayısından hesaplandı (saniyede 3,8 hece, rahat sahne hızı); kronometreli prova sonucu değildir. Kendi konuşma hızınızla en az iki prova yapın. Süre taşarsa veri kümesi ayrıntılarını kısaltın, sınırları belirten cümleleri çıkarmayın.
 

@@ -1,6 +1,6 @@
 # 20 Eylül: rakam haritası ve soru-cevap çalışma notu
 
-Sunum `NSosyal_Final_Sunum_v18.pdf` (17 sayfa) içindir; sayfa numaraları ona göredir. Konuşma metni: `20eylul_sunum_konusma.md`.
+Sunum `NSosyal_Final_Sunum_v20.pdf` (17 sayfa) içindir; sayfa numaraları ona göredir. Konuşma metni: `20eylul_sunum_konusma.md`.
 Kural: söylediğimiz her rakam slaytta da var; rakamı söylerken o sayfadaki tabloyu, grafiği ya da dipnotu gösteriyoruz.
 
 ## 1. Rakam haritası
