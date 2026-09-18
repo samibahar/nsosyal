@@ -1,9 +1,19 @@
 # NSosyal Duygu Katmanı
 
-TEKNOFEST NSosyal İnovasyon Yarışması (2026) için geliştirilen, NSosyal için
-duygu-duyarlı, açıklanabilir ve koruyucu bir sıralama/şeffaflık katmanı
-prototipi. Detaylı teknik anlatım için `NSosyal_Teknik_Rapor_Guncel.docx`
-dosyasına bakınız.
+TEKNOFEST NSosyal İnovasyon Yarışması (2026, Sosyal Yapay Zekâ) için geliştirilen,
+NSosyal akışına eklenmesi önerilen açılıp kapatılabilir bir sıralama katmanı.
+Kullanıcı yoğun tonlu içerikte, kendi okuma hızına göre uzun ve pasif kaldığında
+sıradaki sayfada bu içeriklerin payını azaltır ve aralıklar; hiçbir gönderiyi
+silmez, her kararı "Neden bu?" ile açıklar. Ham davranış kaydı cihazdan çıkmaz.
+
+**Durum:** çalışan bağımsız prototip (tasarım, kodlama ve 85 otomatik test
+tamam). NSosyal API erişimi ve canlı entegrasyon yok; gönüllü kullanıcı testi
+henüz yapılmadı.
+
+**Belgeler:** final sunumu `sunum/` klasöründe; teknik rapor
+`NSosyal_Teknik_Rapor_Guncel.docx`; model kartı, ölçümler ve bilimsel dayanak
+`docs/` klasöründe (`model_karti.md`, `bilimsel_dayanak.md`,
+`olcum_sinirlari.md`, `final_yaklasim_ve_is_modeli.md`, `pilot_protokolu.md`).
 
 ## Gereksinimler
 
@@ -93,7 +103,8 @@ python demo_kontrol.py
 |---|---|---|
 | Duygu (BERT, 3 sınıf) | `duygu_modeli.py`, `ince_ayar_v3.py` | Gönderi metninin tonu: P(pozitif) − P(negatif) |
 | Spiral v2 | `spiral_model.py`, `spiral_ozellik.py` | Son 30 dakikadaki davranıştan yoğun içerikte oyalanma riski |
-| Psikolojik durum | `psikolojik_durum.py` | Tek etkileşim için 5 kategorili olası örüntü; cihazda kişisel uyarlama |
+| Olay sözcüğü desteği | `yogun_sozluk.py` | Elle yazılmış açık olay sözcükleri (ölüm, yangın, saldırı…); eşleşen metnin tonunu en fazla −0,9'a çeker. Öğrenen model değil, kural |
+| Ruh hali (psikolojik durum) | `psikolojik_durum.py` | Son 30 dakikadaki etkileşimlerden 5 kategorili olası ruh hali; cihazda kişisel uyarlama |
 
 **Duygu modeli.** `savasy/bert-base-turkish-sentiment-cased` temel alınarak
 `winvoker/turkish-sentiment-analysis-dataset` ve bu proje için yazılmış haber
@@ -111,10 +122,12 @@ v2 ikili bir sınıflandırıcı olduğu için gönderilerin %94'ünde |ton| > 0
 çıkıyordu; v3'te nötr metinlerin tonu sıfıra yakın (ortalama |ton| 0,005).
 Ayrıntılar: `dogrulama_v3_sonuc.txt`, `v3_arama_sonuc.txt`.
 
+**Olay sözcüğü desteği.** Model duygunun ifadesini okur, olayın ağırlığını değil: "3 işçi hayatını kaybetti" gibi olgusal haber başlıklarını yoğun saymıyordu. 200 gerçek haber başlığında güçlü olumsuzu yakalama yalnız modelle %12, olay sözcüğüyle birlikte %82; saldırgan tweetlerde ise işi model yapıyor (model %82, yalnız sözlük %7). Etiketli 37.249 gerçek metinde birleşik karar doğruluğu %83, AUC 0,89. Ayrıntılar: `docs/model_karti.md`.
+
 **Spiral modeli v2.** Özellikler okuma süresine göre normalize edilir;
 asıl sinyal yoğun tonlu içerikte kullanıcının kendi hızına göre ne kadar
 fazla kaldığı (göreli oyalanma), aktif katılım (yorum, roket) ise riski
-azaltır. İşaret kısıtlı lojistik regresyon: katsayıların yönü hipotezle
+azaltır. Dengeleme kararı = 0,7 × spiral olasılığı + 0,3 × ruh hali modelinin sinirli ve yoğun payı. İşaret kısıtlı lojistik regresyon: katsayıların yönü hipotezle
 sabit, büyüklüğü veriden öğrenilir. Gerçek kullanıcı verisi olmadığından
 davranış düzeyinde bir simülatörle eğitildi; gerçek kullanıcı onaylarıyla
 yeniden eğitilmesi gerekir. Ayrıntılar: `spiral_v2_sonuc.txt`.
@@ -184,6 +197,9 @@ tarayıcıda çalışan `static/trained-weights.js` dosyasına yazar.
 - `duygu_modeli.py`, `spiral_model.py`, `spiral_ozellik.py`,
   `psikolojik_durum.py` — modeller
 - `ince_ayar*.py`, `dogrulama*.py` — ince ayar ve bağımsız doğrulama
+- `yogun_sozluk.py` — olay sözcüğü desteği
+- `sunum/` — final sunumu
+- `docs/` — model kartı, ölçüm sınırları, bilimsel dayanak, pilot protokolü
 - `tests/` — otomatik testler
 
 ## Sorun Giderme

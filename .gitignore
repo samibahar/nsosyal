@@ -1,4 +1,3 @@
-.claude/
 __pycache__/
 *.pyc
 .env
@@ -15,7 +14,6 @@ NSosyal_Proje_Kodlari.zip
 data/
 
 # proje ic notlari, halka acik repoya girmemeli
-CLAUDE.md
 FINAL_YAPILACAKLAR.md
 
 # gonullu pilot dosyalari (kisi basina JSON), repoya girmez
