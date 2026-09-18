@@ -1,7 +1,7 @@
 # 20 Eylül 2026 final sunumu: konuşma metni ve anlatım planı
 
 NSosyal İnovasyon Yarışması, Duygu Katmanı takımı. Canlı sunum 20.09.2026, KÜME Vakfı: 15 dakika sunum, ardından ayrı 2 dakika demo.
-Bu metin `NSosyal_Final_Sunum_v15.pdf` içindir. Her bölümde önce söylenecek metin, sonra varsa "Dikkat" ve "Soru gelirse" notları var.
+Bu metin `NSosyal_Final_Sunum_v16.pdf` içindir. Her bölümde önce söylenecek metin, sonra varsa "Dikkat" ve "Soru gelirse" notları var.
 
 ## Sayfa sayfa akış
 
@@ -16,20 +16,20 @@ Bu metin `NSosyal_Final_Sunum_v15.pdf` içindir. Her bölümde önce söylenecek
 | 7 | Çözüm önerisi - kontrol kullanıcıda | Kontrol kullanıcıda: her karar açıklanır, geri alınabilir | 4:51–5:36 |
 | 8 | Çözüm önerisi - ruh hali modeli ve uzman özeti | Tahmin kullanıcıya sorularak sınanır, özet kullanıcıda kalır | 5:36–6:35 |
 | 9 | Teknik mimari | İçerik analizi ortak, davranış hesabı cihazda | 6:35–7:13 |
-| 10 | Model ve veri kapsamı | 72.495 metinle tarama, etiketli kümelerle doğrulama | 7:13–8:40 |
-| 11 | Prototip | Geliştirirken gördük, düzelttik | 8:40–9:29 |
-| 12 | Uygulanabilirlik | Üretime geçiş, ölçülebilir koşullara bağlı | 9:29–10:04 |
-| 13 | İş modeli | Gelir modeli: platforma entegrasyon ve bakım | 10:04–10:46 |
-| 14 | Özgünlük ve yerlilik | Benzer deneyler herkese aynı kuralı uyguladı; biz kişiye bakıyoruz | 10:46–12:01 |
-| 15 | Uyarlamanın katkısı | Uyarlama, olağan okura daha az müdahale ediyor | 12:01–12:59 |
-| 16 | Hedef kitle ve etki | İlk pilotta kabul ve kullanılabilirliği ölçeceğiz | 12:59–13:39 |
-| 17 | Takvim ve kapanış | Finalden sonra öncelik: kontrollü pilot | 13:39–14:04 |
+| 10 | Model ve veri kapsamı | 72.495 metinle tarama, etiketli kümelerle doğrulama | 7:13–8:49 |
+| 11 | Prototip | Geliştirirken gördük, düzelttik | 8:49–9:38 |
+| 12 | Uygulanabilirlik | Üretime geçiş, ölçülebilir koşullara bağlı | 9:38–10:13 |
+| 13 | İş modeli | Gelir modeli: platforma entegrasyon ve bakım | 10:13–10:55 |
+| 14 | Özgünlük ve yerlilik | Benzer deneyler herkese aynı kuralı uyguladı; biz kişiye bakıyoruz | 10:55–12:10 |
+| 15 | Uyarlamanın katkısı | Uyarlama, olağan okura daha az müdahale ediyor | 12:10–13:08 |
+| 16 | Hedef kitle ve etki | İlk pilotta kabul ve kullanılabilirliği ölçeceğiz | 13:08–13:48 |
+| 17 | Takvim ve kapanış | Finalden sonra öncelik: kontrollü pilot | 13:48–14:13 |
 
 ## Prova metni
 
-Bu dosya jüriye yüklenecek sunuma dahil değildir. Sayfa numaraları aynı klasördeki 17 sayfalık `NSosyal_Final_Sunum_v15.pdf` ile eşleşir.
+Bu dosya jüriye yüklenecek sunuma dahil değildir. Sayfa numaraları aynı klasördeki 17 sayfalık `NSosyal_Final_Sunum_v16.pdf` ile eşleşir.
 
-Hedef zaman planı: **14 dakika 4 saniye**, ardından ayrı **2 dakika demo**. Süreler metnin hece sayısından hesaplandı (saniyede 3,8 hece, rahat sahne hızı); kronometreli prova sonucu değildir. Kendi konuşma hızınızla en az iki prova yapın. Süre taşarsa veri kümesi ayrıntılarını kısaltın, sınırları belirten cümleleri çıkarmayın.
+Hedef zaman planı: **14 dakika 13 saniye**, ardından ayrı **2 dakika demo**. Süreler metnin hece sayısından hesaplandı (saniyede 3,8 hece, rahat sahne hızı); kronometreli prova sonucu değildir. Kendi konuşma hızınızla en az iki prova yapın. Süre taşarsa veri kümesi ayrıntılarını kısaltın, sınırları belirten cümleleri çıkarmayın.
 
 ## 1. Kapak (0:00 - 0:18)
 
@@ -75,9 +75,11 @@ Ne yapmadığımız da en az bu kadar önemli. İçerik silmiyor, hesap engellem
 
 Mimaride iki veri akışı var. Sunucu gönderi metninin tonunu bir kez hesaplıyor ve kırk sekiz aday gönderiyor. Kullanıcının görünür süreleri, tepkileri ve ilgi profili ise telefonda kalıyor; son sıralamayı cihaz yapıyor. Böylece ham davranışı merkezî bir havuza aktarmadan kişiselleştirme yapabiliyoruz. Kayıt on iki hafta tutuluyor; depolama kapalıysa sunucuya giden bir yedek yol yok.
 
-## 10. Model ve veri kapsamı (7:13 - 8:40)
+## 10. Model ve veri kapsamı (7:13 - 8:49)
 
-İşe hazır bir Türkçe duygu modeliyle başladık. Model kartında doğruluğu yüzde 95,4 yazıyordu. Güvenmek yerine, eğitimde görmediği bağımsız bir test setinde kendimiz ölçtük: yüzde 69,8 çıktı; model olumlu cümleleri olumsuz sanıyordu. Modeli üç tur yeniden eğittik: önce yüzde 94,3'e çıktı, sonra kısa haber cümlelerinde 77,5'ten 92,5'e, son turda da nötr sınıfını ekledik. Bugün ikili doğruluk yüzde 94, üç sınıflı yüzde 95,7; eğitim ve test verisi hiç kesişmiyor. Sonra gerçek haber başlıklarında bir kör nokta gördük: "üç kişi hayatını kaybetti" cümlesinde olumsuz bir kelime yok, model bunu nötr okuyordu. Modeli baştan eğitmek yerine olay sözcüğü desteği ekledik. İki yüz başlıkta yalnız model yüzde 12, ikisi birlikte yüzde 82 yakalıyor; sosyal medyada ise işi model yapıyor. Etiketli 37 bin gerçek metinde doğruluğumuz yüzde 83.
+İşe hazır bir Türkçe duygu modeliyle başladık. Model kartında doğruluğu yüzde 95,4 yazıyordu. Güvenmek yerine, eğitimde görmediği bağımsız bir test setinde kendimiz ölçtük: yüzde 69,8 çıktı; model olumlu cümleleri olumsuz sanıyordu. Modeli üç tur yeniden eğittik; bugün ikili doğruluk yüzde 94, üç sınıflı yüzde 95,7, eğitim ve test verisi hiç kesişmiyor. Sonra gerçek haber başlıklarında bir kör nokta gördük. Model duygunun nasıl ifade edildiğini okuyor, olayın ağırlığını değil: "yangında üç işçi hayatını kaybetti" başlığında duygu kelimesi olmadığı için tek başına olumlu dedi. Modeli baştan eğitmek yerine ölüm, yangın, saldırı gibi açık olay sözcüklerinden bir liste ekledik; bu elle yazılmış bir kural ve tonu yalnızca aşağı çekebiliyor. Grafik iş bölümünü gösteriyor: haber başlıklarında olay sözcükleri, tweet ve yorumlarda model yakalıyor; ikisi birlikte her iki türde de en iyi sonucu veriyor. Etiketli 37 bin gerçek metinde doğruluğumuz yüzde 83.
+
+**Soru gelirse:** Olay sözcüğü yapay zekâ değil, yaklaşık 45 kalıplık elle yazılmış bir kural listesi; sistem, öğrenen model ile kuralın birleşimi (hibrit). "Filtre" deme: gönderi kaldırılmaz, yalnızca tonu −0,9'a çekilir. Bedeli: normal tweetlerde yanlış işaret %16'dan %20'ye çıkıyor (film, dizi, mecaz). %83 sonucu sözlük dahil hesaplandı; tweetlerde sözlüğün katkısı çok küçük (%82 → %83). Doz dengeleme Ana Sayfa akışında çalışıyor; sözlük, akışa düşen haber hesabı gönderileri için gerekli. Haberler sekmesi ayrı bir özellik.
 
 ### Ölçümleri karıştırmayın (soru gelirse)
 
@@ -98,37 +100,37 @@ Etiketsiz kısım boşa değil, kör noktamızı orada bulduk: haber kaynakları
 
 **Jüri "72 binde doğruluğunuz ne?" derse tek cümle:** "Doğruluk yalnızca etiketli kısımda ölçülür; 37.249 metinde yüzde 83 ve AUC 0,89. Kalan 34.195 metinde etiket yok, orada doğruluk değil işaretleme davranışı ölçülür; olay sözcüğü desteğine de zaten orada gördüğümüz açık yüzünden karar verdik."
 
-## 11. Prototip (8:40 - 9:29)
+## 11. Prototip (8:49 - 9:38)
 
 Prototip çalışıyor: tasarım, kodlama ve testler tamam; NSosyal'e erişim olmadığı için entegrasyon yok, kullanıcı testi de henüz yapılmadı. Geliştirirken kendimizi sürekli ölçtük. İlk dengeleme yöntemimiz fiilen bir filtreydi, yoğun içeriği yüzde 96'ya kadar kesiyordu; biz sansür değil doz istiyorduk, değiştirdik. Uzun okuyanı yanlışlıkla riskli sayan modeli, kişiyi kendi hızıyla kıyaslayan modelle değiştirdik. Depolama kapalıyken verinin sunucuya gittiği yedek yolu kapattık. Hepsini 85 otomatik test koruyor.
 
 **Dikkat:** Tabloyu okuma; her satırı bir cümlelik hikâye olarak anlat. %0,8 ve hızlı kaydırma sonuçları simülasyondan; "hiç yanlış yapmıyor" deme.
 
-## 12. Uygulanabilirlik (9:29 - 10:04)
+## 12. Uygulanabilirlik (9:38 - 10:13)
 
 Üretime geçiş sunucuyu büyütmekten ibaret değil. İlk koşul platformun aday akışına erişim, ikincisi gerçek cihazlarda hız ve gizlilik denetimi. Sonra az sayıda gönüllüyle açıklamaların anlaşılıp anlaşılmadığını ölçeceğiz; başarı ölçütlerini baştan yazacağız. Bilgiye erişim ya da kullanıcı kontrolü zarar görürse büyütmek yerine düzeltmeye döneceğiz.
 
-## 13. İş modeli (10:04 - 10:46)
+## 13. İş modeli (10:13 - 10:55)
 
 İlk müşterimiz bireysel kullanıcı değil, bu özelliği akışına eklemek isteyen platform. Model üç adımdan oluşuyor: kapsamı belli ücretli bir pilot, ardından kurulum ve uyarlama, sonra yıllık bakım ve destek. Kullanıcıya ücret yok, duygu verisi satmak yok. Hibe ve sponsorluk başlangıç finansmanı; düzenli gelir hizmetten. Henüz müşterimiz yok; fiyatı uydurmak yerine entegrasyon emeği ve destek kapsamından hesaplayacağız. İlk somut teklifimiz NSosyal'da kontrollü bir pilot.
 
-## 14. Özgünlük ve yerlilik (10:46 - 12:01)
+## 14. Özgünlük ve yerlilik (10:55 - 12:10)
 
 Normalde sıralama nasıl çalışıyor? X'in açık kaynak koduna göre yaklaşık bin beş yüz aday için bir sinir ağı beğeni, yanıt, retweet gibi on etkileşim olasılığını tahmin ediyor. Hedef etkileşim; duygusal yoğunluk ayrı bir ölçüt değil. Akışı yeniden sıralayarak iyi bir etki arayan iki benzer deney bulduk. Biri karşı gruba tutumu biraz iyileştirdi; dokuz bin kişilik, altı aylık diğeri iyi oluşu değiştirmedi. İkisi de içeriğin düşmanca olup olmadığına baktı ve deney grubundaki herkese aynı kuralı uyguladı. Biz konuya değil duygusal yoğunluğa, herkese değil takılma görülen kişiye bakıyoruz; kararı da telefon veriyor. Taradığımız literatürde bunu yapan bir akış katmanına rastlamadık. Türkçe ince ayarı, olay sözlüğünü ve cihaz içi sıralamayı ekip olarak geliştirdik.
 
 **Dikkat:** "Dünyada ilk" deme; "taradığımız literatürde rastlamadık" de. Benzer deneylerin siyasi yönünü öne çıkarma, farkı yöntemde anlat: neye bakıyor, kime uygulanıyor. Piccardi vd. 2025 (Science) ölçeği duygu durumu değil, karşı gruba tutum. X sütunu Mart 2023'te açık kaynak yapılan koda dayanıyor, bin beş yüz aday rakamı mühendislik blogundan. "Bugün de aynen böyle çalışıyor" deme; "açık kaynak koddaki adımlar" de. Rakip kötülemesi yapma, tasarım hedefi farkını anlat.
 
-## 15. Uyarlamanın katkısı (12:01 - 12:59)
+## 15. Uyarlamanın katkısı (12:10 - 13:08)
 
 İlk aklımıza gelen çözüm herkese aynı dozdu. Bunu sınamak için on iki davranış profilinde, her birinde 150 sentetik kullanıcıyla on koşul çalıştırdık; toplam on sekiz bin simüle oturum, gerçek gönüllü değil. Sabit doz takılan kullanıcıda işe yarıyor, ama olağan okuru da yüzde 32 etkiliyor. Bizim sistem takılanlarda yoğun içerikte geçen süreyi yüzde 32 azaltırken olağan okurda yalnızca yüzde 6. Yani fark ne kadar azalttığımızda değil, ne zaman müdahale ettiğimizde. Ölçümde kendi ton etiketimizi kullandığımız için bunun bağımsız doğrulama olmadığını da söylüyoruz.
 
-## 16. Hedef kitle ve etki (12:59 - 13:39)
+## 16. Hedef kitle ve etki (13:08 - 13:48)
 
 Hedef kitlemiz bir tanı grubu değil; yoğun bir akışı takip ederken kontrol isteyen ve özelliği gönüllü açan yetişkinler. NSosyal, açıkladığı son rakama göre 1,7 milyonu aşkın kayıtlı kullanıcıya ulaştı. İlk pilotta beş ila on kişiyle açıklamaların anlaşılıp anlaşılmadığını ve önemli bilgiyi kaçırıp kaçırmadıklarını ölçeceğiz. Ruh sağlığına faydayı ise ancak etik onaylı, kontrollü bir çalışma gösterebilir.
 
 **Dikkat:** 1,7 milyon kayıtlı kullanıcı: AA, 30.12.2025, platformun açıklaması. "Aktif" deme, kaynağı yok.
 
-## 17. Takvim ve kapanış (13:39 - 14:04)
+## 17. Takvim ve kapanış (13:48 - 14:13)
 
 Bugün elimizde çalışan bir prototip, gerçek metin testleri ve tekrarlanabilir bir simülasyon var. Önceliğimiz modeli büyütmek değil, kullanıcıyla doğrulamak. Özetle: haberi saklamıyoruz, dozunu azaltıyoruz ve kontrolü kullanıcıya bırakıyoruz. Teşekkür ederiz.
 
