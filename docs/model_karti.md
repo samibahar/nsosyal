@@ -156,6 +156,27 @@ nötr KAP bildirimleri karşılaştırmaya girmedi. KAP'ta AUC 0,48'dir: finans
 bildirimleri bilerek yoğun sayılmaz. Taramanın 34.195 metni (forum, RSS,
 BBC, TTC4900, Vikihaber) etiketsizdir; orada doğruluk hesaplanamaz.
 
+**Sürümler aynı testlerde (18.09.2026).** Hazır model, v1, v2 ve v3 aynı
+testlerden geçirildi; eğitim yapılmadı. Karar ton < −0,15. İlk dört satırda
+olay sözcüğü desteği yoktur.
+
+| Sürüm | Ne değişti | Genel Türkçe (winvoker, 630, ikili) | Nötrlerde ort. \|ton\| (370, 0 ideal) | 40 haber üslubu cümle | 200 başlık: güçlü olumsuzu yakalama (34) | 200 başlık: nötr/olumluda yanlış işaret (111) | Saldırgan tweet yakalama (4.769) | Normal tweette yanlış işaret (5.838) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Hazır model | İndirildiği gibi | %69,8 | 0,83 | %52,5 | %82 | %33 | %83 | %50 |
+| v1 | Genel Türkçe ince ayar | %94,3 | 0,91 | %77,5 | %21 | %8 | %93 | %43 |
+| v2 | Haber üslubu eklendi | %93,3 | 0,96 | %92,5 | %71 | %18 | %92 | %47 |
+| v3 | Nötr sınıfı (üç sınıf) | %94,0 | 0,00 | %92,5 | %12 | %1 | %82 | %16 |
+| v3 + olay sözcüğü | Uygulamadaki sistem | — | — | — | %82 | %4 | %83 | %20 |
+
+Genel Türkçe sütunu kayıtlı ölçümlerdir; aynı gün yeniden çalıştırmada
+%70,0 / %94,3 / %93,3 / %94,1 çıktı (fark en fazla 0,2 puan). Okuma: hazır
+model her şeye olumsuz diyordu; v1 genel Türkçeyi öğrendi ama haber üslubunu
+kaçırdı; v2 haber üslubunu öğrendi ama nötr metne de kesin karar veriyordu
+(normal tweetlerin %47'si işaretleniyordu); v3 nötrü öğrendi ve yanlış
+işareti %16'ya indirdi, ama haber başlıklarındaki olayları kaçırdı. Bu açığı
+olay sözcüğü desteği kapattı. Tweetlerde işi model yapıyor (sözlük tek başına
+%7), haber başlıklarında sözlük.
+
 **Atıf ve lisans.** Temel model `savasy/bert-base-turkish-sentiment-cased`,
 veri seti `winvoker/turkish-sentiment-analysis-dataset` (HuggingFace). Temel
 modelin sayfasında lisans belirtilmemiştir; ince ayarlı model araştırma ve
